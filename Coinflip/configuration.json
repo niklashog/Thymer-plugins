@@ -1,0 +1,21 @@
+{
+	"ver": 1,
+	"name": "Coin Flip",
+	"icon": "ti-currency-dollar",
+	"item_name": "Plugin",
+	"description": "Heads or Tails? Flip a coin from your status bar.",
+	"show_sidebar_items": false,
+	"show_cmdpal_items": true,
+	"views": [],
+	"fields": [],
+	"page_field_ids": [],
+	"sidebar_record_sort_field_id": "updated_at",
+	"sidebar_record_sort_dir": "desc",
+	"managed": {
+		"fields": false,
+		"views": false,
+		"sidebar": false
+	},
+	"custom": {},
+	"home": false
+}
