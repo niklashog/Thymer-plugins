@@ -40,7 +40,7 @@ class Plugin extends AppPlugin {
             frameIndex++;
          }, 80);
 
-         // Determine how long the "toss" lasts (between 1.2 and 2.2 seconds)
+         // Random duration for the toss
          const landingDelay = Math.floor(getSecureRandom() * 1000) + 1200;
 
          setTimeout(() => {
@@ -53,7 +53,7 @@ class Plugin extends AppPlugin {
             let resultText = '';
             let labelText = '';
 
-            if (roll < 0.01) { // 1% Easter Egg: Edge
+            if (roll < 0.01) {
                edgeCount++;
                localStorage.setItem(EDGE_KEY, edgeCount.toString());
                resultText = "IMPOSSIBLE! Edge!";
@@ -62,17 +62,14 @@ class Plugin extends AppPlugin {
                headsCount++;
                localStorage.setItem(HEADS_KEY, headsCount.toString());
                resultText = 'Heads';
-               // Updated to use coin emojis instead of stars
                labelText = "🪙 HEADS 🪙";
             } else {
                tailsCount++;
                localStorage.setItem(TAILS_KEY, tailsCount.toString());
                resultText = 'Tails';
-               // Updated to use coin emojis instead of stars
-               labelText = "🪙 TAILS 🪙";
+               labelText = "✨ TAILS ✨";
             }
 
-            // Update UI with final result
             this.statusBarItem.setLabel(labelText);
             this.statusBarItem.setTooltip(getStatsString());
             
@@ -83,7 +80,6 @@ class Plugin extends AppPlugin {
                type: roll < 0.01 ? 'warning' : 'success'
             });
 
-            // Reset to the simple coin icon after 2.5 seconds
             setTimeout(() => {
                this.statusBarItem.setLabel("🪙");
                isFlipping = false;
@@ -97,9 +93,36 @@ class Plugin extends AppPlugin {
          tooltip: getStatsString(),
          onClick: () => flipCoin()
       });
+
+      // Explicitly register the Reset command
+      this.ui.addCommandPaletteCommand({
+         label: 'Coin Flip: Reset Counter',
+         icon: 'trash',
+         onSelected: () => {
+            headsCount = 0; tailsCount = 0; edgeCount = 0;
+            localStorage.setItem(HEADS_KEY, '0');
+            localStorage.setItem(TAILS_KEY, '0');
+            localStorage.setItem(EDGE_KEY, '0');
+            this.statusBarItem.setTooltip(getStatsString());
+            this.ui.addToaster({ 
+               title: 'Coin Flip', 
+               message: 'Statistics have been reset', 
+               autoDestroyTime: 3000,
+               type: 'success' 
+            });
+         }
+      });
+
+      // Explicitly register the Flip command
+      this.ui.addCommandPaletteCommand({
+         label: 'Coin Flip: Toss Coin',
+         icon: 'coin',
+         onSelected: () => flipCoin()
+      });
    }
 
    onUnload() {
+      // Clean up UI elements when plugin is disabled/reloaded
       if (this.statusBarItem) {
          this.statusBarItem.remove();
       }
