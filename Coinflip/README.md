@@ -11,4 +11,4 @@ Coin Flip: Toss Coin
 Coin Flip: Reset Counter
 
 
-Read up on flipism [here](https://en.wikipedia.org/wiki/Flipism)
+[Read up](https://en.wikipedia.org/wiki/Flipism) on flipism. The true way to make your most important choices in life.
