@@ -1,3 +1,5 @@
+Global Plugin
+
 1. Download or open files provided
 2. Press 'Ctrl + P' and search for Plugins.
 3. Paste content of custom_code.js and configuration.json into the corresponding tabs.
