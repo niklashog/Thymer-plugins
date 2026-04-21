@@ -1,0 +1,56 @@
+{
+	"ver": 1,
+	"name": "Uppgifts-dashboard",
+	"icon": "layout-dashboard",
+	"description": "Visar alla uppgifter med förfallodatum samlat på ett ställe, med möjlighet att skjuta fram dem.",
+	"item_name": "Uppgift",
+	"home": false,
+	"show_sidebar_items": false,
+	"show_cmdpal_items": false,
+	"fields": [
+		{
+			"icon": "ti-clock-plus",
+			"id": "created_at",
+			"label": "Skapad",
+			"many": false,
+			"read_only": true,
+			"active": true,
+			"type": "datetime"
+		},
+		{
+			"icon": "ti-clock-edit",
+			"id": "updated_at",
+			"label": "Ändrad",
+			"many": false,
+			"read_only": true,
+			"active": true,
+			"type": "datetime"
+		}
+	],
+	"page_field_ids": [],
+	"sidebar_record_sort_dir": "desc",
+	"sidebar_record_sort_field_id": "updated_at",
+	"managed": {
+		"fields": false,
+		"views": false,
+		"sidebar": false
+	},
+	"custom": {},
+	"views": [
+		{
+			"id": "dashboard",
+			"type": "custom",
+			"icon": "layout-dashboard",
+			"label": "Dashboard",
+			"description": "Alla uppgifter med förfallodatum",
+			"query": "",
+			"read_only": false,
+			"shown": true,
+			"field_ids": ["created_at", "updated_at"],
+			"sort_dir": "asc",
+			"sort_field_id": "created_at",
+			"group_by_field_id": null,
+			"opts": {}
+		}
+	]
+}
