@@ -56,6 +56,7 @@ class TodayDashboard {
             '.db-pin,.db-unpin,.db-nav{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
             '.db-pin:hover,.db-unpin:hover{opacity:.7}' +
+            '.db-src-icon{display:none}' +
             '.db-empty{font-size:13px;opacity:.3;padding:4px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
             '.db-mode-bar{display:flex;justify-content:flex-end;margin-bottom:20px}' +
@@ -73,13 +74,16 @@ class TodayDashboard {
             '.db-block-body{flex:1;min-width:0;padding:4px 0}' +
             '.db-block-hint{font-size:12px;opacity:.18;padding:14px 0 14px 2px}' +
             '@media(max-width:600px){' +
-            '.db-root{padding:16px 14px;max-width:100%}' +
+            '.db-root{padding:12px 4px;max-width:100%}' +
             '.db-block{flex-direction:column;min-height:0;margin-bottom:8px}' +
             '.db-block-time{padding:10px 6px 4px 6px;min-width:0;width:100%}' +
             '.db-block-body{padding:0 6px 10px 6px;width:100%}' +
             '.db-block-hint{padding:4px 0 8px 2px}' +
             '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
             '.db-task-source,.db-task-source--link{display:none}' +
+            '.db-src-icon{display:inline-flex;align-items:center;justify-content:center;opacity:.3}' +
+            '.db-src-icon:hover{opacity:.7}' +
+            '.db-unpin{display:none}' +
             '}'
         );
 
@@ -298,6 +302,7 @@ class TodayDashboard {
                 <div class="db-done line-check-div clickable" data-action="undone" data-guid="${task.guid}"></div>
                 <span class="db-task-text--sel">${text}</span>
                 ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
+                ${source ? `<button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" title="Open source"><i class="ti ti-arrow-up-right"></i></button>` : ''}
             </div>`;
         }
 
@@ -311,6 +316,7 @@ class TodayDashboard {
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
                 ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
+                ${source ? `<button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" title="Open source"><i class="ti ti-arrow-up-right"></i></button>` : ''}
                 ${actionBtn}
             </div>`;
         }
