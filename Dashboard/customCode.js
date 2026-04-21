@@ -338,7 +338,7 @@ class TodayDashboard {
                 if (row) row.classList.add('state-done');
                 btn.style.pointerEvents = 'none';
 
-                await task.setTaskStatus('done');
+                await task.setTaskStatus('done'); // PLUGIN_TASK_STATUS_DONE = 'done'
 
                 const guid = btn.dataset.guid;
                 this._addToDone(guid);
@@ -364,15 +364,13 @@ class TodayDashboard {
                 if (!task) return;
                 btn.style.pointerEvents = 'none';
 
-                console.log('[Dashboard] lineitem proto methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
-
                 try {
-                    await task.setTaskStatus('todo');
+                    await task.setTaskStatus('none');
                     const row = btn.closest('.db-task');
                     if (row) row.classList.remove('state-done');
                     this._removeFromDone(btn.dataset.guid);
                 } catch (err) {
-                    console.error('[Dashboard] setTaskStatus(todo) failed:', err);
+                    console.error('[Dashboard] setTaskStatus(none) failed:', err);
                     btn.style.pointerEvents = '';
                 }
             });
