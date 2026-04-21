@@ -1,4 +1,4 @@
-const SLOTS = Array.from({ length: 14 }, (_, i) => `${String(i + 7).padStart(2, '0')}:00`);
+const SLOTS = Array.from({ length: 18 }, (_, i) => `${String(i + 6).padStart(2, '0')}:00`);
 
 class TodayDashboard {
     constructor(plugin) {
