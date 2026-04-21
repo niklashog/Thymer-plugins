@@ -245,7 +245,7 @@ class TodayDashboard {
         const doneBtn = `<div class="db-done line-check-div clickable" data-action="done" data-guid="${task.guid}"></div>`;
 
         if (focus) {
-            return `<div class="db-task" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task" data-guid="${task.guid}">
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
                 ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
@@ -253,7 +253,7 @@ class TodayDashboard {
             </div>`;
         }
 
-        return `<div class="db-task" data-guid="${task.guid}">
+        return `<div class="db-task listitem-task" data-guid="${task.guid}">
             ${doneBtn}
             <div class="db-task-body" data-action="open" data-guid="${task.guid}">
                 <span class="db-task-text">${text}</span>
