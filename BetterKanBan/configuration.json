@@ -1,0 +1,71 @@
+{
+    "ver": 1,
+    "name": "Imagine",
+    "icon": "sparkles",
+    "description": "Create pre-configured Imagine boards from the command palette",
+    "custom": {
+        "collectionConf": {
+            "ver": 1,
+            "name": "New Board",
+            "icon": "ti-layout-kanban",
+            "home": false,
+            "item_name": "Task",
+            "description": "Kanban board with dependency tracking",
+            "default_banner": null,
+            "show_sidebar_items": false,
+            "show_cmdpal_items": false,
+            "page_field_ids": ["title", "status", "priority", "depends-on"],
+            "fields": [
+                { "id": "title",      "label": "Title",    "type": "text",     "icon": "ti-abc",        "many": false, "read_only": false, "active": true },
+                { "id": "updated_at", "label": "Modified", "type": "datetime", "icon": "ti-clock-edit", "many": false, "read_only": true,  "active": true },
+                { "id": "created_at", "label": "Created",  "type": "datetime", "icon": "ti-clock-plus", "many": false, "read_only": true,  "active": true },
+                { "id": "banner",     "label": "Banner",   "type": "banner",   "icon": "ti-photo",      "many": false, "read_only": false, "active": true },
+                {
+                    "id": "status", "label": "Status", "type": "choice", "icon": "ti-flag",
+                    "many": false, "read_only": false, "active": true,
+                    "choices": [
+                        { "id": "todo",        "label": "To Do",       "color": "9", "icon": "", "active": true },
+                        { "id": "in-progress", "label": "In Progress", "color": "4", "icon": "", "active": true },
+                        { "id": "in-review",   "label": "In Review",   "color": "1", "icon": "", "active": true },
+                        { "id": "done",        "label": "Done",        "color": "2", "icon": "", "active": true }
+                    ]
+                },
+                {
+                    "id": "priority", "label": "Priority", "type": "choice", "icon": "ti-alert-triangle",
+                    "many": false, "read_only": false, "active": true,
+                    "choices": [
+                        { "id": "low",      "label": "Low",      "color": "3", "icon": "", "active": true },
+                        { "id": "medium",   "label": "Medium",   "color": "1", "icon": "", "active": true },
+                        { "id": "high",     "label": "High",     "color": "0", "icon": "", "active": true },
+                        { "id": "critical", "label": "Critical", "color": "7", "icon": "", "active": true }
+                    ]
+                },
+                { "id": "depends-on", "label": "Depends on", "type": "record", "icon": "ti-barrier-block", "many": false, "read_only": false, "active": true },
+                {
+                    "id": "filter", "label": "Filter", "type": "choice", "icon": "ti-filter",
+                    "many": false, "read_only": false, "active": true,
+                    "choices": [
+                        { "id": "todo",  "label": "Todo",  "color": "0", "icon": "", "active": true },
+                        { "id": "doing", "label": "Doing", "color": "4", "icon": "", "active": true },
+                        { "id": "done",  "label": "Done",  "color": "2", "icon": "", "active": true }
+                    ]
+                }
+            ],
+            "sidebar_record_sort_dir": "desc",
+            "sidebar_record_sort_field_id": "updated_at",
+            "managed": { "fields": false, "views": false, "sidebar": false },
+            "custom": {},
+            "views": [
+                {
+                    "id": "board", "type": "board", "icon": "ti-layout-kanban",
+                    "label": "Board", "description": "Kanban board with dependency tracking",
+                    "query": "", "shown": true, "read_only": false,
+                    "field_ids": ["title", "priority", "depends-on"],
+                    "group_by_field_id": "status",
+                    "sort_dir": "asc", "sort_field_id": null,
+                    "opts": {}
+                }
+            ]
+        }
+    }
+}
