@@ -277,11 +277,10 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.disabled = true;
-                console.log('[Dashboard] task object:', task);
-                console.log('[Dashboard] task methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
-                console.log('[Dashboard] PLUGIN_TASK_STATUS_DONE:', typeof PLUGIN_TASK_STATUS_DONE, PLUGIN_TASK_STATUS_DONE);
+                console.log('[Dashboard] proto methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
                 try {
-                    await task.setTaskStatus(PLUGIN_TASK_STATUS_DONE);
+                    await task.setTaskStatus('done');
+                    console.log('[Dashboard] setTaskStatus done — ok');
                 } catch (err) {
                     console.error('[Dashboard] setTaskStatus failed:', err);
                 }
