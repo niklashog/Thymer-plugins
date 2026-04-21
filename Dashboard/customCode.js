@@ -121,7 +121,7 @@ class TodayDashboard {
             this.plugin.data.searchByQuery('@task @today', 100),
         ]);
 
-        const [overdueResult, dueResult] = this._mode !== 'plan'
+        const [overdueResult, dueResult] = this._mode === 'focus'
             ? [{ lines: [] }, { lines: [] }]
             : await Promise.all([
                 this.plugin.data.searchByQuery('@task @overdue', 50),
@@ -369,7 +369,6 @@ class TodayDashboard {
                 e.stopPropagation();
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
-                // Add today as datetime segment, replacing any existing date
                 const newSegments = [
                     ...(task.segments || []).filter(s => s.type !== 'datetime'),
                     { type: 'datetime', text: { d: this._todayD() } },
@@ -378,7 +377,7 @@ class TodayDashboard {
                     await task.setSegments(newSegments);
                     if (this._panel) this._render(this._panel);
                 } catch (err) {
-                    console.error('[Dashboard] pin (setSegments) failed:', err);
+                    console.error('[Dashboard] pin failed:', err);
                 }
             });
         });
