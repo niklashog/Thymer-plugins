@@ -144,13 +144,10 @@ class TodayDashboard {
     }
 
     _buildPlanHTML(overdue, today, inbox) {
-        const modeBar = today.length
-            ? `<div class="db-mode-bar">
-                <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
-               </div>`
-            : '';
         return `<div class="db-root">
-            ${modeBar}
+            <div class="db-mode-bar">
+                <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+            </div>
             ${this._section('Overdue',       overdue, 'overdue')}
             ${this._section("Today's Focus", today,   'today')}
             ${this._section('Inbox',         inbox,   'inbox')}
