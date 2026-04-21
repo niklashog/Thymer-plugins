@@ -71,7 +71,16 @@ class TodayDashboard {
             '.db-block-label{width:120px;flex-shrink:0}' +
             '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
             '.db-block-body{flex:1;min-width:0;padding:4px 0}' +
-            '.db-block-hint{font-size:12px;opacity:.18;padding:14px 0 14px 2px}'
+            '.db-block-hint{font-size:12px;opacity:.18;padding:14px 0 14px 2px}' +
+            '@media(max-width:600px){' +
+            '.db-root{padding:16px 14px;max-width:100%}' +
+            '.db-block{flex-direction:column;min-height:0;margin-bottom:8px}' +
+            '.db-block-time{padding:10px 6px 4px 6px;min-width:0;width:100%}' +
+            '.db-block-body{padding:0 6px 10px 6px;width:100%}' +
+            '.db-block-hint{padding:4px 0 8px 2px}' +
+            '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
+            '.db-task-source,.db-task-source--link{display:none}' +
+            '}'
         );
 
         this.plugin.ui.addCommandPaletteCommand({
