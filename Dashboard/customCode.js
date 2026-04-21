@@ -277,13 +277,7 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.disabled = true;
-                console.log('[Dashboard] proto methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
-                try {
-                    await task.setTaskStatus('done');
-                    console.log('[Dashboard] setTaskStatus done — ok');
-                } catch (err) {
-                    console.error('[Dashboard] setTaskStatus failed:', err);
-                }
+                await task.setTaskStatus('done');
                 this._removeFromToday(btn.dataset.guid);
             });
         });
