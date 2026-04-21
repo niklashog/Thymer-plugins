@@ -363,20 +363,18 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.style.pointerEvents = 'none';
-                const row = btn.closest('.db-task');
 
-                for (const status of ['todo', 'active', 'open', null, '']) {
-                    try {
-                        await task.setTaskStatus(status);
-                        console.log('[Dashboard] undone worked with status:', JSON.stringify(status));
-                        break;
-                    } catch (e) {
-                        console.warn('[Dashboard] setTaskStatus failed for:', JSON.stringify(status), e);
-                    }
+                console.log('[Dashboard] lineitem proto methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
+
+                try {
+                    await task.setTaskStatus('todo');
+                    const row = btn.closest('.db-task');
+                    if (row) row.classList.remove('state-done');
+                    this._removeFromDone(btn.dataset.guid);
+                } catch (err) {
+                    console.error('[Dashboard] setTaskStatus(todo) failed:', err);
+                    btn.style.pointerEvents = '';
                 }
-
-                if (row) row.classList.remove('state-done');
-                this._removeFromDone(btn.dataset.guid);
             });
         });
 
