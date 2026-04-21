@@ -5,9 +5,10 @@ class TodayDashboard {
         this.plugin        = plugin;
         this._panel        = null;
         this._refreshTimer = null;
-        this._renderVer      = 0;
-        this._mode           = null; // null = auto, 'focus', 'plan'
-        this._selected       = null; // { type: 'task'|'block', id: string }
+        this._renderVer    = 0;
+        this._mode         = null;
+        this._selected     = null;
+        this._doneTasksMap = new Map(); // guid → lineitem, in-memory for current session
     }
 
     load() {
@@ -121,21 +122,12 @@ class TodayDashboard {
                 this.plugin.data.searchByQuery('@task @due',    100),
             ]);
 
-        // @task @done may not be supported in all versions — fail gracefully
-        let doneResult = { lines: [] };
-        try {
-            doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
-        } catch (e) {
-            console.warn('[Dashboard] @task @done query failed:', e);
-        }
-
         if (ver !== this._renderVer) return;
 
         const todayGuids     = new Set(this._loadTodayGuids());
         const overdueGuids   = new Set((overdueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
         const datedGuids     = new Set((dueResult.lines       || []).filter(l => l.type === 'task').map(l => l.guid));
         const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
-        const allDone        =         (doneResult.lines      || []).filter(l => l.type === 'task');
         const allTodos       =         (todoResult.lines      || []).filter(l => l.type === 'task');
 
         const allTodoSet      = new Set(allTodos.map(l => l.guid));
@@ -143,13 +135,9 @@ class TodayDashboard {
         if (cleanTodayGuids.length !== todayGuids.size) this._saveTodayGuids(cleanTodayGuids);
         const todaySet = new Set(cleanTodayGuids);
 
-        // Done tasks that the user marked done via this plugin today
-        const allDoneSet      = new Set(allDone.map(l => l.guid));
-        const savedDoneGuids  = this._loadDoneGuids();
-        const cleanDoneGuids  = savedDoneGuids.filter(g => allDoneSet.has(g));
-        if (cleanDoneGuids.length !== savedDoneGuids.length) this._saveDoneGuids(cleanDoneGuids);
-        const doneSet         = new Set(cleanDoneGuids);
-        const doneTasks       = allDone.filter(l => doneSet.has(l.guid));
+        // Done tasks: in-memory map (no query needed, survives re-renders within session)
+        const doneSet   = new Set(this._loadDoneGuids());
+        const doneTasks = [...this._doneTasksMap.values()].filter(t => doneSet.has(t.guid));
 
         // Pinned overdue tasks move to today (user explicitly chose to handle them today)
         const overdue   = allTodos.filter(l => overdueGuids.has(l.guid) && !todaySet.has(l.guid));
@@ -343,9 +331,10 @@ class TodayDashboard {
                 if (row) row.classList.add('state-done');
                 btn.style.pointerEvents = 'none';
 
-                await task.setTaskStatus('done'); // PLUGIN_TASK_STATUS_DONE = 'done'
+                await task.setTaskStatus('done');
 
                 const guid = btn.dataset.guid;
+                this._doneTasksMap.set(guid, task);
                 this._addToDone(guid);
             });
         });
@@ -373,6 +362,7 @@ class TodayDashboard {
                     await task.setTaskStatus('none');
                     const row = btn.closest('.db-task');
                     if (row) row.classList.remove('state-done');
+                    this._doneTasksMap.delete(btn.dataset.guid);
                     this._removeFromDone(btn.dataset.guid);
                 } catch (err) {
                     console.error('[Dashboard] setTaskStatus(none) failed:', err);
