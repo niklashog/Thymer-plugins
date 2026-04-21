@@ -8,7 +8,12 @@ class TodayDashboard {
         this._renderVer    = 0;
         this._mode         = null;
         this._selected     = null;
-        this._doneTasksMap = new Map(); // guid → lineitem, in-memory for current session
+        this._doneTasksMap = new Map(); // session cache: guid → lineitem
+    }
+
+    _todayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
     load() {
@@ -99,76 +104,76 @@ class TodayDashboard {
         const el  = panel.getElement();
         if (!el) return;
 
-        // Background refresh: abort if the element no longer shows our content
         if (!fromCallback && !el.querySelector('.db-root, .db-loading')) return;
 
         if (!el.querySelector('.db-root')) {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
-        // In focus mode skip overdue/due — not needed and saves time on large workspaces
-        const hasPinned  = this._loadTodayGuids().length > 0 || this._loadDoneGuids().length > 0;
-        const likelyFocus = this._mode !== 'plan' && hasPinned;
+        const today = this._todayStr();
 
         const [todoResult, scheduledResult] = await Promise.all([
-            this.plugin.data.searchByQuery('@task @todo',  likelyFocus ? 100 : 150),
+            this.plugin.data.searchByQuery('@task @todo',  150),
             this.plugin.data.searchByQuery('@task @today', 100),
         ]);
 
-        const [overdueResult, dueResult] = likelyFocus
+        const [overdueResult, dueResult] = this._mode !== 'plan'
             ? [{ lines: [] }, { lines: [] }]
             : await Promise.all([
                 this.plugin.data.searchByQuery('@task @overdue', 50),
                 this.plugin.data.searchByQuery('@task @due',    100),
             ]);
 
+        // Populate session cache from Thymer's done list — cross-device on fresh load
+        try {
+            const doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
+            for (const l of (doneResult.lines || [])) {
+                if (l.type === 'task' && l.props?.['db-done-date'] === today) {
+                    this._doneTasksMap.set(l.guid, l);
+                }
+            }
+        } catch (e) {
+            console.warn('[Dashboard] @task @done query failed:', e);
+        }
+
         if (ver !== this._renderVer) return;
 
-        const todayGuids     = new Set(this._loadTodayGuids());
         const overdueGuids   = new Set((overdueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
         const datedGuids     = new Set((dueResult.lines       || []).filter(l => l.type === 'task').map(l => l.guid));
         const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
         const allTodos       =         (todoResult.lines      || []).filter(l => l.type === 'task');
 
-        const allTodoSet      = new Set(allTodos.map(l => l.guid));
-        const cleanTodayGuids = [...todayGuids].filter(g => allTodoSet.has(g));
-        if (cleanTodayGuids.length !== todayGuids.size) this._saveTodayGuids(cleanTodayGuids);
-        const todaySet = new Set(cleanTodayGuids);
+        // Pinned tasks: read from Thymer meta props (synced cross-device)
+        const todaySet  = new Set(allTodos.filter(l => l.props?.['db-pinned'] === today).map(l => l.guid));
+        const doneTasks = [...this._doneTasksMap.values()];
 
-        // Done tasks: in-memory map (no query needed, survives re-renders within session)
-        const doneSet   = new Set(this._loadDoneGuids());
-        const doneTasks = [...this._doneTasksMap.values()].filter(t => doneSet.has(t.guid));
-
-        // Pinned overdue tasks move to today (user explicitly chose to handle them today)
-        const overdue   = allTodos.filter(l => overdueGuids.has(l.guid) && !todaySet.has(l.guid));
-        const today     = allTodos.filter(l => todaySet.has(l.guid));
-        const scheduled = allTodos.filter(l => scheduledGuids.has(l.guid) && !todaySet.has(l.guid) && !overdueGuids.has(l.guid));
-        const inbox     = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
-
-        // Clean stale time block assignments
-        const timeBlocks = this._loadTimeBlocks();
-        const focusGuids = new Set([...today.map(l => l.guid), ...scheduled.map(l => l.guid)]);
-        let tbDirty = false;
-        for (const guid of Object.keys(timeBlocks)) {
-            if (!focusGuids.has(guid) && !doneSet.has(guid)) { delete timeBlocks[guid]; tbDirty = true; }
+        // Time blocks: read from Thymer meta props
+        const timeBlocks = {};
+        for (const t of [...allTodos, ...doneTasks]) {
+            const tb = t.props?.['db-timeblock'];
+            if (tb) timeBlocks[t.guid] = tb;
         }
-        if (tbDirty) this._saveTimeBlocks(timeBlocks);
 
-        if (today.length === 0 && scheduled.length === 0 && doneTasks.length === 0) this._mode = null;
-        const effectiveMode = ((today.length > 0 || scheduled.length > 0 || doneTasks.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
+        const overdue     = allTodos.filter(l => overdueGuids.has(l.guid) && !todaySet.has(l.guid));
+        const todayPinned = allTodos.filter(l => todaySet.has(l.guid));
+        const scheduled   = allTodos.filter(l => scheduledGuids.has(l.guid) && !todaySet.has(l.guid) && !overdueGuids.has(l.guid));
+        const inbox       = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
+
+        if (todayPinned.length === 0 && scheduled.length === 0 && doneTasks.length === 0) this._mode = null;
+        const effectiveMode = ((todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
 
         const allTasks = [...allTodos, ...doneTasks];
 
         el.innerHTML = effectiveMode === 'focus'
-            ? this._buildFocusHTML(today, scheduled, doneTasks)
-            : this._buildPlanHTML(overdue, today, inbox);
+            ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks)
+            : this._buildPlanHTML(overdue, todayPinned, inbox);
 
         this._applyTheme(el);
         this._attachListeners(el, allTasks);
         this._reapplySelection(el);
     }
 
-    _buildFocusHTML(today, scheduled, doneTasks) {
+    _buildFocusHTML(today, scheduled, doneTasks, timeBlocks) {
         const pinnedGuids = new Set(today.map(t => t.guid));
         const doneGuids   = new Set(doneTasks.map(t => t.guid));
         const allFocus = [
@@ -176,7 +181,6 @@ class TodayDashboard {
             ...scheduled.filter(t => !pinnedGuids.has(t.guid)),
         ];
 
-        const timeBlocks    = this._loadTimeBlocks();
         const unassigned    = allFocus.filter(t => !timeBlocks[t.guid]);
         const assignedByTime = {};
         for (const task of allFocus) {
@@ -185,7 +189,6 @@ class TodayDashboard {
             if (!assignedByTime[time]) assignedByTime[time] = [];
             assignedByTime[time].push(task);
         }
-        // Done tasks also appear in their assigned blocks
         for (const task of doneTasks) {
             const time = timeBlocks[task.guid];
             if (!time) continue;
@@ -193,8 +196,7 @@ class TodayDashboard {
             if (!assignedByTime[time].find(t => t.guid === task.guid)) assignedByTime[time].push(task);
         }
 
-        const sectionFor = guid => pinnedGuids.has(guid) ? 'focus-pinned' : 'focus-scheduled';
-
+        const sectionFor    = guid => pinnedGuids.has(guid) ? 'focus-pinned' : 'focus-scheduled';
         const unassignedDone = doneTasks.filter(t => !timeBlocks[t.guid]);
 
         return `<div class="db-root">
@@ -268,7 +270,7 @@ class TodayDashboard {
 
         let actionBtn = '';
         if (section === 'done') {
-            actionBtn = `<button class="db-unpin" data-action="undone" data-guid="${task.guid}" title="Mark as not done">↩</button>`;
+            actionBtn = '';
         } else if (section === 'block') {
             actionBtn = `<button class="db-unpin" data-action="unassign" data-guid="${task.guid}" title="Remove from block">×</button>`;
         } else if (section === 'today' || section === 'focus-pinned') {
@@ -319,6 +321,7 @@ class TodayDashboard {
 
     _attachListeners(el, allTasks) {
         const byGuid = new Map(allTasks.map(l => [l.guid, l]));
+        const today  = this._todayStr();
 
         el.querySelectorAll('[data-action="done"]').forEach(btn => {
             btn.addEventListener('click', async e => {
@@ -326,29 +329,18 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.style.pointerEvents = 'none';
-
                 const row = btn.closest('.db-task');
                 if (row) row.classList.add('state-done');
-                btn.style.pointerEvents = 'none';
-
-                await task.setTaskStatus('done');
-
-                const guid = btn.dataset.guid;
-                this._doneTasksMap.set(guid, task);
-                this._addToDone(guid);
+                try {
+                    await task.setTaskStatus('done');
+                    await task.setMetaProperty('db-done-date', today);
+                    this._doneTasksMap.set(task.guid, task);
+                } catch (err) {
+                    console.error('[Dashboard] done failed:', err);
+                    if (row) row.classList.remove('state-done');
+                    btn.style.pointerEvents = '';
+                }
             });
-        });
-
-        el.querySelectorAll('[data-action="pin"]').forEach(btn => {
-            btn.addEventListener('click', e => { e.stopPropagation(); this._addToToday(btn.dataset.guid); });
-        });
-
-        el.querySelectorAll('[data-action="unpin"]').forEach(btn => {
-            btn.addEventListener('click', e => { e.stopPropagation(); this._removeFromToday(btn.dataset.guid); });
-        });
-
-        el.querySelectorAll('[data-action="unassign"]').forEach(btn => {
-            btn.addEventListener('click', e => { e.stopPropagation(); this._unassignTask(btn.dataset.guid); });
         });
 
         el.querySelectorAll('[data-action="undone"]').forEach(btn => {
@@ -357,16 +349,90 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.style.pointerEvents = 'none';
-
                 try {
                     await task.setTaskStatus('none');
+                    await task.setMetaProperty('db-done-date', null);
+                    this._doneTasksMap.delete(task.guid);
                     const row = btn.closest('.db-task');
                     if (row) row.classList.remove('state-done');
-                    this._doneTasksMap.delete(btn.dataset.guid);
-                    this._removeFromDone(btn.dataset.guid);
+                    if (this._panel) this._render(this._panel);
                 } catch (err) {
-                    console.error('[Dashboard] setTaskStatus(none) failed:', err);
+                    console.error('[Dashboard] undone failed:', err);
                     btn.style.pointerEvents = '';
+                }
+            });
+        });
+
+        el.querySelectorAll('[data-action="pin"]').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const task = byGuid.get(btn.dataset.guid);
+                if (!task) return;
+                await task.setMetaProperty('db-pinned', today);
+                if (this._panel) this._render(this._panel);
+            });
+        });
+
+        el.querySelectorAll('[data-action="unpin"]').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const task = byGuid.get(btn.dataset.guid);
+                if (!task) return;
+                await task.setMetaProperty('db-pinned', null);
+                if (this._panel) this._render(this._panel);
+            });
+        });
+
+        el.querySelectorAll('[data-action="unassign"]').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const task = byGuid.get(btn.dataset.guid);
+                if (!task) return;
+                await task.setMetaProperty('db-timeblock', null);
+                if (this._panel) this._render(this._panel);
+            });
+        });
+
+        el.querySelectorAll('[data-action="select-task"]').forEach(span => {
+            span.addEventListener('click', async e => {
+                e.stopPropagation();
+                const guid = span.dataset.guid;
+                if (this._selected?.type === 'block') {
+                    const time = this._selected.id;
+                    this._selected = null;
+                    const task = byGuid.get(guid);
+                    if (task) {
+                        await task.setMetaProperty('db-timeblock', time);
+                        if (this._panel) this._render(this._panel);
+                    }
+                } else if (this._selected?.type === 'task' && this._selected.id === guid) {
+                    this._selected = null;
+                    this._reapplySelection(el);
+                } else {
+                    this._selected = { type: 'task', id: guid };
+                    this._reapplySelection(el);
+                }
+            });
+        });
+
+        el.querySelectorAll('[data-action="select-block"]').forEach(block => {
+            block.addEventListener('click', async e => {
+                if (e.target.closest('[data-action="done"],[data-action="unassign"],[data-action="open"],[data-action="select-task"]')) return;
+                const time = block.dataset.time;
+                if (this._selected?.type === 'task') {
+                    const guid = this._selected.id;
+                    this._selected = null;
+                    const task = byGuid.get(guid);
+                    if (task) {
+                        await task.setMetaProperty('db-timeblock', time);
+                        if (this._panel) this._render(this._panel);
+                    }
+                } else if (this._selected?.type === 'block' && this._selected.id === time) {
+                    this._selected = null;
+                    this._reapplySelection(el);
+                } else {
+                    this._selected = { type: 'block', id: time };
+                    this._reapplySelection(el);
                 }
             });
         });
@@ -383,42 +449,6 @@ class TodayDashboard {
                     subId: null,
                     workspaceGuid: this.plugin.getWorkspaceGuid(),
                 });
-            });
-        });
-
-        el.querySelectorAll('[data-action="select-task"]').forEach(span => {
-            span.addEventListener('click', e => {
-                e.stopPropagation();
-                const guid = span.dataset.guid;
-                if (this._selected?.type === 'block') {
-                    const time = this._selected.id;
-                    this._selected = null;
-                    this._assignTask(guid, time);
-                } else if (this._selected?.type === 'task' && this._selected.id === guid) {
-                    this._selected = null;
-                    this._reapplySelection(el);
-                } else {
-                    this._selected = { type: 'task', id: guid };
-                    this._reapplySelection(el);
-                }
-            });
-        });
-
-        el.querySelectorAll('[data-action="select-block"]').forEach(block => {
-            block.addEventListener('click', e => {
-                if (e.target.closest('[data-action="done"],[data-action="unassign"],[data-action="open"],[data-action="select-task"]')) return;
-                const time = block.dataset.time;
-                if (this._selected?.type === 'task') {
-                    const guid = this._selected.id;
-                    this._selected = null;
-                    this._assignTask(guid, time);
-                } else if (this._selected?.type === 'block' && this._selected.id === time) {
-                    this._selected = null;
-                    this._reapplySelection(el);
-                } else {
-                    this._selected = { type: 'block', id: time };
-                    this._reapplySelection(el);
-                }
             });
         });
 
@@ -475,70 +505,6 @@ class TodayDashboard {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
-    }
-
-    _loadTodayGuids() {
-        try { return JSON.parse(localStorage.getItem('db-today') || '[]'); }
-        catch { return []; }
-    }
-
-    _saveTodayGuids(guids) {
-        localStorage.setItem('db-today', JSON.stringify(guids));
-    }
-
-    _loadTimeBlocks() {
-        try { return JSON.parse(localStorage.getItem('db-timeblocks') || '{}'); }
-        catch { return {}; }
-    }
-
-    _saveTimeBlocks(blocks) {
-        localStorage.setItem('db-timeblocks', JSON.stringify(blocks));
-    }
-
-    _addToToday(guid) {
-        const guids = this._loadTodayGuids();
-        if (!guids.includes(guid)) {
-            this._saveTodayGuids([...guids, guid]);
-            if (this._panel) this._render(this._panel);
-        }
-    }
-
-    _removeFromToday(guid) {
-        this._saveTodayGuids(this._loadTodayGuids().filter(g => g !== guid));
-        if (this._panel) this._render(this._panel);
-    }
-
-    _assignTask(guid, time) {
-        const blocks = this._loadTimeBlocks();
-        blocks[guid] = time;
-        this._saveTimeBlocks(blocks);
-        if (this._panel) this._render(this._panel);
-    }
-
-    _unassignTask(guid) {
-        const blocks = this._loadTimeBlocks();
-        delete blocks[guid];
-        this._saveTimeBlocks(blocks);
-        if (this._panel) this._render(this._panel);
-    }
-
-    _loadDoneGuids() {
-        try { return JSON.parse(localStorage.getItem('db-done-today') || '[]'); }
-        catch { return []; }
-    }
-
-    _saveDoneGuids(guids) {
-        localStorage.setItem('db-done-today', JSON.stringify(guids));
-    }
-
-    _addToDone(guid) {
-        const guids = this._loadDoneGuids();
-        if (!guids.includes(guid)) this._saveDoneGuids([...guids, guid]);
-    }
-
-    _removeFromDone(guid) {
-        this._saveDoneGuids(this._loadDoneGuids().filter(g => g !== guid));
-        if (this._panel) this._render(this._panel);
     }
 }
 
