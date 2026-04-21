@@ -2,12 +2,13 @@ const SLOTS = Array.from({ length: 18 }, (_, i) => `${String(i + 6).padStart(2, 
 
 class TodayDashboard {
     constructor(plugin) {
-        this.plugin        = plugin;
-        this._panel        = null;
-        this._refreshTimer = null;
-        this._renderVer    = 0;
-        this._mode         = null; // null = auto, 'focus', 'plan'
-        this._selected     = null; // { type: 'task'|'block', id: string }
+        this.plugin          = plugin;
+        this._panel          = null;
+        this._panelObserver  = null;
+        this._refreshTimer   = null;
+        this._renderVer      = 0;
+        this._mode           = null; // null = auto, 'focus', 'plan'
+        this._selected       = null; // { type: 'task'|'block', id: string }
     }
 
     load() {
@@ -67,6 +68,21 @@ class TodayDashboard {
         this.plugin.ui.registerCustomPanelType('today-dashboard', panel => {
             this._panel = panel;
             panel.setTitle("Today's Focus");
+
+            // Null out _panel when Thymer navigates the panel away from our type,
+            // preventing scheduleRefresh from writing into the wrong view.
+            if (this._panelObserver) this._panelObserver.disconnect();
+            const el = panel.getElement();
+            if (el) {
+                this._panelObserver = new MutationObserver(() => {
+                    if (!el.querySelector('.db-root, .db-loading')) {
+                        this._panel = null;
+                        this._panelObserver = null;
+                    }
+                });
+                this._panelObserver.observe(el, { childList: true });
+            }
+
             this._render(panel);
         });
 
