@@ -1,4 +1,14 @@
-const SLOTS = Array.from({ length: 18 }, (_, i) => `${String(i + 6).padStart(2, '0')}:00`);
+const SLOTS = [
+    { time: '08:00', label: 'Early morning' },
+    { time: '10:00', label: 'Morning' },
+    { time: '12:00', label: 'Lunchtime' },
+    { time: '14:00', label: 'Early afternoon' },
+    { time: '16:00', label: 'Afternoon' },
+    { time: '18:00', label: 'Sundown' },
+    { time: '20:00', label: 'Early evening' },
+    { time: '22:00', label: 'Evening' },
+    { time: '00:00', label: 'Good night' },
+];
 
 class TodayDashboard {
     constructor(plugin) {
@@ -217,14 +227,14 @@ class TodayDashboard {
                 <div class="db-section-header">
                     <span class="db-section-title">Day Plan</span>
                 </div>
-                ${SLOTS.map(time => this._blockHTML(time, assignedByTime[time] || [], doneGuids)).join('')}
+                ${SLOTS.map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
             </div>
         </div>`;
     }
 
-    _blockHTML(time, tasks, doneGuids = new Set()) {
+    _blockHTML(time, label, tasks, doneGuids = new Set()) {
         return `<div class="db-block" data-action="select-block" data-time="${time}">
-            <div class="db-block-time">${time}</div>
+            <div class="db-block-time">${label}</div>
             <div class="db-block-body">
                 ${tasks.length
                     ? tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')
