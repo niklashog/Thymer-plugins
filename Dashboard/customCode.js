@@ -115,6 +115,8 @@ class TodayDashboard {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
+        const today = this._todayStr();
+
         const [todoResult, scheduledResult] = await Promise.all([
             this.plugin.data.searchByQuery('@task @todo',  150),
             this.plugin.data.searchByQuery('@task @today', 100),
@@ -144,8 +146,6 @@ class TodayDashboard {
         const datedGuids     = new Set((dueResult.lines       || []).filter(l => l.type === 'task').map(l => l.guid));
         const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
         const allTodos       =         (todoResult.lines      || []).filter(l => l.type === 'task');
-
-        const today = this._todayStr();
 
         // Pinned tasks: meta prop set by this plugin (cross-device via Thymer sync)
         const todaySet    = new Set(allTodos.filter(l => l.props?.['db-pinned'] === today).map(l => l.guid));
