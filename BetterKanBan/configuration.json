@@ -1,8 +1,8 @@
 {
     "ver": 1,
-    "name": "Imagine",
-    "icon": "sparkles",
-    "description": "Create pre-configured Imagine boards from the command palette",
+    "name": "Better KanBan",
+    "icon": "ti-layout-kanban",
+    "description": "Create pre-configured KanBan-boards from the command palette",
     "custom": {
         "collectionConf": {
             "ver": 1,
