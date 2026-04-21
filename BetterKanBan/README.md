@@ -6,11 +6,11 @@ A kanban board plugin with built-in dependency tracking. Create fully configured
 
 ## Features
 
-- Create kanban boards via command palette ("New Imagine Board")
+- Create kanban boards via command palette ("New Kanban Board")
 - Choose between **3-step** (To Do → Doing → Done) or **4-step** (To Do → In Progress → In Review → Done) workflow on creation
 - Keyboard navigation in menu (arrows / enter / space)
 - Visual dependency tracking on board cards — see what's blocking a task and what a task is blocking
-- "Depends on" property filtered to the board's own tasks
+- "Depends on" property default filter on current collection. Disable for broader use.
 
 ## Installation
 
