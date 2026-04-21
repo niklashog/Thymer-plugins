@@ -65,8 +65,10 @@ class TodayDashboard {
             '.db-block{display:flex;border-radius:6px;cursor:pointer;transition:background .1s;min-height:38px}' +
             '.db-block:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-block--selected{background:var(--db-sel,rgba(128,128,128,.1))}' +
-            '.db-block-time{font-size:11px;opacity:.4;min-width:160px;padding:11px 8px 11px 6px;' +
-            'flex-shrink:0;font-variant-numeric:tabular-nums;line-height:1.2;align-self:flex-start}' +
+            '.db-block-time{display:flex;align-items:baseline;gap:5px;flex-shrink:0;font-size:11px;opacity:.4;' +
+            'padding:11px 8px 11px 6px;align-self:flex-start}' +
+            '.db-block-label{width:110px;flex-shrink:0}' +
+            '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
             '.db-block-body{flex:1;min-width:0;padding:2px 0}' +
             '.db-block-hint{font-size:12px;opacity:.18;padding:9px 0 9px 2px}'
         );
@@ -234,7 +236,7 @@ class TodayDashboard {
 
     _blockHTML(time, label, tasks, doneGuids = new Set()) {
         return `<div class="db-block" data-action="select-block" data-time="${time}">
-            <div class="db-block-time">${label} → ${time}</div>
+            <div class="db-block-time"><span class="db-block-label">${label}</span><span>→</span><span class="db-block-clock">${time}</span></div>
             <div class="db-block-body">
                 ${tasks.length
                     ? tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')
