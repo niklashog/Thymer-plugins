@@ -23,7 +23,7 @@ class TodayDashboard {
             '.db-task{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;transition:background .1s}' +
             '.db-task:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-task--selected{outline:1px solid rgba(128,128,128,.4);border-radius:6px}' +
-            '.db-done{flex-shrink:0;cursor:pointer}' +
+            '.db-done{flex-shrink:0;cursor:pointer;align-self:center}' +
             '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;cursor:pointer}' +
             '.db-task-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
