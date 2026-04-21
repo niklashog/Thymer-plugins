@@ -2,10 +2,9 @@ const SLOTS = Array.from({ length: 18 }, (_, i) => `${String(i + 6).padStart(2, 
 
 class TodayDashboard {
     constructor(plugin) {
-        this.plugin          = plugin;
-        this._panel          = null;
-        this._panelObserver  = null;
-        this._refreshTimer   = null;
+        this.plugin        = plugin;
+        this._panel        = null;
+        this._refreshTimer = null;
         this._renderVer      = 0;
         this._mode           = null; // null = auto, 'focus', 'plan'
         this._selected       = null; // { type: 'task'|'block', id: string }
@@ -68,22 +67,7 @@ class TodayDashboard {
         this.plugin.ui.registerCustomPanelType('today-dashboard', panel => {
             this._panel = panel;
             panel.setTitle("Today's Focus");
-
-            // Null out _panel when Thymer navigates the panel away from our type,
-            // preventing scheduleRefresh from writing into the wrong view.
-            if (this._panelObserver) this._panelObserver.disconnect();
-            const el = panel.getElement();
-            if (el) {
-                this._panelObserver = new MutationObserver(() => {
-                    if (!el.querySelector('.db-root, .db-loading')) {
-                        this._panel = null;
-                        this._panelObserver = null;
-                    }
-                });
-                this._panelObserver.observe(el, { childList: true });
-            }
-
-            this._render(panel);
+            this._render(panel, true);
         });
 
         const scheduleRefresh = () => {
@@ -92,7 +76,9 @@ class TodayDashboard {
                 this._refreshTimer = null;
                 if (!this._panel) return;
                 const el = this._panel.getElement();
-                if (el?.isConnected) this._render(this._panel);
+                if (el?.isConnected && el.querySelector('.db-root, .db-loading')) {
+                    this._render(this._panel, false);
+                }
             }, 800);
         };
 
@@ -107,10 +93,13 @@ class TodayDashboard {
         if (panel) panel.navigateToCustomType('today-dashboard');
     }
 
-    async _render(panel) {
+    async _render(panel, fromCallback = false) {
         const ver = ++this._renderVer;
         const el  = panel.getElement();
         if (!el) return;
+
+        // Background refresh: abort if the element no longer shows our content
+        if (!fromCallback && !el.querySelector('.db-root, .db-loading')) return;
 
         if (!el.querySelector('.db-root')) {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
