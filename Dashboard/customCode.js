@@ -277,7 +277,14 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.disabled = true;
-                await task.setTaskStatus(PLUGIN_TASK_STATUS_DONE);
+                console.log('[Dashboard] task object:', task);
+                console.log('[Dashboard] task methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
+                console.log('[Dashboard] PLUGIN_TASK_STATUS_DONE:', typeof PLUGIN_TASK_STATUS_DONE, PLUGIN_TASK_STATUS_DONE);
+                try {
+                    await task.setTaskStatus(PLUGIN_TASK_STATUS_DONE);
+                } catch (err) {
+                    console.error('[Dashboard] setTaskStatus failed:', err);
+                }
                 this._removeFromToday(btn.dataset.guid);
             });
         });
