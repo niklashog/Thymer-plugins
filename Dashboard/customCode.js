@@ -75,7 +75,9 @@ class TodayDashboard {
             if (this._refreshTimer) clearTimeout(this._refreshTimer);
             this._refreshTimer = setTimeout(() => {
                 this._refreshTimer = null;
-                if (this._panel) this._render(this._panel);
+                if (!this._panel) return;
+                const el = this._panel.getElement();
+                if (el?.isConnected) this._render(this._panel);
             }, 800);
         };
 
