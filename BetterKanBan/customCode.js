@@ -126,8 +126,8 @@ class Plugin extends AppPlugin {
         );
 
         this.ui.addCommandPaletteCommand({
-            label: 'New Imagine Board',
-            icon:  'sparkles',
+            label: 'New Kanban Board',
+            icon:  'ti-layout-kanban',
             onSelected: () => this._createBoard(),
         });
     }
