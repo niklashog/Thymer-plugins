@@ -33,7 +33,7 @@ class TodayDashboard {
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
             '.db-task-source--link{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0;cursor:pointer;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
-            '.db-pin,.db-unpin{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
+            '.db-pin,.db-unpin,.db-nav{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
             '.db-pin:hover,.db-unpin:hover{opacity:.7}' +
             '.db-empty{font-size:13px;opacity:.3;padding:4px 6px}' +
@@ -271,7 +271,7 @@ class TodayDashboard {
         } else if (section === 'today' || section === 'focus-pinned') {
             actionBtn = `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`;
         } else if (section === 'inbox') {
-            actionBtn = `<button class="db-pin" data-action="pin" data-guid="${task.guid}" title="Add to Today">+</button>`;
+            actionBtn = `<button class="db-nav" data-action="open" data-guid="${task.guid}" title="Open task"><i class="ti ti-arrow-up-right"></i></button>`;
         }
 
         const doneBtn = `<div class="db-done line-check-div clickable" data-action="done" data-guid="${task.guid}"></div>`;
@@ -290,6 +290,17 @@ class TodayDashboard {
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
                 ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
+                ${actionBtn}
+            </div>`;
+        }
+
+        if (section === 'inbox') {
+            return `<div class="db-task listitem-task" data-guid="${task.guid}">
+                ${doneBtn}
+                <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
+                    <span class="db-task-text">${text}</span>
+                    ${source ? `<span class="db-task-source">${source}</span>` : ''}
+                </div>
                 ${actionBtn}
             </div>`;
         }
