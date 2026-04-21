@@ -270,7 +270,7 @@ class TodayDashboard {
             actionBtn = `<button class="db-unpin" data-action="unassign" data-guid="${task.guid}" title="Remove from block">×</button>`;
         } else if (section === 'today' || section === 'focus-pinned') {
             actionBtn = `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`;
-        } else if (section === 'inbox') {
+        } else if (section === 'inbox' || section === 'overdue') {
             actionBtn = `<button class="db-nav" data-action="open" data-guid="${task.guid}" title="Open task"><i class="ti ti-arrow-up-right"></i></button>`;
         }
 
@@ -294,7 +294,7 @@ class TodayDashboard {
             </div>`;
         }
 
-        if (section === 'inbox') {
+        if (section === 'inbox' || section === 'overdue') {
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
