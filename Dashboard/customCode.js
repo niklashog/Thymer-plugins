@@ -100,17 +100,26 @@ class TodayDashboard {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
-        const [todoResult, overdueResult, dueResult, scheduledResult] = await Promise.all([
-            this.plugin.data.searchByQuery('@task @todo',    500),
-            this.plugin.data.searchByQuery('@task @overdue', 200),
-            this.plugin.data.searchByQuery('@task @due',     300),
-            this.plugin.data.searchByQuery('@task @today',   200),
+        // In focus mode skip overdue/due — not needed and saves time on large workspaces
+        const hasPinned  = this._loadTodayGuids().length > 0 || this._loadDoneGuids().length > 0;
+        const likelyFocus = this._mode !== 'plan' && hasPinned;
+
+        const [todoResult, scheduledResult] = await Promise.all([
+            this.plugin.data.searchByQuery('@task @todo',  likelyFocus ? 100 : 150),
+            this.plugin.data.searchByQuery('@task @today', 100),
         ]);
+
+        const [overdueResult, dueResult] = likelyFocus
+            ? [{ lines: [] }, { lines: [] }]
+            : await Promise.all([
+                this.plugin.data.searchByQuery('@task @overdue', 50),
+                this.plugin.data.searchByQuery('@task @due',    100),
+            ]);
 
         // @task @done may not be supported in all versions — fail gracefully
         let doneResult = { lines: [] };
         try {
-            doneResult = await this.plugin.data.searchByQuery('@task @done', 500);
+            doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
         } catch (e) {
             console.warn('[Dashboard] @task @done query failed:', e);
         }
@@ -137,10 +146,11 @@ class TodayDashboard {
         const doneSet         = new Set(cleanDoneGuids);
         const doneTasks       = allDone.filter(l => doneSet.has(l.guid));
 
-        const overdue   = allTodos.filter(l => overdueGuids.has(l.guid));
-        const today     = allTodos.filter(l => todaySet.has(l.guid) && !overdueGuids.has(l.guid));
-        const scheduled = allTodos.filter(l => scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid) && !todaySet.has(l.guid));
-        const inbox     = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid));
+        // Pinned overdue tasks move to today (user explicitly chose to handle them today)
+        const overdue   = allTodos.filter(l => overdueGuids.has(l.guid) && !todaySet.has(l.guid));
+        const today     = allTodos.filter(l => todaySet.has(l.guid));
+        const scheduled = allTodos.filter(l => scheduledGuids.has(l.guid) && !todaySet.has(l.guid) && !overdueGuids.has(l.guid));
+        const inbox     = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
 
         // Clean stale time block assignments
         const timeBlocks = this._loadTimeBlocks();
