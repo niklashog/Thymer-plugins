@@ -100,13 +100,20 @@ class TodayDashboard {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
-        const [todoResult, overdueResult, dueResult, scheduledResult, doneResult] = await Promise.all([
+        const [todoResult, overdueResult, dueResult, scheduledResult] = await Promise.all([
             this.plugin.data.searchByQuery('@task @todo',    500),
             this.plugin.data.searchByQuery('@task @overdue', 200),
             this.plugin.data.searchByQuery('@task @due',     300),
             this.plugin.data.searchByQuery('@task @today',   200),
-            this.plugin.data.searchByQuery('@task @done',    500),
         ]);
+
+        // @task @done may not be supported in all versions — fail gracefully
+        let doneResult = { lines: [] };
+        try {
+            doneResult = await this.plugin.data.searchByQuery('@task @done', 500);
+        } catch (e) {
+            console.warn('[Dashboard] @task @done query failed:', e);
+        }
 
         if (ver !== this._renderVer) return;
 
