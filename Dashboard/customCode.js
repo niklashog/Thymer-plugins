@@ -24,6 +24,8 @@ class TodayDashboard {
             '.db-task:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-task--selected{outline:1px solid rgba(128,128,128,.4);border-radius:6px}' +
             '.db-done{flex-shrink:0;cursor:pointer;align-self:center;margin-top:0!important;margin-right:0!important}' +
+            '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
+            '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
             '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;cursor:pointer}' +
             '.db-task-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
@@ -270,8 +272,18 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.style.pointerEvents = 'none';
+
+                const row = btn.closest('.db-task');
+                if (row) row.classList.add('state-done');
+
                 await task.setTaskStatus('done');
-                this._removeFromToday(btn.dataset.guid);
+
+                // Clean up storage without re-rendering — task stays visible, crossed out
+                const guid = btn.dataset.guid;
+                this._saveTodayGuids(this._loadTodayGuids().filter(g => g !== guid));
+                const blocks = this._loadTimeBlocks();
+                delete blocks[guid];
+                this._saveTimeBlocks(blocks);
             });
         });
 
