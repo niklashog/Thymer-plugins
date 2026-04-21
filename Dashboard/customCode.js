@@ -85,46 +85,61 @@ class TodayDashboard {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
-        const [todoResult, overdueResult, dueResult] = await Promise.all([
+        const [todoResult, overdueResult, dueResult, scheduledResult] = await Promise.all([
             this.plugin.data.searchByQuery('@task @todo',    500),
             this.plugin.data.searchByQuery('@task @overdue', 200),
             this.plugin.data.searchByQuery('@task @due',     300),
+            this.plugin.data.searchByQuery('@task @today',   200),
         ]);
 
         if (ver !== this._renderVer) return;
 
-        const todayGuids   = new Set(this._loadTodayGuids());
-        const overdueGuids = new Set((overdueResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
-        const datedGuids   = new Set((dueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
-        const allTodos     =         (todoResult.lines  || []).filter(l => l.type === 'task');
+        const todayGuids      = new Set(this._loadTodayGuids());
+        const overdueGuids    = new Set((overdueResult.lines    || []).filter(l => l.type === 'task').map(l => l.guid));
+        const datedGuids      = new Set((dueResult.lines        || []).filter(l => l.type === 'task').map(l => l.guid));
+        const scheduledGuids  = new Set((scheduledResult.lines  || []).filter(l => l.type === 'task').map(l => l.guid));
+        const allTodos        =         (todoResult.lines       || []).filter(l => l.type === 'task');
 
         const allTodoSet      = new Set(allTodos.map(l => l.guid));
         const cleanTodayGuids = [...todayGuids].filter(g => allTodoSet.has(g));
         if (cleanTodayGuids.length !== todayGuids.size) this._saveTodayGuids(cleanTodayGuids);
         const todaySet = new Set(cleanTodayGuids);
 
-        const overdue = allTodos.filter(l => overdueGuids.has(l.guid));
-        const today   = allTodos.filter(l => todaySet.has(l.guid) && !overdueGuids.has(l.guid));
-        const inbox   = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid));
+        const overdue    = allTodos.filter(l => overdueGuids.has(l.guid));
+        const today      = allTodos.filter(l => todaySet.has(l.guid) && !overdueGuids.has(l.guid));
+        const scheduled  = allTodos.filter(l => scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid) && !todaySet.has(l.guid));
+        const inbox      = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid));
 
-        // Auto-reset override when today is empty
-        if (today.length === 0) this._mode = null;
-        const effectiveMode = (today.length > 0 && this._mode !== 'plan') ? 'focus' : 'plan';
+        // Auto-reset override when both pinned and scheduled are empty
+        if (today.length === 0 && scheduled.length === 0) this._mode = null;
+        const effectiveMode = ((today.length > 0 || scheduled.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
 
         el.innerHTML = effectiveMode === 'focus'
-            ? this._buildFocusHTML(today)
+            ? this._buildFocusHTML(today, scheduled)
             : this._buildPlanHTML(overdue, today, inbox);
 
         this._applyTheme(el);
         this._attachListeners(el, allTodos);
     }
 
-    _buildFocusHTML(today) {
+    _buildFocusHTML(today, scheduled) {
+        const rows = [
+            ...today.map(t => this._taskRow(t, 'today')),
+            ...scheduled.map(t => this._taskRow(t, 'scheduled')),
+        ].join('');
+        const count = today.length + scheduled.length;
+
         return `<div class="db-root">
             <div class="db-mode-bar">
                 <button class="db-mode-toggle" data-action="set-mode" data-mode="plan">Plan →</button>
             </div>
-            ${this._section("Today's Focus", today, 'today')}
+            <div class="db-section db-section--today">
+                <div class="db-section-header">
+                    <span class="db-section-title">Today</span>
+                    ${count ? `<span class="db-count">${count}</span>` : ''}
+                </div>
+                ${rows || `<div class="db-empty">Nothing for today</div>`}
+            </div>
         </div>`;
     }
 
@@ -164,7 +179,13 @@ class TodayDashboard {
     _taskRow(task, section) {
         const text   = this._escape(this._getText(task));
         const source = this._escape(task.record?.getName() || '');
-        const pinned = section === 'today';
+
+        let actionBtn = '';
+        if (section === 'today') {
+            actionBtn = `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`;
+        } else if (section === 'inbox') {
+            actionBtn = `<button class="db-pin" data-action="pin" data-guid="${task.guid}" title="Add to Today">+</button>`;
+        }
 
         return `<div class="db-task" data-guid="${task.guid}">
             <button class="db-done" data-action="done" data-guid="${task.guid}" title="Mark done">
@@ -176,12 +197,7 @@ class TodayDashboard {
                 <span class="db-task-text">${text}</span>
                 ${source ? `<span class="db-task-source">${source}</span>` : ''}
             </div>
-            <button class="db-${pinned ? 'unpin' : 'pin'}"
-                data-action="${pinned ? 'unpin' : 'pin'}"
-                data-guid="${task.guid}"
-                title="${pinned ? 'Remove from Today' : 'Add to Today'}">
-                ${pinned ? '×' : '+'}
-            </button>
+            ${actionBtn}
         </div>`;
     }
 
