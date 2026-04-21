@@ -62,15 +62,17 @@ class TodayDashboard {
             '.db-mode-toggle{background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:11px;opacity:.3;padding:2px 0;transition:opacity .15s}' +
             '.db-mode-toggle:hover{opacity:.7}' +
-            '.db-block{display:flex;border-radius:6px;cursor:pointer;transition:background .1s;min-height:38px}' +
+            '.db-block{display:flex;border-radius:6px;cursor:pointer;transition:background .1s;' +
+            'min-height:52px;border-bottom:1px solid var(--db-divider,rgba(128,128,128,.07))}' +
+            '.db-block:last-child{border-bottom:none}' +
             '.db-block:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-block--selected{background:var(--db-sel,rgba(128,128,128,.1))}' +
-            '.db-block-time{display:flex;align-items:baseline;gap:5px;flex-shrink:0;font-size:11px;opacity:.4;' +
-            'padding:11px 8px 11px 6px;align-self:flex-start}' +
-            '.db-block-label{width:110px;flex-shrink:0}' +
+            '.db-block-time{display:flex;align-items:baseline;gap:6px;flex-shrink:0;font-size:11px;opacity:.4;' +
+            'padding:16px 12px 16px 6px;align-self:flex-start;min-width:210px}' +
+            '.db-block-label{width:120px;flex-shrink:0}' +
             '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
-            '.db-block-body{flex:1;min-width:0;padding:2px 0}' +
-            '.db-block-hint{font-size:12px;opacity:.18;padding:9px 0 9px 2px}'
+            '.db-block-body{flex:1;min-width:0;padding:4px 0}' +
+            '.db-block-hint{font-size:12px;opacity:.18;padding:14px 0 14px 2px}'
         );
 
         this.plugin.ui.addCommandPaletteCommand({
