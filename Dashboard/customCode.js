@@ -100,11 +100,12 @@ class TodayDashboard {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
-        const [todoResult, overdueResult, dueResult, scheduledResult] = await Promise.all([
+        const [todoResult, overdueResult, dueResult, scheduledResult, doneResult] = await Promise.all([
             this.plugin.data.searchByQuery('@task @todo',    500),
             this.plugin.data.searchByQuery('@task @overdue', 200),
             this.plugin.data.searchByQuery('@task @due',     300),
             this.plugin.data.searchByQuery('@task @today',   200),
+            this.plugin.data.searchByQuery('@task @done',    500),
         ]);
 
         if (ver !== this._renderVer) return;
@@ -113,12 +114,21 @@ class TodayDashboard {
         const overdueGuids   = new Set((overdueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
         const datedGuids     = new Set((dueResult.lines       || []).filter(l => l.type === 'task').map(l => l.guid));
         const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
+        const allDone        =         (doneResult.lines      || []).filter(l => l.type === 'task');
         const allTodos       =         (todoResult.lines      || []).filter(l => l.type === 'task');
 
         const allTodoSet      = new Set(allTodos.map(l => l.guid));
         const cleanTodayGuids = [...todayGuids].filter(g => allTodoSet.has(g));
         if (cleanTodayGuids.length !== todayGuids.size) this._saveTodayGuids(cleanTodayGuids);
         const todaySet = new Set(cleanTodayGuids);
+
+        // Done tasks that the user marked done via this plugin today
+        const allDoneSet      = new Set(allDone.map(l => l.guid));
+        const savedDoneGuids  = this._loadDoneGuids();
+        const cleanDoneGuids  = savedDoneGuids.filter(g => allDoneSet.has(g));
+        if (cleanDoneGuids.length !== savedDoneGuids.length) this._saveDoneGuids(cleanDoneGuids);
+        const doneSet         = new Set(cleanDoneGuids);
+        const doneTasks       = allDone.filter(l => doneSet.has(l.guid));
 
         const overdue   = allTodos.filter(l => overdueGuids.has(l.guid));
         const today     = allTodos.filter(l => todaySet.has(l.guid) && !overdueGuids.has(l.guid));
@@ -130,24 +140,27 @@ class TodayDashboard {
         const focusGuids = new Set([...today.map(l => l.guid), ...scheduled.map(l => l.guid)]);
         let tbDirty = false;
         for (const guid of Object.keys(timeBlocks)) {
-            if (!focusGuids.has(guid)) { delete timeBlocks[guid]; tbDirty = true; }
+            if (!focusGuids.has(guid) && !doneSet.has(guid)) { delete timeBlocks[guid]; tbDirty = true; }
         }
         if (tbDirty) this._saveTimeBlocks(timeBlocks);
 
-        if (today.length === 0 && scheduled.length === 0) this._mode = null;
-        const effectiveMode = ((today.length > 0 || scheduled.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
+        if (today.length === 0 && scheduled.length === 0 && doneTasks.length === 0) this._mode = null;
+        const effectiveMode = ((today.length > 0 || scheduled.length > 0 || doneTasks.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
+
+        const allTasks = [...allTodos, ...doneTasks];
 
         el.innerHTML = effectiveMode === 'focus'
-            ? this._buildFocusHTML(today, scheduled)
+            ? this._buildFocusHTML(today, scheduled, doneTasks)
             : this._buildPlanHTML(overdue, today, inbox);
 
         this._applyTheme(el);
-        this._attachListeners(el, allTodos);
+        this._attachListeners(el, allTasks);
         this._reapplySelection(el);
     }
 
-    _buildFocusHTML(today, scheduled) {
+    _buildFocusHTML(today, scheduled, doneTasks) {
         const pinnedGuids = new Set(today.map(t => t.guid));
+        const doneGuids   = new Set(doneTasks.map(t => t.guid));
         const allFocus = [
             ...today,
             ...scheduled.filter(t => !pinnedGuids.has(t.guid)),
@@ -162,36 +175,46 @@ class TodayDashboard {
             if (!assignedByTime[time]) assignedByTime[time] = [];
             assignedByTime[time].push(task);
         }
+        // Done tasks also appear in their assigned blocks
+        for (const task of doneTasks) {
+            const time = timeBlocks[task.guid];
+            if (!time) continue;
+            if (!assignedByTime[time]) assignedByTime[time] = [];
+            if (!assignedByTime[time].find(t => t.guid === task.guid)) assignedByTime[time].push(task);
+        }
 
         const sectionFor = guid => pinnedGuids.has(guid) ? 'focus-pinned' : 'focus-scheduled';
+
+        const unassignedDone = doneTasks.filter(t => !timeBlocks[t.guid]);
 
         return `<div class="db-root">
             <div class="db-mode-bar">
                 <button class="db-mode-toggle" data-action="set-mode" data-mode="plan">Plan →</button>
             </div>
-            ${unassigned.length ? `
+            ${(unassigned.length || unassignedDone.length) ? `
             <div class="db-section db-section--today">
                 <div class="db-section-header">
                     <span class="db-section-title">Unscheduled</span>
-                    <span class="db-count">${unassigned.length}</span>
+                    ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
                 </div>
                 ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
+                ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
             </div>` : ''}
             <div class="db-section">
                 <div class="db-section-header">
                     <span class="db-section-title">Day Plan</span>
                 </div>
-                ${SLOTS.map(time => this._blockHTML(time, assignedByTime[time] || [])).join('')}
+                ${SLOTS.map(time => this._blockHTML(time, assignedByTime[time] || [], doneGuids)).join('')}
             </div>
         </div>`;
     }
 
-    _blockHTML(time, tasks) {
+    _blockHTML(time, tasks, doneGuids = new Set()) {
         return `<div class="db-block" data-action="select-block" data-time="${time}">
             <div class="db-block-time">${time}</div>
             <div class="db-block-body">
                 ${tasks.length
-                    ? tasks.map(t => this._taskRow(t, 'block')).join('')
+                    ? tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')
                     : `<div class="db-block-hint">tap to select</div>`
                 }
             </div>
@@ -234,7 +257,9 @@ class TodayDashboard {
         const focus  = section === 'focus-pinned' || section === 'focus-scheduled' || section === 'block';
 
         let actionBtn = '';
-        if (section === 'block') {
+        if (section === 'done') {
+            actionBtn = `<button class="db-unpin" data-action="undone" data-guid="${task.guid}" title="Mark as not done">↩</button>`;
+        } else if (section === 'block') {
             actionBtn = `<button class="db-unpin" data-action="unassign" data-guid="${task.guid}" title="Remove from block">×</button>`;
         } else if (section === 'today' || section === 'focus-pinned') {
             actionBtn = `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`;
@@ -243,6 +268,15 @@ class TodayDashboard {
         }
 
         const doneBtn = `<div class="db-done line-check-div clickable" data-action="done" data-guid="${task.guid}"></div>`;
+
+        if (section === 'done') {
+            return `<div class="db-task listitem-task state-done" data-guid="${task.guid}">
+                <div class="db-done line-check-div" style="pointer-events:none"></div>
+                <span class="db-task-text--sel">${text}</span>
+                ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
+                ${actionBtn}
+            </div>`;
+        }
 
         if (focus) {
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
@@ -275,15 +309,12 @@ class TodayDashboard {
 
                 const row = btn.closest('.db-task');
                 if (row) row.classList.add('state-done');
+                btn.style.pointerEvents = 'none';
 
                 await task.setTaskStatus('done');
 
-                // Clean up storage without re-rendering — task stays visible, crossed out
                 const guid = btn.dataset.guid;
-                this._saveTodayGuids(this._loadTodayGuids().filter(g => g !== guid));
-                const blocks = this._loadTimeBlocks();
-                delete blocks[guid];
-                this._saveTimeBlocks(blocks);
+                this._addToDone(guid);
             });
         });
 
@@ -297,6 +328,16 @@ class TodayDashboard {
 
         el.querySelectorAll('[data-action="unassign"]').forEach(btn => {
             btn.addEventListener('click', e => { e.stopPropagation(); this._unassignTask(btn.dataset.guid); });
+        });
+
+        el.querySelectorAll('[data-action="undone"]').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const task = byGuid.get(btn.dataset.guid);
+                if (!task) return;
+                await task.setTaskStatus('todo');
+                this._removeFromDone(btn.dataset.guid);
+            });
         });
 
         el.querySelectorAll('[data-action="open"]').forEach(node => {
@@ -447,6 +488,25 @@ class TodayDashboard {
         const blocks = this._loadTimeBlocks();
         delete blocks[guid];
         this._saveTimeBlocks(blocks);
+        if (this._panel) this._render(this._panel);
+    }
+
+    _loadDoneGuids() {
+        try { return JSON.parse(localStorage.getItem('db-done-today') || '[]'); }
+        catch { return []; }
+    }
+
+    _saveDoneGuids(guids) {
+        localStorage.setItem('db-done-today', JSON.stringify(guids));
+    }
+
+    _addToDone(guid) {
+        const guids = this._loadDoneGuids();
+        if (!guids.includes(guid)) this._saveDoneGuids([...guids, guid]);
+    }
+
+    _removeFromDone(guid) {
+        this._saveDoneGuids(this._loadDoneGuids().filter(g => g !== guid));
         if (this._panel) this._render(this._panel);
     }
 }
