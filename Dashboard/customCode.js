@@ -288,10 +288,9 @@ class TodayDashboard {
 
         if (section === 'done') {
             return `<div class="db-task listitem-task state-done" data-guid="${task.guid}">
-                <div class="db-done line-check-div" style="pointer-events:none"></div>
+                <div class="db-done line-check-div clickable" data-action="undone" data-guid="${task.guid}"></div>
                 <span class="db-task-text--sel">${text}</span>
                 ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
-                ${actionBtn}
             </div>`;
         }
 
@@ -363,7 +362,20 @@ class TodayDashboard {
                 e.stopPropagation();
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
-                await task.setTaskStatus('todo');
+                btn.style.pointerEvents = 'none';
+                const row = btn.closest('.db-task');
+
+                for (const status of ['todo', 'active', 'open', null, '']) {
+                    try {
+                        await task.setTaskStatus(status);
+                        console.log('[Dashboard] undone worked with status:', JSON.stringify(status));
+                        break;
+                    } catch (e) {
+                        console.warn('[Dashboard] setTaskStatus failed for:', JSON.stringify(status), e);
+                    }
+                }
+
+                if (row) row.classList.remove('state-done');
                 this._removeFromDone(btn.dataset.guid);
             });
         });
