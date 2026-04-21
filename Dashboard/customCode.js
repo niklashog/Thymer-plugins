@@ -16,6 +16,10 @@ class TodayDashboard {
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
+    _todayD() {
+        return this._todayStr().replace(/-/g, ''); // "20260422"
+    }
+
     load() {
         this.plugin.ui.injectCSS(
             '.db-root{padding:24px 28px;max-width:700px;margin:0 auto}' +
@@ -124,7 +128,6 @@ class TodayDashboard {
                 this.plugin.data.searchByQuery('@task @due',    100),
             ]);
 
-        // Populate session cache from Thymer's done list — cross-device on fresh load
         try {
             const doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
             for (const l of (doneResult.lines || [])) {
@@ -143,47 +146,41 @@ class TodayDashboard {
         const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
         const allTodos       =         (todoResult.lines      || []).filter(l => l.type === 'task');
 
-        // Pinned tasks: read from Thymer meta props (synced cross-device)
-        const todaySet  = new Set(allTodos.filter(l => l.props?.['db-pinned'] === today).map(l => l.guid));
-        const doneTasks = [...this._doneTasksMap.values()];
+        // Today's tasks = all tasks Thymer says are @today (includes ones we pinned via setSegments)
+        const todayTasks = allTodos.filter(l => scheduledGuids.has(l.guid));
+        const doneTasks  = [...this._doneTasksMap.values()];
 
-        // Time blocks: read from Thymer meta props
+        // Time blocks from meta props
         const timeBlocks = {};
         for (const t of [...allTodos, ...doneTasks]) {
             const tb = t.props?.['db-timeblock'];
             if (tb) timeBlocks[t.guid] = tb;
         }
 
-        const overdue     = allTodos.filter(l => overdueGuids.has(l.guid) && !todaySet.has(l.guid));
-        const todayPinned = allTodos.filter(l => todaySet.has(l.guid));
-        const scheduled   = allTodos.filter(l => scheduledGuids.has(l.guid) && !todaySet.has(l.guid) && !overdueGuids.has(l.guid));
-        const inbox       = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
+        const todaySet = new Set(todayTasks.map(l => l.guid));
+        const overdue  = allTodos.filter(l => overdueGuids.has(l.guid) && !todaySet.has(l.guid));
+        const inbox    = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !overdueGuids.has(l.guid));
 
-        if (todayPinned.length === 0 && scheduled.length === 0 && doneTasks.length === 0) this._mode = null;
-        const effectiveMode = ((todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
+        if (todayTasks.length === 0 && doneTasks.length === 0) this._mode = null;
+        const effectiveMode = ((todayTasks.length > 0 || doneTasks.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
 
         const allTasks = [...allTodos, ...doneTasks];
 
         el.innerHTML = effectiveMode === 'focus'
-            ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks)
-            : this._buildPlanHTML(overdue, todayPinned, inbox);
+            ? this._buildFocusHTML(todayTasks, doneTasks, timeBlocks)
+            : this._buildPlanHTML(overdue, todayTasks, inbox);
 
         this._applyTheme(el);
         this._attachListeners(el, allTasks);
         this._reapplySelection(el);
     }
 
-    _buildFocusHTML(today, scheduled, doneTasks, timeBlocks) {
-        const pinnedGuids = new Set(today.map(t => t.guid));
-        const doneGuids   = new Set(doneTasks.map(t => t.guid));
-        const allFocus = [
-            ...today,
-            ...scheduled.filter(t => !pinnedGuids.has(t.guid)),
-        ];
-
-        const unassigned    = allFocus.filter(t => !timeBlocks[t.guid]);
+    _buildFocusHTML(todayTasks, doneTasks, timeBlocks) {
+        const doneGuids      = new Set(doneTasks.map(t => t.guid));
+        const unassigned     = todayTasks.filter(t => !timeBlocks[t.guid]);
         const assignedByTime = {};
-        for (const task of allFocus) {
+
+        for (const task of todayTasks) {
             const time = timeBlocks[task.guid];
             if (!time) continue;
             if (!assignedByTime[time]) assignedByTime[time] = [];
@@ -196,7 +193,6 @@ class TodayDashboard {
             if (!assignedByTime[time].find(t => t.guid === task.guid)) assignedByTime[time].push(task);
         }
 
-        const sectionFor    = guid => pinnedGuids.has(guid) ? 'focus-pinned' : 'focus-scheduled';
         const unassignedDone = doneTasks.filter(t => !timeBlocks[t.guid]);
 
         return `<div class="db-root">
@@ -209,7 +205,7 @@ class TodayDashboard {
                     <span class="db-section-title">Unscheduled</span>
                     ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
                 </div>
-                ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
+                ${unassigned.map(t => this._taskRow(t, 'focus')).join('')}
                 ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
             </div>` : ''}
             <div class="db-section">
@@ -247,7 +243,7 @@ class TodayDashboard {
     _section(title, tasks, type) {
         const empty = {
             overdue: 'No overdue tasks',
-            today:   'Nothing pinned — add tasks from the inbox',
+            today:   'Nothing pinned — tap a task in the inbox to add it',
             inbox:   'No undated tasks',
         }[type];
 
@@ -266,19 +262,6 @@ class TodayDashboard {
     _taskRow(task, section) {
         const text   = this._escape(this._getText(task));
         const source = this._escape(task.record?.getName() || '');
-        const focus  = section === 'focus-pinned' || section === 'focus-scheduled' || section === 'block';
-
-        let actionBtn = '';
-        if (section === 'done') {
-            actionBtn = '';
-        } else if (section === 'block') {
-            actionBtn = `<button class="db-unpin" data-action="unassign" data-guid="${task.guid}" title="Remove from block">×</button>`;
-        } else if (section === 'today' || section === 'focus-pinned') {
-            actionBtn = `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`;
-        } else if (section === 'inbox' || section === 'overdue') {
-            actionBtn = `<button class="db-nav" data-action="open" data-guid="${task.guid}" title="Open task"><i class="ti ti-arrow-up-right"></i></button>`;
-        }
-
         const doneBtn = `<div class="db-done line-check-div clickable" data-action="done" data-guid="${task.guid}"></div>`;
 
         if (section === 'done') {
@@ -289,12 +272,31 @@ class TodayDashboard {
             </div>`;
         }
 
-        if (focus) {
+        if (section === 'focus') {
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
                 ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
-                ${actionBtn}
+            </div>`;
+        }
+
+        if (section === 'block') {
+            return `<div class="db-task listitem-task" data-guid="${task.guid}">
+                ${doneBtn}
+                <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
+                ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
+                <button class="db-unpin" data-action="unassign" data-guid="${task.guid}" title="Remove from block">×</button>
+            </div>`;
+        }
+
+        if (section === 'today') {
+            return `<div class="db-task listitem-task" data-guid="${task.guid}">
+                ${doneBtn}
+                <div class="db-task-body">
+                    <span class="db-task-text">${text}</span>
+                    ${source ? `<span class="db-task-source">${source}</span>` : ''}
+                </div>
+                <button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>
             </div>`;
         }
 
@@ -305,7 +307,7 @@ class TodayDashboard {
                     <span class="db-task-text">${text}</span>
                     ${source ? `<span class="db-task-source">${source}</span>` : ''}
                 </div>
-                ${actionBtn}
+                <button class="db-nav" data-action="open" data-guid="${task.guid}" title="Open task"><i class="ti ti-arrow-up-right"></i></button>
             </div>`;
         }
 
@@ -315,7 +317,6 @@ class TodayDashboard {
                 <span class="db-task-text">${text}</span>
                 ${source ? `<span class="db-task-source">${source}</span>` : ''}
             </div>
-            ${actionBtn}
         </div>`;
     }
 
@@ -368,8 +369,17 @@ class TodayDashboard {
                 e.stopPropagation();
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
-                await task.setMetaProperty('db-pinned', today);
-                if (this._panel) this._render(this._panel);
+                // Add today as datetime segment, replacing any existing date
+                const newSegments = [
+                    ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                    { type: 'datetime', text: { d: this._todayD() } },
+                ];
+                try {
+                    await task.setSegments(newSegments);
+                    if (this._panel) this._render(this._panel);
+                } catch (err) {
+                    console.error('[Dashboard] pin (setSegments) failed:', err);
+                }
             });
         });
 
@@ -378,8 +388,14 @@ class TodayDashboard {
                 e.stopPropagation();
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
-                await task.setMetaProperty('db-pinned', null);
-                if (this._panel) this._render(this._panel);
+                // Remove datetime segment → task goes back to inbox
+                const newSegments = (task.segments || []).filter(s => s.type !== 'datetime');
+                try {
+                    await task.setSegments(newSegments);
+                    if (this._panel) this._render(this._panel);
+                } catch (err) {
+                    console.error('[Dashboard] unpin (setSegments) failed:', err);
+                }
             });
         });
 
