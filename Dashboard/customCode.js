@@ -1,9 +1,10 @@
 class TodayDashboard {
     constructor(plugin) {
-        this.plugin      = plugin;
-        this._panel      = null;
+        this.plugin        = plugin;
+        this._panel        = null;
         this._refreshTimer = null;
-        this._renderVer  = 0;
+        this._renderVer    = 0;
+        this._mode         = null; // null = auto, 'focus' = forced focus, 'plan' = forced plan
     }
 
     load() {
@@ -30,7 +31,11 @@ class TodayDashboard {
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
             '.db-pin:hover,.db-unpin:hover{opacity:.7}' +
             '.db-empty{font-size:13px;opacity:.3;padding:4px 6px}' +
-            '.db-loading{padding:28px;opacity:.35;font-size:14px}'
+            '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
+            '.db-mode-bar{display:flex;justify-content:flex-end;margin-bottom:20px}' +
+            '.db-mode-toggle{background:none;border:none;cursor:pointer;color:inherit;' +
+            'font-size:11px;opacity:.3;padding:2px 0;transition:opacity .15s}' +
+            '.db-mode-toggle:hover{opacity:.7}'
         );
 
         this.plugin.ui.addCommandPaletteCommand({
@@ -86,15 +91,14 @@ class TodayDashboard {
             this.plugin.data.searchByQuery('@task @due',     300),
         ]);
 
-        if (ver !== this._renderVer) return; // stale — a newer render is in flight
+        if (ver !== this._renderVer) return;
 
         const todayGuids   = new Set(this._loadTodayGuids());
         const overdueGuids = new Set((overdueResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
         const datedGuids   = new Set((dueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
         const allTodos     =         (todoResult.lines  || []).filter(l => l.type === 'task');
 
-        // Remove stale today-guids (tasks that are done or deleted)
-        const allTodoSet     = new Set(allTodos.map(l => l.guid));
+        const allTodoSet      = new Set(allTodos.map(l => l.guid));
         const cleanTodayGuids = [...todayGuids].filter(g => allTodoSet.has(g));
         if (cleanTodayGuids.length !== todayGuids.size) this._saveTodayGuids(cleanTodayGuids);
         const todaySet = new Set(cleanTodayGuids);
@@ -103,16 +107,38 @@ class TodayDashboard {
         const today   = allTodos.filter(l => todaySet.has(l.guid) && !overdueGuids.has(l.guid));
         const inbox   = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid));
 
-        el.innerHTML = this._buildHTML(overdue, today, inbox);
+        // Auto-reset override when today is empty
+        if (today.length === 0) this._mode = null;
+        const effectiveMode = (today.length > 0 && this._mode !== 'plan') ? 'focus' : 'plan';
+
+        el.innerHTML = effectiveMode === 'focus'
+            ? this._buildFocusHTML(today)
+            : this._buildPlanHTML(overdue, today, inbox);
+
         this._applyTheme(el);
         this._attachListeners(el, allTodos);
     }
 
-    _buildHTML(overdue, today, inbox) {
+    _buildFocusHTML(today) {
         return `<div class="db-root">
-            ${this._section('Overdue',        overdue, 'overdue')}
-            ${this._section("Today's Focus",  today,   'today')}
-            ${this._section('Inbox',          inbox,   'inbox')}
+            <div class="db-mode-bar">
+                <button class="db-mode-toggle" data-action="set-mode" data-mode="plan">Plan →</button>
+            </div>
+            ${this._section("Today's Focus", today, 'today')}
+        </div>`;
+    }
+
+    _buildPlanHTML(overdue, today, inbox) {
+        const modeBar = today.length
+            ? `<div class="db-mode-bar">
+                <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+               </div>`
+            : '';
+        return `<div class="db-root">
+            ${modeBar}
+            ${this._section('Overdue',       overdue, 'overdue')}
+            ${this._section("Today's Focus", today,   'today')}
+            ${this._section('Inbox',         inbox,   'inbox')}
         </div>`;
     }
 
@@ -194,16 +220,24 @@ class TodayDashboard {
                 });
             });
         });
+
+        el.querySelectorAll('[data-action="set-mode"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this._mode = btn.dataset.mode;
+                if (this._panel) this._render(this._panel);
+            });
+        });
     }
 
     _applyTheme(el) {
-        let node = document.querySelector('.panel') || document.body;
+        const startNode = document.querySelector('.panel') || document.body;
+        let node = startNode;
         while (node) {
             const c = getComputedStyle(node).backgroundColor;
             if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') break;
             node = node.parentElement;
         }
-        const fg  = getComputedStyle(node || document.body).color;
+        const fg  = getComputedStyle(node || startNode).color;
         const rgb = (fg.match(/\d+/g) || ['150', '150', '150']).slice(0, 3).join(',');
         const root = el.querySelector('.db-root');
         if (root) {
