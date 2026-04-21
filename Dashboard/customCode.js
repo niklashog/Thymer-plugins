@@ -23,10 +23,7 @@ class TodayDashboard {
             '.db-task{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;transition:background .1s}' +
             '.db-task:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-task--selected{outline:1px solid rgba(128,128,128,.4);border-radius:6px}' +
-            '.db-done{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
-            'padding:2px;display:flex;opacity:.35;transition:opacity .15s;border-radius:50%}' +
-            '.db-done:hover{opacity:1}' +
-            '.db-done:disabled{opacity:.15;cursor:default}' +
+            '.db-done{flex-shrink:0;cursor:pointer}' +
             '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;cursor:pointer}' +
             '.db-task-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
@@ -68,7 +65,6 @@ class TodayDashboard {
         this.plugin.ui.registerCustomPanelType('today-dashboard', panel => {
             this._panel = panel;
             panel.setTitle("Today's Focus");
-            console.log('[Dashboard] plugin.ui methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.ui)));
             this._render(panel);
         });
 
@@ -244,11 +240,7 @@ class TodayDashboard {
             actionBtn = `<button class="db-pin" data-action="pin" data-guid="${task.guid}" title="Add to Today">+</button>`;
         }
 
-        const doneBtn = `<button class="db-done" data-action="done" data-guid="${task.guid}" title="Mark done">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                <circle cx="7.5" cy="7.5" r="6.25" stroke="currentColor" stroke-width="1.25"/>
-            </svg>
-        </button>`;
+        const doneBtn = `<div class="db-done line-check-div clickable" data-action="done" data-guid="${task.guid}"></div>`;
 
         if (focus) {
             return `<div class="db-task" data-guid="${task.guid}">
@@ -277,8 +269,7 @@ class TodayDashboard {
                 e.stopPropagation();
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
-                btn.disabled = true;
-                console.log('[Dashboard] lineitem methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
+                btn.style.pointerEvents = 'none';
                 await task.setTaskStatus('done');
                 this._removeFromToday(btn.dataset.guid);
             });
