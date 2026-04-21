@@ -12,3 +12,4 @@ A collection of plugins for [Thymer](https://thymer.com).
 |---|---|---|
 | [BetterKanBan](./BetterKanBan) | Global | Kanban boards with dependency tracking |
 | [Coinflip](./Coinflip) | Global | Flip a coin from the status bar |
+| [Dashboard](./Dashboard) | Global | ⚠️ WIP — Workspace-wide task dashboard |
