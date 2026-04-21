@@ -1,14 +1,20 @@
-Global Plugin
+# Coinflip
 
-1. Download or open files provided from github
-2. In Thymer, press 'ctrl + p' and search for Plugins.
-3. Paste content of custom_code.js and configuration.json into the corresponding tabs.
-4. Press Preview. Then Save.
-5. Click the magic coin in the status bar to flip the coin.
+**Type:** Global Plugin
 
-Two commands are also available through the command palette (ctrl + p)
-Coin Flip: Toss Coin
-Coin Flip: Reset Counter
+Heads or tails? Flip a coin from your status bar.
 
+## Features
 
-[Read up](https://en.wikipedia.org/wiki/Flipism) on flipism. The true way to make your most important choices in life.
+- Coin flip button in the status bar
+- Command palette commands: **Coin Flip: Toss Coin** and **Coin Flip: Reset Counter**
+
+## Installation
+
+1. In Thymer, press `Ctrl+P` and search for **Plugins**
+2. Create a new **Global Plugin**
+3. Paste the contents of `custom_code.js` into the Code tab
+4. Paste the contents of `configuration.json` into the Configuration tab
+5. Press **Preview**, then **Save**
+
+> [Read up](https://en.wikipedia.org/wiki/Flipism) on flipism — the true way to make your most important choices in life.
