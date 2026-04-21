@@ -68,6 +68,7 @@ class TodayDashboard {
         this.plugin.ui.registerCustomPanelType('today-dashboard', panel => {
             this._panel = panel;
             panel.setTitle("Today's Focus");
+            console.log('[Dashboard] plugin.ui methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.ui)));
             this._render(panel);
         });
 
@@ -277,6 +278,7 @@ class TodayDashboard {
                 const task = byGuid.get(btn.dataset.guid);
                 if (!task) return;
                 btn.disabled = true;
+                console.log('[Dashboard] lineitem methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(task)));
                 await task.setTaskStatus('done');
                 this._removeFromToday(btn.dataset.guid);
             });
