@@ -17,6 +17,7 @@ class TodayDashboard {
         this._refreshTimer = null;
         this._renderVer    = 0;
         this._mode         = null;
+        this._prevMode     = null;
         this._selected     = null;
         this._doneTasksMap = new Map();
         this._viewDate     = null;
@@ -380,7 +381,7 @@ class TodayDashboard {
         return `<div class="db-header">
                 ${this._menuHTML()}
                 <span class="db-header-crumb">Ignore list</span>
-                <button class="db-mode-toggle" data-action="set-mode" data-mode="plan">← Plan</button>
+                <button class="db-mode-toggle" data-action="set-mode" data-mode="${this._prevMode || 'plan'}">← ${this._prevMode === 'focus' ? 'Focus' : 'Plan'}</button>
             </div>
             <div class="db-root">
                 <div class="db-section">
@@ -674,7 +675,9 @@ class TodayDashboard {
 
         el.querySelectorAll('[data-action="set-mode"]').forEach(btn => {
             btn.addEventListener('click', () => {
-                this._mode = btn.dataset.mode;
+                const next = btn.dataset.mode;
+                if (next === 'ignore-list') this._prevMode = this._mode;
+                this._mode = next;
                 if (this._panel) this._render(this._panel);
             });
         });
