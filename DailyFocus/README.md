@@ -33,10 +33,20 @@ Used to decide what goes into your day.
 
 Tap a task body in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Switch back with the **← Focus** button.
 
+### Ignore list
+
+Accessible via the ☰ menu in the top left corner of any view. Ignore tasks to hide them from Plan and Focus without deleting them. Ignored tasks are listed separately and can be restored at any time with a single click.
+
+## Menu
+
+A hamburger menu (☰) sits in the top left corner of every view. Currently contains:
+
+- **Ignore list** — hide tasks from Plan and Focus
+
 ## Task interactions
 
 - **Circle button** — mark a task done (or undo it from the done state). Done tasks appear with strikethrough and reduced opacity.
-- **Source name / arrow icon** — the source document name and `↗` icon are a single clickable area that navigates to the task's origin in Thymer.
+- **Source name / arrow icon** — the source document name and `↗` icon are a single clickable area that navigates directly to the task itself in its source document, scrolling to and highlighting it.
 - **× button** — unpin from Today's Focus or remove from a time block.
 - **Task text** (in Focus mode) — tap to select a task, then tap a time block to assign it; tap again to deselect.
 
@@ -45,7 +55,9 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 ## Changelog
 
 ### 2026-04-23
-- Added **Manage** mode — accessible via the `Manage →` button in the Plan view. Lets you ignore tasks so they no longer appear in Plan or Focus. Ignored tasks can be restored at any time from the same view.
+- Added **☰ menu** — sits in the top left corner of every view, starting point for plugin settings and tools
+- Added **Ignore list** — accessible via the ☰ menu. Hide tasks from Plan and Focus without deleting them. Restore at any time from the same view.
+- **Source navigation** now scrolls to and highlights the specific task in its source document, not just the page
 
 ## Installation
 
