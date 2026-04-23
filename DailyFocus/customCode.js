@@ -368,6 +368,7 @@ class TodayDashboard {
         return `<div class="db-header">
                 ${this._menuHTML()}
                 <span class="db-header-crumb">Plan</span>
+                <span class="db-header-sep">/</span>
                 <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
             </div>
             <div class="db-root">
@@ -381,6 +382,7 @@ class TodayDashboard {
         return `<div class="db-header">
                 ${this._menuHTML()}
                 <span class="db-header-crumb">Ignore list</span>
+                <span class="db-header-sep">/</span>
                 <button class="db-mode-toggle" data-action="set-mode" data-mode="${this._prevMode || 'plan'}">← ${this._prevMode === 'focus' ? 'Focus' : 'Plan'}</button>
             </div>
             <div class="db-root">
