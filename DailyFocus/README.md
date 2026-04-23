@@ -6,9 +6,9 @@ A workspace-wide task dashboard that aggregates tasks from across your entire Th
 
 ## Screenshots
 
-| Focus | Plan | History |
+| Plan | Focus | History |
 |---|---|---|
-| ![Focus mode](focus.jpg) | ![Plan mode](plan.jpg) | ![Day navigation](withhistory.jpg) |
+| ![Plan mode](plan.jpg) | ![Focus mode](focus.jpg) | ![Day navigation](withhistory.jpg) |
 
 ## Modes
 
