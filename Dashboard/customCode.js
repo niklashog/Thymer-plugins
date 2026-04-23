@@ -77,13 +77,14 @@ class TodayDashboard {
             '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
             'text-overflow:ellipsis;cursor:pointer}' +
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
-            '.db-task-source--link{font-size:11px;color:var(--ed-link-color);white-space:nowrap;flex-shrink:0;cursor:pointer;' +
+            '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;gap:2px;padding-right:4px}' +
+            '.db-task-source--link{font-size:11px;color:var(--ed-link-color);white-space:nowrap;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
-            '.db-task-source--link:hover{color:var(--ed-link-hover-color)}' +
+            '.db-task-source-wrap:hover .db-task-source--link{color:var(--ed-link-hover-color)}' +
             '.db-pin,.db-unpin,.db-nav{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
-            '.db-pin:hover,.db-unpin:hover{opacity:.7}' +
-            '.db-src-icon{display:none}' +
+            '.db-pin:hover,.db-unpin:hover,.db-nav:hover{opacity:.7}' +
+            '.db-src-icon{display:inline-flex;align-items:center;justify-content:center}' +
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
             '.db-header{display:flex;align-items:center;gap:8px;padding:24px 32px 28px;width:100%;box-sizing:border-box}' +
@@ -96,12 +97,13 @@ class TodayDashboard {
             'min-height:52px;margin-bottom:4px}' +
             '.db-block:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-block--selected{background:var(--db-sel,rgba(128,128,128,.1))}' +
-            '.db-block-time{display:flex;align-items:baseline;gap:6px;flex-shrink:0;font-size:13px;opacity:.4;' +
-            'padding:8px 12px 12px 6px;align-self:flex-start;min-width:210px}' +
+            '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:210px;padding:3px 0 4px}' +
+            '.db-block-time-inner{display:flex;align-items:center;gap:6px;font-size:13px;opacity:.4;' +
+            'padding:5px 6px;min-height:30px}' +
             '.db-block-label{width:140px;flex-shrink:0}' +
             '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
-            '.db-block-body{flex:1;min-width:0;padding:3px 0 4px}' +
-            '.db-block-hint{font-size:12px;opacity:.18;padding:7px 0 14px 2px}' +
+            '.db-block-body{flex:1;min-width:0;padding:1px 0 4px}' +
+            '.db-block-hint{font-size:12px;opacity:.18;padding:11px 0 14px 2px}' +
             '.db-day-nav{display:flex;align-items:center;gap:8px}' +
             '.db-day-nav-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);font-size:16px;' +
             'padding:2px 6px;transition:color .15s;border-radius:4px}' +
@@ -112,11 +114,12 @@ class TodayDashboard {
             '.db-root{padding:12px 1% 12px 1%;max-width:100%}' +
             '.db-header{padding:10px 1% 16px}' +
             '.db-block{flex-direction:column;min-height:0;margin-bottom:8px}' +
-            '.db-block-time{padding:10px 6px 4px 6px;min-width:0;width:100%}' +
+            '.db-block-time{padding:4px 6px 0;min-width:0;width:100%}' +
+            '.db-block-time-inner{padding:4px 0;min-height:0}' +
             '.db-block-body{padding:0 6px 10px 6px;width:100%}' +
             '.db-block-hint{padding:4px 0 8px 2px}' +
             '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
-            '.db-task-source,.db-task-source--link{display:none}' +
+            '.db-task-source,.db-task-source--link,.db-task-source-wrap{display:none}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center;opacity:.3}' +
             '.db-src-icon:hover{opacity:.7}' +
             '.db-unpin{display:none}' +
@@ -232,8 +235,8 @@ class TodayDashboard {
         const scheduled   = allTodos.filter(l => scheduledGuids.has(l.guid) && !todaySet.has(l.guid) && !overdueGuids.has(l.guid));
         const inbox       = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
 
-        if (todayPinned.length === 0 && scheduled.length === 0 && doneTasks.length === 0) this._mode = null;
-        const effectiveMode = ((todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0) && this._mode !== 'plan') ? 'focus' : 'plan';
+        const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
+        const effectiveMode = (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan' : 'focus';
 
         const allTasks = [...allTodos, ...doneTasks];
 
@@ -301,7 +304,7 @@ class TodayDashboard {
                     ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
                 </div>
                 <div class="db-block">
-                    <div class="db-block-time"><span class="db-block-label">When time is right</span></div>
+                    <div class="db-block-time"><div class="db-block-time-inner"><span class="db-block-label">When time is right</span></div></div>
                     <div class="db-block-body">
                         ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
                         ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
@@ -319,7 +322,7 @@ class TodayDashboard {
 
     _blockHTML(time, label, tasks, doneGuids = new Set()) {
         return `<div class="db-block" data-action="select-block" data-time="${time}">
-            <div class="db-block-time"><span class="db-block-label">${label}</span><span>→</span><span class="db-block-clock">${time}</span></div>
+            <div class="db-block-time"><div class="db-block-time-inner"><span class="db-block-label">${label}</span><span>→</span><span class="db-block-clock">${time}</span></div></div>
             <div class="db-block-body">
                 ${tasks.length
                     ? tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')
@@ -371,9 +374,8 @@ class TodayDashboard {
             return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}" data-guid="${task.guid}">
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
-                    ${source ? `<span class="db-task-source">${source}</span>` : ''}
                 </div>
-                ${source ? `<button class="db-nav" data-action="open" data-guid="${task.guid}" title="Open task"><i class="ti ti-arrow-up-right"></i></button>` : ''}
+                ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
             </div>`;
         }
 
@@ -383,8 +385,7 @@ class TodayDashboard {
             return `<div class="db-task listitem-task state-done" data-guid="${task.guid}">
                 <div class="db-done line-check-div clickable" data-action="undone" data-guid="${task.guid}"></div>
                 <span class="db-task-text--sel">${text}</span>
-                ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
-                ${source ? `<button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" title="Open source"><i class="ti ti-arrow-up-right"></i></button>` : ''}
+                ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
             </div>`;
         }
 
@@ -397,8 +398,7 @@ class TodayDashboard {
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
-                ${source ? `<span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span>` : ''}
-                ${source ? `<button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" title="Open source"><i class="ti ti-arrow-up-right"></i></button>` : ''}
+                ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
                 ${actionBtn}
             </div>`;
         }
@@ -408,8 +408,8 @@ class TodayDashboard {
                 ${doneBtn}
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
-                    ${source ? `<span class="db-task-source">${source}</span>` : ''}
                 </div>
+                ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
                 <button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>
             </div>`;
         }
@@ -419,9 +419,8 @@ class TodayDashboard {
                 ${doneBtn}
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
-                    ${source ? `<span class="db-task-source">${source}</span>` : ''}
                 </div>
-                <button class="db-nav" data-action="open" data-guid="${task.guid}" title="Open task"><i class="ti ti-arrow-up-right"></i></button>
+                ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
             </div>`;
         }
 
