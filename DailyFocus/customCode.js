@@ -616,6 +616,8 @@ class TodayDashboard {
                     type: 'edit_panel',
                     rootId: task.record.guid,
                     subId: null,
+                    itemGuid: task.guid,
+                    highlight: true,
                     workspaceGuid: this.plugin.getWorkspaceGuid(),
                 });
             });
