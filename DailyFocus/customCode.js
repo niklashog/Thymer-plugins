@@ -85,6 +85,9 @@ class TodayDashboard {
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
             '.db-pin:hover,.db-unpin:hover,.db-nav:hover,.db-ignore:hover,.db-unignore:hover{opacity:.7}' +
             '.db-task--ignored{opacity:.35}' +
+            '.db-icon-hover{display:none}' +
+            '.db-ignore:hover .db-icon-default,.db-unignore:hover .db-icon-default{display:none}' +
+            '.db-ignore:hover .db-icon-hover,.db-unignore:hover .db-icon-hover{display:inline}' +
             '.db-header-actions{margin-left:auto;display:flex;gap:12px}' +
             '.db-header-actions .db-mode-toggle{margin-left:0}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center}' +
@@ -390,7 +393,7 @@ class TodayDashboard {
                 <span class="db-task-text">${text}</span>
             </div>
             ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
-            <button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'}"></i></button>
+            <button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>
         </div>`;
     }
 
