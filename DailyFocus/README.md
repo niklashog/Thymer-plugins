@@ -42,6 +42,11 @@ Tap a task body in Overdue or Inbox to pin it to Today's Focus. Remove it with `
 
 The dashboard refreshes automatically when tasks are created, updated, or completed elsewhere in the workspace.
 
+## Changelog
+
+### 2026-04-23
+- Added **Manage** mode — accessible via the `Manage →` button in the Plan view. Lets you ignore tasks so they no longer appear in Plan or Focus. Ignored tasks can be restored at any time from the same view.
+
 ## Installation
 
 1. Open Thymer and go to **Settings → Plugins**
