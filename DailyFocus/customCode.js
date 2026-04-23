@@ -274,7 +274,7 @@ class TodayDashboard {
         return `<div class="db-menu-wrap">
             <button class="db-hamburger" data-action="toggle-menu"><i class="ti ti-menu-2"></i></button>
             <div class="db-dropdown" hidden>
-                <button class="db-dropdown-item" data-action="set-mode" data-mode="manage">Ignore list</button>
+                <button class="db-dropdown-item" data-action="set-mode" data-mode="ignore-list">Ignore list</button>
             </div>
         </div>`;
     }
