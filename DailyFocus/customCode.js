@@ -99,6 +99,9 @@ class TodayDashboard {
             '.db-mode-toggle{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:14px;padding:2px 0;margin-left:auto;transition:color .15s}' +
             '.db-mode-toggle:hover{color:var(--ed-link-hover-color)}' +
+            '.db-manage-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
+            'font-size:14px;padding:2px 0;transition:color .15s}' +
+            '.db-manage-btn:hover{color:var(--ed-link-hover-color)}' +
             '.db-block{display:flex;border-radius:6px;cursor:pointer;transition:background .1s;' +
             'min-height:52px;margin-bottom:4px}' +
             '.db-block:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
@@ -347,10 +350,8 @@ class TodayDashboard {
     _buildPlanHTML(overdue, today, inbox, ignoredCount = 0) {
         return `<div class="db-header">
                 <span class="db-header-crumb">Plan</span>
-                <div class="db-header-actions">
-                    <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
-                    <button class="db-mode-toggle" data-action="set-mode" data-mode="manage">Manage →</button>
-                </div>
+                <button class="db-manage-btn" data-action="set-mode" data-mode="manage">Manage →</button>
+                <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
             </div>
             <div class="db-root">
             ${this._section('Overdue',       overdue, 'overdue')}
