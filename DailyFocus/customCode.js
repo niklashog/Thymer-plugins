@@ -81,9 +81,12 @@ class TodayDashboard {
             '.db-task-source--link{font-size:11px;color:var(--ed-link-color);white-space:nowrap;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-task-source-wrap:hover .db-task-source--link{color:var(--ed-link-hover-color)}' +
-            '.db-pin,.db-unpin,.db-nav{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
+            '.db-pin,.db-unpin,.db-nav,.db-ignore,.db-unignore{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
-            '.db-pin:hover,.db-unpin:hover,.db-nav:hover{opacity:.7}' +
+            '.db-pin:hover,.db-unpin:hover,.db-nav:hover,.db-ignore:hover,.db-unignore:hover{opacity:.7}' +
+            '.db-task--ignored{opacity:.35}' +
+            '.db-header-actions{margin-left:auto;display:flex;gap:12px}' +
+            '.db-header-actions .db-mode-toggle{margin-left:0}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center}' +
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
@@ -190,7 +193,7 @@ class TodayDashboard {
             this.plugin.data.searchByQuery('@task @today', 100),
         ]);
 
-        const [overdueResult, dueResult] = this._mode === 'focus'
+        const [overdueResult, dueResult] = (this._mode === 'focus' || this._mode === 'manage')
             ? [{ lines: [] }, { lines: [] }]
             : await Promise.all([
                 this.plugin.data.searchByQuery('@task @overdue', 50),
@@ -215,7 +218,9 @@ class TodayDashboard {
         const overdueGuids   = new Set((overdueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
         const datedGuids     = new Set((dueResult.lines       || []).filter(l => l.type === 'task').map(l => l.guid));
         const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
-        const allTodos       =         (todoResult.lines      || []).filter(l => l.type === 'task');
+        const allTodosRaw    =         (todoResult.lines      || []).filter(l => l.type === 'task');
+        const ignoredTasks   = allTodosRaw.filter(l =>  l.props?.['db-ignored']);
+        const allTodos       = allTodosRaw.filter(l => !l.props?.['db-ignored']);
 
         const todaySet   = new Set(allTodos.filter(l => l.props?.['db-pinned'] === today).map(l => l.guid));
         const doneTasks  = isViewingToday
@@ -236,16 +241,20 @@ class TodayDashboard {
         const inbox       = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
-        const effectiveMode = (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan' : 'focus';
+        const effectiveMode = this._mode === 'manage' ? 'manage'
+            : (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan'
+            : 'focus';
 
         const allTasks = [...allTodos, ...doneTasks];
 
-        el.innerHTML = effectiveMode === 'focus'
-            ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned)
-            : this._buildPlanHTML(overdue, todayPinned, inbox);
+        el.innerHTML = effectiveMode === 'manage'
+            ? this._buildManageHTML(allTodos, ignoredTasks)
+            : effectiveMode === 'focus'
+                ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned)
+                : this._buildPlanHTML(overdue, todayPinned, inbox, ignoredTasks.length);
 
         this._applyTheme(el);
-        this._attachListeners(el, allTasks);
+        this._attachListeners(el, allTasks, ignoredTasks);
         this._reapplySelection(el);
     }
 
@@ -332,15 +341,56 @@ class TodayDashboard {
         </div>`;
     }
 
-    _buildPlanHTML(overdue, today, inbox) {
+    _buildPlanHTML(overdue, today, inbox, ignoredCount = 0) {
         return `<div class="db-header">
                 <span class="db-header-crumb">Plan</span>
-                <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+                <div class="db-header-actions">
+                    <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+                    <button class="db-mode-toggle" data-action="set-mode" data-mode="manage">Manage →</button>
+                </div>
             </div>
             <div class="db-root">
             ${this._section('Overdue',       overdue, 'overdue')}
             ${this._section("Today's Focus", today,   'today')}
             ${this._section('Inbox',         inbox,   'inbox')}
+        </div>`;
+    }
+
+    _buildManageHTML(activeTasks, ignoredTasks) {
+        return `<div class="db-header">
+                <span class="db-header-crumb">Manage</span>
+                <button class="db-mode-toggle" data-action="set-mode" data-mode="plan">← Plan</button>
+            </div>
+            <div class="db-root">
+                <div class="db-section">
+                    <div class="db-section-header">
+                        <span class="db-section-title">Tasks</span>
+                        ${activeTasks.length ? `<span class="db-count">${activeTasks.length}</span>` : ''}
+                    </div>
+                    ${activeTasks.length
+                        ? activeTasks.map(t => this._manageTaskRow(t, false)).join('')
+                        : `<div class="db-empty">No active tasks</div>`
+                    }
+                </div>
+                ${ignoredTasks.length ? `
+                <div class="db-section">
+                    <div class="db-section-header">
+                        <span class="db-section-title">${ignoredTasks.length} already ignored</span>
+                    </div>
+                    ${ignoredTasks.map(t => this._manageTaskRow(t, true)).join('')}
+                </div>` : ''}
+            </div>`;
+    }
+
+    _manageTaskRow(task, isIgnored) {
+        const text   = this._escape(this._getText(task));
+        const source = this._escape(task.record?.getName() || '');
+        return `<div class="db-task listitem-task${isIgnored ? ' db-task--ignored' : ''}" data-guid="${task.guid}">
+            <div class="db-task-body">
+                <span class="db-task-text">${text}</span>
+            </div>
+            ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
+            <button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'}"></i></button>
         </div>`;
     }
 
@@ -433,8 +483,8 @@ class TodayDashboard {
         </div>`;
     }
 
-    _attachListeners(el, allTasks) {
-        const byGuid = new Map(allTasks.map(l => [l.guid, l]));
+    _attachListeners(el, allTasks, ignoredTasks = []) {
+        const byGuid = new Map([...allTasks, ...ignoredTasks].map(l => [l.guid, l]));
         const today  = this._todayStr();
 
         el.querySelectorAll('[data-action="done"]').forEach(btn => {
@@ -564,6 +614,26 @@ class TodayDashboard {
                     subId: null,
                     workspaceGuid: this.plugin.getWorkspaceGuid(),
                 });
+            });
+        });
+
+        el.querySelectorAll('[data-action="ignore"]').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const task = byGuid.get(btn.dataset.guid);
+                if (!task) return;
+                await task.setMetaProperty('db-ignored', 'true');
+                if (this._panel) this._render(this._panel);
+            });
+        });
+
+        el.querySelectorAll('[data-action="unignore"]').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const task = byGuid.get(btn.dataset.guid);
+                if (!task) return;
+                await task.setMetaProperty('db-ignored', null);
+                if (this._panel) this._render(this._panel);
             });
         });
 
