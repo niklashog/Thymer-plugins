@@ -88,8 +88,16 @@ class TodayDashboard {
             '.db-icon-hover{display:none}' +
             '.db-ignore:hover .db-icon-default,.db-unignore:hover .db-icon-default{display:none}' +
             '.db-ignore:hover .db-icon-hover,.db-unignore:hover .db-icon-hover{display:inline}' +
-            '.db-header-actions{margin-left:auto;display:flex;gap:12px}' +
-            '.db-header-actions .db-mode-toggle{margin-left:0}' +
+            '.db-menu-wrap{position:relative;flex-shrink:0}' +
+            '.db-hamburger{background:none;border:none;cursor:pointer;color:inherit;font-size:18px;' +
+            'line-height:1;padding:1px 5px;opacity:.3;transition:opacity .15s;border-radius:4px}' +
+            '.db-hamburger:hover{opacity:.7}' +
+            '.db-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:var(--db-bg,white);' +
+            'border:1px solid var(--db-divider,rgba(128,128,128,.15));border-radius:8px;padding:4px;' +
+            'min-width:160px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.12)}' +
+            '.db-dropdown-item{display:block;width:100%;text-align:left;background:none;border:none;' +
+            'cursor:pointer;color:inherit;font-size:13px;padding:7px 10px;border-radius:4px;transition:background .1s}' +
+            '.db-dropdown-item:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center}' +
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
@@ -99,9 +107,7 @@ class TodayDashboard {
             '.db-mode-toggle{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:14px;padding:2px 0;margin-left:auto;transition:color .15s}' +
             '.db-mode-toggle:hover{color:var(--ed-link-hover-color)}' +
-            '.db-manage-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
-            'font-size:14px;padding:2px 0;transition:color .15s}' +
-            '.db-manage-btn:hover{color:var(--ed-link-hover-color)}' +
+            '' +
             '.db-block{display:flex;border-radius:6px;cursor:pointer;transition:background .1s;' +
             'min-height:52px;margin-bottom:4px}' +
             '.db-block:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
@@ -264,6 +270,15 @@ class TodayDashboard {
         this._reapplySelection(el);
     }
 
+    _menuHTML() {
+        return `<div class="db-menu-wrap">
+            <button class="db-hamburger" data-action="toggle-menu"><i class="ti ti-menu-2"></i></button>
+            <div class="db-dropdown" hidden>
+                <button class="db-dropdown-item" data-action="set-mode" data-mode="manage">Hide tasks</button>
+            </div>
+        </div>`;
+    }
+
     _buildFocusHTML(today, scheduled, doneTasks, timeBlocks, allTasks, viewPinned) {
         const isToday        = this._viewDateStr() === this._todayD();
         const pinnedGuids    = new Set(today.map(t => t.guid));
@@ -302,6 +317,7 @@ class TodayDashboard {
         const unassignedDone = isToday ? doneTasks.filter(t => !timeBlocks[t.guid]) : [];
 
         return `<div class="db-header">
+                ${this._menuHTML()}
                 <span class="db-header-crumb">Focus</span>
                 <span class="db-header-sep">/</span>
                 <div class="db-day-nav">
@@ -349,8 +365,8 @@ class TodayDashboard {
 
     _buildPlanHTML(overdue, today, inbox, ignoredCount = 0) {
         return `<div class="db-header">
+                ${this._menuHTML()}
                 <span class="db-header-crumb">Plan</span>
-                <button class="db-manage-btn" data-action="set-mode" data-mode="manage">Manage →</button>
                 <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
             </div>
             <div class="db-root">
@@ -362,7 +378,8 @@ class TodayDashboard {
 
     _buildManageHTML(activeTasks, ignoredTasks) {
         return `<div class="db-header">
-                <span class="db-header-crumb">Manage</span>
+                ${this._menuHTML()}
+                <span class="db-header-crumb">Hide tasks</span>
                 <button class="db-mode-toggle" data-action="set-mode" data-mode="plan">← Plan</button>
             </div>
             <div class="db-root">
@@ -623,6 +640,18 @@ class TodayDashboard {
             });
         });
 
+        const hamburger = el.querySelector('[data-action="toggle-menu"]');
+        const dropdown  = el.querySelector('.db-dropdown');
+        if (hamburger && dropdown) {
+            hamburger.addEventListener('click', e => {
+                e.stopPropagation();
+                dropdown.hidden = !dropdown.hidden;
+                if (!dropdown.hidden) {
+                    document.addEventListener('click', () => { dropdown.hidden = true; }, { once: true });
+                }
+            });
+        }
+
         el.querySelectorAll('[data-action="ignore"]').forEach(btn => {
             btn.addEventListener('click', async e => {
                 e.stopPropagation();
@@ -682,8 +711,10 @@ class TodayDashboard {
             if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') break;
             node = node.parentElement;
         }
+        const bg  = getComputedStyle(node || startNode).backgroundColor;
         const fg  = getComputedStyle(node || startNode).color;
         const rgb = (fg.match(/\d+/g) || ['150', '150', '150']).slice(0, 3).join(',');
+        el.style.setProperty('--db-bg', bg);
         const root = el.querySelector('.db-root');
         if (root) {
             root.style.setProperty('--db-hover',   `rgba(${rgb},.07)`);
