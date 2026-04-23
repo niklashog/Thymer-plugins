@@ -1,4 +1,4 @@
-# Today's Focus Dashboard
+# Daily Focus Dashboard
 
 **Type:** Global Plugin
 
@@ -44,4 +44,4 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 4. Paste the contents of `configuration.json` into the configuration editor
 5. Save and activate the plugin
 
-Access the dashboard via the sidebar icon or the command palette (`Open Today's Focus`).
+Access the dashboard via the sidebar icon or the command palette (`Open Daily Focus`).

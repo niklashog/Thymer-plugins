@@ -127,21 +127,21 @@ class TodayDashboard {
         );
 
         this.plugin.ui.addCommandPaletteCommand({
-            label: "Open Today's Focus",
+            label: "Open Daily Focus",
             icon:  'gauge',
             onSelected: () => this._openPanel(),
         });
 
         this.plugin.ui.addSidebarItem({
-            label:   "Today's Focus",
+            label:   "Daily Focus",
             icon:    'gauge',
-            tooltip: "Open Today's Focus dashboard",
+            tooltip: "Open Daily Focus",
             onClick: () => this._openPanel(),
         });
 
         this.plugin.ui.registerCustomPanelType('today-dashboard', panel => {
             this._panel = panel;
-            panel.setTitle("Today's Focus");
+            panel.setTitle("Daily Focus");
             this._render(panel, true);
         });
 
