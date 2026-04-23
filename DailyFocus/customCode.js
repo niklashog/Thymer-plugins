@@ -205,7 +205,7 @@ class TodayDashboard {
             this.plugin.data.searchByQuery('@task @today', 100),
         ]);
 
-        const [overdueResult, dueResult] = (this._mode === 'focus' || this._mode === 'manage')
+        const [overdueResult, dueResult] = (this._mode === 'focus' || this._mode === 'ignore-list')
             ? [{ lines: [] }, { lines: [] }]
             : await Promise.all([
                 this.plugin.data.searchByQuery('@task @overdue', 50),
@@ -253,14 +253,14 @@ class TodayDashboard {
         const inbox       = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
-        const effectiveMode = this._mode === 'manage' ? 'manage'
+        const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
             : (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan'
             : 'focus';
 
         const allTasks = [...allTodos, ...doneTasks];
 
-        el.innerHTML = effectiveMode === 'manage'
-            ? this._buildManageHTML(allTodos, ignoredTasks)
+        el.innerHTML = effectiveMode === 'ignore-list'
+            ? this._buildIgnoreListHTML(allTodos, ignoredTasks)
             : effectiveMode === 'focus'
                 ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned)
                 : this._buildPlanHTML(overdue, todayPinned, inbox, ignoredTasks.length);
@@ -376,7 +376,7 @@ class TodayDashboard {
         </div>`;
     }
 
-    _buildManageHTML(activeTasks, ignoredTasks) {
+    _buildIgnoreListHTML(activeTasks, ignoredTasks) {
         return `<div class="db-header">
                 ${this._menuHTML()}
                 <span class="db-header-crumb">Ignore list</span>
@@ -389,7 +389,7 @@ class TodayDashboard {
                         ${activeTasks.length ? `<span class="db-count">${activeTasks.length}</span>` : ''}
                     </div>
                     ${activeTasks.length
-                        ? activeTasks.map(t => this._manageTaskRow(t, false)).join('')
+                        ? activeTasks.map(t => this._ignoreListTaskRow(t, false)).join('')
                         : `<div class="db-empty">No active tasks</div>`
                     }
                 </div>
@@ -398,12 +398,12 @@ class TodayDashboard {
                     <div class="db-section-header">
                         <span class="db-section-title">${ignoredTasks.length} already ignored</span>
                     </div>
-                    ${ignoredTasks.map(t => this._manageTaskRow(t, true)).join('')}
+                    ${ignoredTasks.map(t => this._ignoreListTaskRow(t, true)).join('')}
                 </div>` : ''}
             </div>`;
     }
 
-    _manageTaskRow(task, isIgnored) {
+    _ignoreListTaskRow(task, isIgnored) {
         const text   = this._escape(this._getText(task));
         const source = this._escape(task.record?.getName() || '');
         return `<div class="db-task listitem-task${isIgnored ? ' db-task--ignored' : ''}" data-guid="${task.guid}">
