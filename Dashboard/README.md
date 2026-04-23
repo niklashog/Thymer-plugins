@@ -1,18 +1,40 @@
-# Dashboard
+# Today's Focus Dashboard
 
 **Type:** Global Plugin
 
-A workspace-wide task dashboard that aggregates tasks from across your entire Thymer workspace and lets you manage them in one place.
+A workspace-wide task dashboard that aggregates tasks from across your entire Thymer workspace. Operates in two modes — **Focus** for executing your day, **Plan** for deciding what matters.
 
-## Features
+## Modes
+
+### Focus (default when tasks exist)
+
+Shows what you're working on today, organized by time.
+
+- **Unscheduled** — tasks pinned to today or scheduled for today that haven't been assigned a time block yet
+- **Day Plan** — time slots from Early Morning through Evening; tap a task then a slot (or vice versa) to assign it
+
+Navigate to past or future days using the `←` / `→` arrows in the header to review or plan other days.
+
+Switch to Plan mode with the **Plan →** button in the header.
+
+### Plan
+
+Used to decide what goes into your day.
 
 - **Overdue** — tasks past their due date, highlighted in red
-- **Today's Focus** — tasks you've manually pinned for today, persisted across sessions
-- **Inbox** — all undated todos without a scheduled date
+- **Today's Focus** — tasks pinned for today
+- **Inbox** — all undated todos with no scheduled date
 
-Pin any inbox task to Today's Focus with `+`, remove it with `×`. Mark tasks done with the circle button. Click a task to open it in its source document.
+Tap a task body in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Switch back with the **← Focus** button.
 
-The dashboard updates automatically when tasks are created, updated, or completed.
+## Task interactions
+
+- **Circle button** — mark a task done (or undo it from the done state). Done tasks appear with strikethrough and reduced opacity.
+- **Source name / arrow icon** — the source document name and `↗` icon are a single clickable area that navigates to the task's origin in Thymer.
+- **× button** — unpin from Today's Focus or remove from a time block.
+- **Task text** (in Focus mode) — tap to select a task, then tap a time block to assign it; tap again to deselect.
+
+The dashboard refreshes automatically when tasks are created, updated, or completed elsewhere in the workspace.
 
 ## Installation
 
@@ -22,4 +44,4 @@ The dashboard updates automatically when tasks are created, updated, or complete
 4. Paste the contents of `configuration.json` into the configuration editor
 5. Save and activate the plugin
 
-The dashboard is accessible via the sidebar or the command palette (`Open Dashboard`).
+Access the dashboard via the sidebar icon or the command palette (`Open Today's Focus`).
