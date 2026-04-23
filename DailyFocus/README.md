@@ -4,6 +4,12 @@
 
 A workspace-wide task dashboard that aggregates tasks from across your entire Thymer workspace. Operates in two modes — **Focus** for executing your day, **Plan** for deciding what matters.
 
+## Screenshots
+
+| Focus | Plan | History |
+|---|---|---|
+| ![Focus mode](focus.jpg) | ![Plan mode](plan.jpg) | ![Day navigation](withhistory.jpg) |
+
 ## Modes
 
 ### Focus (default when tasks exist)
