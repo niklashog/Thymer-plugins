@@ -1183,6 +1183,7 @@ class TodayDashboard {
         ], null);
         if (newTask) {
             await newTask.setMetaProperty('db-recurring-freq', freq);
+            if (day) await newTask.setMetaProperty('db-recurring-day', day);
             await task.setMetaProperty('db-recurring-next', nextDate);
         }
     }
