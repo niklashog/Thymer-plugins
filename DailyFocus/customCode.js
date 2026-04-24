@@ -117,15 +117,18 @@ class TodayDashboard {
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
             '.db-recur-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:199}' +
-            '.db-recur-row{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;transition:background .1s}' +
-            '.db-recur-row:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
-            '.db-recur-row--expanded{background:var(--db-hover,rgba(128,128,128,.07))}' +
+            '.db-recur-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;cursor:pointer;' +
+            'transition:border-color .1s;background:var(--db-bg,white);' +
+            'border:1px solid var(--db-divider,rgba(128,128,128,.15));margin-bottom:6px}' +
+            '.db-recur-row:hover{border-color:rgba(128,128,128,.3)}' +
+            '.db-recur-row--expanded{border-radius:8px 8px 0 0;margin-bottom:0}' +
             '.db-recur-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-recur-summary{font-size:12px;opacity:.4;white-space:nowrap;flex-shrink:0}' +
             '.db-recur-summary--unconfigured{color:#ef4444;opacity:.7}' +
-            '.db-recur-row .db-task-source-wrap{min-width:120px;justify-content:flex-end}' +
+            '.db-recur-row .db-task-source-wrap{min-width:120px;justify-content:flex-end;' +
+            'border-left:1px solid var(--db-divider,rgba(128,128,128,.15));padding-left:10px;margin-left:4px}' +
             '.db-recur-edit{background:var(--db-bg,white);border:1px solid var(--db-divider,rgba(128,128,128,.15));' +
-            'border-radius:8px;padding:16px;margin:4px 6px 12px 6px}' +
+            'border-top:none;border-radius:0 0 8px 8px;padding:16px;margin:0 0 6px 0}' +
             '.db-recur-pills{display:flex;gap:6px;margin-bottom:16px}' +
             '.db-recur-pill{background:none;border:1px solid var(--db-divider,rgba(128,128,128,.2));border-radius:20px;' +
             'cursor:pointer;font-size:12px;font-weight:500;padding:4px 12px;color:inherit;opacity:.6;transition:all .1s}' +
