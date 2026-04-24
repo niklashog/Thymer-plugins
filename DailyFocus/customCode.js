@@ -23,11 +23,15 @@ class TodayDashboard {
         this._hideRecurring  = true; // [RECURRING] remove when Thymer ships native recurring
         this._themeCache     = null;
         this._listenerAbort  = null;
+        this._todayCache     = null;
     }
 
     _todayStr() {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if (!this._todayCache) {
+            const d = new Date();
+            this._todayCache = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+        return this._todayCache;
     }
 
     _todayD() {
@@ -245,6 +249,7 @@ class TodayDashboard {
     }
 
     async _render(panel, fromCallback = false) {
+        this._todayCache = null;
         const ver = ++this._renderVer;
         const el  = panel.getElement();
         if (!el) return;
@@ -273,11 +278,13 @@ class TodayDashboard {
             ]);
 
         let doneLinesAll = [];
-        try {
-            const doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
-            doneLinesAll = (doneResult.lines || []).filter(l => l.type === 'task');
-        } catch (e) {
-            console.warn('[Dashboard] @task @done query failed:', e);
+        if (this._mode !== 'recurring-list' && this._mode !== 'ignore-list') {
+            try {
+                const doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
+                doneLinesAll = (doneResult.lines || []).filter(l => l.type === 'task');
+            } catch (e) {
+                console.warn('[Dashboard] @task @done query failed:', e);
+            }
         }
 
         if (ver !== this._renderVer) return;
@@ -309,12 +316,20 @@ class TodayDashboard {
             if (parsed && parsed.date === viewDate) timeBlocks[t.guid] = parsed.time;
         }
 
-        const overdue     = allTodos.filter(l => overdueGuids.has(l.guid) && !todaySet.has(l.guid));
-        const planOverdue = allTodos.filter(l => overdueGuids.has(l.guid) && !l.props?.['db-pinned']);
-        const todayPinned = allTodos.filter(l => todaySet.has(l.guid));
-        const scheduled   = allTodos.filter(l => scheduledGuids.has(l.guid) && !todaySet.has(l.guid) && !overdueGuids.has(l.guid));
-        const inbox       = allTodos.filter(l => !datedGuids.has(l.guid) && !todaySet.has(l.guid) && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
-        const planInbox   = allTodos.filter(l => !datedGuids.has(l.guid) && !l.props?.['db-pinned'] && !scheduledGuids.has(l.guid) && !overdueGuids.has(l.guid));
+        const overdue = [], planOverdue = [], todayPinned = [], scheduled = [], inbox = [], planInbox = [];
+        for (const l of allTodos) {
+            const isOverdue   = overdueGuids.has(l.guid);
+            const isPinned    = todaySet.has(l.guid);
+            const isScheduled = scheduledGuids.has(l.guid);
+            const isDated     = datedGuids.has(l.guid);
+            const hasPinProp  = !!l.props?.['db-pinned'];
+            if (isOverdue && !isPinned)                                overdue.push(l);
+            if (isOverdue && !hasPinProp)                              planOverdue.push(l);
+            if (isPinned)                                              todayPinned.push(l);
+            if (isScheduled && !isPinned && !isOverdue)                scheduled.push(l);
+            if (!isDated && !isPinned && !isScheduled && !isOverdue)   inbox.push(l);
+            if (!isDated && !hasPinProp && !isScheduled && !isOverdue) planInbox.push(l);
+        }
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
         const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
@@ -374,10 +389,10 @@ class TodayDashboard {
         const taskByGuid          = new Map(allTasks.map(t => [t.guid, t]));
         const assignedByTime      = {};
         const sectionFor          = guid => recurringPreviewSet.has(guid) ? 'recurring-preview' : pinnedGuids.has(guid) ? 'focus-pinned' : 'focus-scheduled';
+        const allFocusToday       = isToday ? [...today, ...scheduled.filter(t => !pinnedGuids.has(t.guid))] : [];
 
         if (isToday) {
-            const allFocus = [...today, ...scheduled.filter(t => !pinnedGuids.has(t.guid))];
-            for (const task of allFocus) {
+            for (const task of allFocusToday) {
                 const time = timeBlocks[task.guid];
                 if (!time) continue;
                 if (!assignedByTime[time]) assignedByTime[time] = [];
@@ -398,7 +413,6 @@ class TodayDashboard {
             }
         }
 
-        const allFocusToday  = isToday ? [...today, ...scheduled.filter(t => !pinnedGuids.has(t.guid))] : [];
         const unassigned     = isToday
             ? allFocusToday.filter(t => !timeBlocks[t.guid])
             : [...viewPinned.filter(t => !timeBlocks[t.guid]), ...recurringPreview];
@@ -770,7 +784,9 @@ class TodayDashboard {
     }
 
     _attachListeners(el, allTasks, ignoredTasks = [], signal) {
-        const byGuid = new Map([...allTasks, ...ignoredTasks].map(l => [l.guid, l]));
+        const byGuid = new Map();
+        for (const l of allTasks)     byGuid.set(l.guid, l);
+        for (const l of ignoredTasks) byGuid.set(l.guid, l);
         const today  = this._todayStr();
 
         el.addEventListener('click', async e => {
