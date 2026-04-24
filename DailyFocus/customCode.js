@@ -1191,10 +1191,10 @@ class TodayDashboard {
                 { type: 'datetime', text: nextDate },
             ], null);
             if (newTask) {
+                await task.setMetaProperty('db-recurring-next', nextDate);
                 await newTask.setMetaProperty('db-recurring-freq', freq);
                 if (day) await newTask.setMetaProperty('db-recurring-day', day);
                 await newTask.setMetaProperty('db-pinned', nextDate);
-                await task.setMetaProperty('db-recurring-next', nextDate);
             }
         } finally {
             this._recurringInProgress.delete(task.guid);
