@@ -686,7 +686,7 @@ class TodayDashboard {
         }
         return `<div class="db-recur-edit">
             <div class="db-recur-pills">${pills}</div>
-            <div class="db-recur-date-area">${dateArea}</div>
+            ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
             <div class="db-recur-actions">
                 <button class="db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
                 <button class="db-recur-cancel" data-action="cancel-recurring">Cancel</button>
