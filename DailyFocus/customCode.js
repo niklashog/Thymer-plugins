@@ -369,15 +369,14 @@ class TodayDashboard {
             if (parsed && parsed.date === viewDate) timeBlocks[t.guid] = parsed.time;
         }
 
-        const overdue = [], planOverdue = [], todayPinned = [], scheduled = [], inbox = [], planInbox = [];
+        const planOverdue = [], todayPinned = [], scheduled = [], inbox = [], planInbox = [];
         for (const l of allTodos) {
             const isOverdue   = overdueGuids.has(l.guid);
             const isPinned    = todaySet.has(l.guid);
             const isScheduled = scheduledGuids.has(l.guid);
             const isDated     = datedGuids.has(l.guid);
             const hasPinProp  = !!l.props?.['db-pinned'];
-            if (isOverdue && !isPinned)                                overdue.push(l);
-            if (isOverdue && !hasPinProp)                              planOverdue.push(l);
+            if (isOverdue && !isPinned)                                planOverdue.push(l);
             if (isPinned)                                              todayPinned.push(l);
             if (isScheduled && !isPinned && !isOverdue)                scheduled.push(l);
             if (!isDated && !isPinned && !isScheduled && !isOverdue)   inbox.push(l);
