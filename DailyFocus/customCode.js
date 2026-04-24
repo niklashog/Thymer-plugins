@@ -202,7 +202,7 @@ class TodayDashboard {
             '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:170px;padding:3px 0 4px}' +
             '.db-block-time-inner{display:flex;align-items:center;gap:6px;font-size:13px;opacity:.4;' +
             'padding:5px 6px;min-height:30px}' +
-            '.db-block-label{width:100px;flex-shrink:0}' +
+            '.db-block-label{width:105px;flex-shrink:0}' +
             '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
             '.db-block-body{flex:1;min-width:0;padding:4px 8px 8px 12px}' +
             '.db-block-hint{font-size:12px;opacity:.18;padding:11px 0 14px 2px}' +
