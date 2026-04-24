@@ -1186,6 +1186,7 @@ class TodayDashboard {
         if (newTask) {
             await newTask.setMetaProperty('db-recurring-freq', freq);
             if (day) await newTask.setMetaProperty('db-recurring-day', day);
+            await newTask.setMetaProperty('db-pinned', nextDate);
             await task.setMetaProperty('db-recurring-next', nextDate);
         }
     }
