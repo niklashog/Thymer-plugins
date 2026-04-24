@@ -232,6 +232,8 @@ class TodayDashboard {
 
         // [RECURRING-START] catch-up on load + daily interval — remove when Thymer ships native recurring
         this._runRecurringCatchUp();
+        const _d = new Date();
+        this._lastChecked = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
         this._checkInterval = setInterval(() => {
             const d = new Date();
             const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
