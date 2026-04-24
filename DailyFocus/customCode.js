@@ -1095,6 +1095,7 @@ class TodayDashboard {
                 const [mm, dd] = day.split('-').map(Number);
                 d.setFullYear(d.getFullYear() + 1);
                 const maxDay = new Date(d.getFullYear(), mm, 0).getDate();
+                d.setDate(1);
                 d.setMonth(mm - 1);
                 d.setDate(Math.min(dd, maxDay));
             } else {
