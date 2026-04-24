@@ -308,6 +308,7 @@ class TodayDashboard {
     _scheduleRefresh() {
         if (this._refreshTimer) clearTimeout(this._refreshTimer);
         if (this._panel) this._prefetch();
+        else this._dataCache = null;
         this._refreshTimer = setTimeout(() => {
             this._refreshTimer = null;
             if (!this._panel) return;
