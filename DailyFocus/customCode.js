@@ -123,6 +123,7 @@ class TodayDashboard {
             '.db-recur-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-recur-summary{font-size:12px;opacity:.4;white-space:nowrap;flex-shrink:0}' +
             '.db-recur-summary--unconfigured{color:#ef4444;opacity:.7}' +
+            '.db-recur-row .db-task-source-wrap{min-width:90px;justify-content:flex-end}' +
             '.db-recur-edit{background:var(--db-bg,white);border:1px solid var(--db-divider,rgba(128,128,128,.15));' +
             'border-radius:8px;padding:16px;margin:4px 6px 12px 6px}' +
             '.db-recur-pills{display:flex;gap:6px;margin-bottom:16px}' +
