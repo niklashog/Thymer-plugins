@@ -24,6 +24,8 @@ class TodayDashboard {
         this._themeCache     = null;
         this._listenerAbort  = null;
         this._todayCache     = null;
+        this._lastChecked    = null;
+        this._checkInterval  = null;
     }
 
     _todayStr() {
@@ -210,18 +212,6 @@ class TodayDashboard {
             this._render(panel, true);
         });
 
-        const scheduleRefresh = () => {
-            if (this._refreshTimer) clearTimeout(this._refreshTimer);
-            this._refreshTimer = setTimeout(() => {
-                this._refreshTimer = null;
-                if (!this._panel) return;
-                const el = this._panel.getElement();
-                if (el?.isConnected && el.querySelector('.db-root, .db-loading')) {
-                    this._render(this._panel, false);
-                }
-            }, 800);
-        };
-
         this.plugin.events.on('lineitem.updated', async ev => {
             // [RECURRING-START] native completion detection — remove when Thymer ships native recurring
             if (ev.status === 'done') {
@@ -235,11 +225,35 @@ class TodayDashboard {
                 }
             }
             // [RECURRING-END]
-            scheduleRefresh();
+            this._scheduleRefresh();
         });
-        this.plugin.events.on('lineitem.created', scheduleRefresh);
-        this.plugin.events.on('lineitem.deleted', scheduleRefresh);
+        this.plugin.events.on('lineitem.created', () => this._scheduleRefresh());
+        this.plugin.events.on('lineitem.deleted', () => this._scheduleRefresh());
 
+        // [RECURRING-START] catch-up on load + daily interval — remove when Thymer ships native recurring
+        this._runRecurringCatchUp();
+        this._checkInterval = setInterval(() => {
+            const d = new Date();
+            const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if (this._lastChecked === today) return;
+            this._lastChecked = today;
+            this._todayCache = null;
+            this._runRecurringCatchUp().then(() => this._scheduleRefresh());
+        }, 60 * 1000);
+        // [RECURRING-END]
+
+    }
+
+    _scheduleRefresh() {
+        if (this._refreshTimer) clearTimeout(this._refreshTimer);
+        this._refreshTimer = setTimeout(() => {
+            this._refreshTimer = null;
+            if (!this._panel) return;
+            const el = this._panel.getElement();
+            if (el?.isConnected && el.querySelector('.db-root, .db-loading')) {
+                this._render(this._panel, false);
+            }
+        }, 800);
     }
 
     async _openPanel() {
@@ -1139,6 +1153,22 @@ class TodayDashboard {
             return d.getMonth() + 1 === mm && d.getDate() === dd;
         }
         return false;
+    }
+
+    async _runRecurringCatchUp() {
+        try {
+            const result = await this.plugin.data.searchByQuery('@task @done', 200);
+            const missed = (result.lines || []).filter(l =>
+                l.type === 'task' &&
+                l.props?.['db-recurring-freq'] &&
+                !l.props?.['db-recurring-next']
+            );
+            for (const task of missed) {
+                await this._createNextOccurrence(task);
+            }
+        } catch (e) {
+            console.warn('[Dashboard] recurring catch-up failed:', e);
+        }
     }
 
     async _createNextOccurrence(task) {
