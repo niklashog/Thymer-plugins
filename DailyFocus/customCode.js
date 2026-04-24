@@ -199,12 +199,12 @@ class TodayDashboard {
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);box-shadow:var(--color-shadow-cards)}' +
             '.db-block:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
             '.db-block--selected{background:var(--cards-hover-bg);box-shadow:0 0 0 2px var(--ed-link-color),var(--color-shadow-cards)}' +
-            '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:210px;padding:3px 0 4px}' +
+            '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:170px;padding:3px 0 4px}' +
             '.db-block-time-inner{display:flex;align-items:center;gap:6px;font-size:13px;opacity:.4;' +
             'padding:5px 6px;min-height:30px}' +
-            '.db-block-label{width:140px;flex-shrink:0}' +
+            '.db-block-label{width:100px;flex-shrink:0}' +
             '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
-            '.db-block-body{flex:1;min-width:0;padding:1px 0 4px}' +
+            '.db-block-body{flex:1;min-width:0;padding:4px 8px 8px 12px}' +
             '.db-block-hint{font-size:12px;opacity:.18;padding:11px 0 14px 2px}' +
             '.db-day-nav{display:flex;align-items:center;gap:8px}' +
             '.db-day-nav-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);font-size:16px;' +
