@@ -27,7 +27,7 @@ class TodayDashboard {
         this._lastChecked        = null;
         this._checkInterval      = null;
         this._recurringInProgress = new Set();
-        this._dataCache          = null;
+        this._lastData           = null;
         this._prefetchInFlight   = false;
         // [RECURRING-START] draft state for recurring task UI — remove when Thymer ships native recurring
         this._expandedRecurring = null;
@@ -286,6 +286,37 @@ class TodayDashboard {
         this._prefetch();
     }
 
+    _patchTask(guid, propsUpdate) {
+        if (!this._lastData) return;
+        for (const key of ['todoResult', 'doneResult']) {
+            const line = (this._lastData[key]?.lines || []).find(l => l.guid === guid);
+            if (line) { if (!line.props) line.props = {}; Object.assign(line.props, propsUpdate); return; }
+        }
+    }
+
+    _moveToDone(guid, doneDate) {
+        if (!this._lastData) return;
+        const lines = this._lastData.todoResult?.lines || [];
+        const idx = lines.findIndex(l => l.guid === guid);
+        if (idx === -1) return;
+        const task = lines.splice(idx, 1)[0];
+        if (!task.props) task.props = {};
+        task.props['db-done-date'] = doneDate;
+        this._lastData.doneResult.lines.unshift(task);
+        this._doneTasksMap.set(guid, task);
+    }
+
+    _moveToTodo(guid) {
+        if (!this._lastData) return;
+        const lines = this._lastData.doneResult?.lines || [];
+        const idx = lines.findIndex(l => l.guid === guid);
+        if (idx === -1) return;
+        const task = lines.splice(idx, 1)[0];
+        if (task.props) task.props['db-done-date'] = null;
+        this._lastData.todoResult.lines.unshift(task);
+        this._doneTasksMap.delete(guid);
+    }
+
     async _prefetch() {
         if (this._prefetchInFlight) return;
         this._prefetchInFlight = true;
@@ -297,7 +328,7 @@ class TodayDashboard {
                 this.plugin.data.searchByQuery('@task @due',    100),
                 this.plugin.data.searchByQuery('@task @done',   100),
             ]);
-            this._dataCache = { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
+            this._lastData = { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
         } catch (e) {
             console.warn('[Dashboard] prefetch failed:', e);
         } finally {
@@ -308,7 +339,7 @@ class TodayDashboard {
     _scheduleRefresh() {
         if (this._refreshTimer) clearTimeout(this._refreshTimer);
         if (this._panel) this._prefetch();
-        else this._dataCache = null;
+        else this._lastData = null;
         this._refreshTimer = setTimeout(() => {
             this._refreshTimer = null;
             if (!this._panel) return;
@@ -333,10 +364,9 @@ class TodayDashboard {
 
         if (!fromCallback && !el.querySelector('.db-root, .db-loading')) return;
 
-        const cache = this._dataCache;
-        this._dataCache = null;
+        const data = this._lastData;
 
-        if (!el.querySelector('.db-root') && !cache) {
+        if (!el.querySelector('.db-root') && !data) {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
@@ -347,35 +377,30 @@ class TodayDashboard {
 
         let todoResult, scheduledResult, overdueResult, dueResult, doneLinesAll = [];
 
-        if (cache) {
-            todoResult      = cache.todoResult;
-            scheduledResult = cache.scheduledResult;
-            overdueResult   = (this._mode === 'focus' || this._mode === 'ignore-list') ? { lines: [] } : cache.overdueResult;
-            dueResult       = (this._mode === 'focus' || this._mode === 'ignore-list') ? { lines: [] } : cache.dueResult;
+        if (data) {
+            todoResult      = data.todoResult;
+            scheduledResult = data.scheduledResult;
+            overdueResult   = (this._mode === 'focus' || this._mode === 'ignore-list') ? { lines: [] } : data.overdueResult;
+            dueResult       = (this._mode === 'focus' || this._mode === 'ignore-list') ? { lines: [] } : data.dueResult;
             if (this._mode !== 'recurring-list' && this._mode !== 'ignore-list') {
-                doneLinesAll = (cache.doneResult?.lines || []).filter(l => l.type === 'task');
+                doneLinesAll = (data.doneResult?.lines || []).filter(l => l.type === 'task');
             }
         } else {
-            [todoResult, scheduledResult] = await Promise.all([
-                this.plugin.data.searchByQuery('@task @todo',  150),
-                this.plugin.data.searchByQuery('@task @today', 100),
-            ]);
-
-            [overdueResult, dueResult] = (this._mode === 'focus' || this._mode === 'ignore-list')
-                ? [{ lines: [] }, { lines: [] }]
-                : await Promise.all([
-                    this.plugin.data.searchByQuery('@task @overdue', 50),
-                    this.plugin.data.searchByQuery('@task @due',    100),
+            let doneResult = { lines: [] };
+            try {
+                [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
+                    this.plugin.data.searchByQuery('@task @todo',     150),
+                    this.plugin.data.searchByQuery('@task @today',   100),
+                    this.plugin.data.searchByQuery('@task @overdue',  50),
+                    this.plugin.data.searchByQuery('@task @due',     100),
+                    this.plugin.data.searchByQuery('@task @done',    100),
                 ]);
-
-            if (this._mode !== 'recurring-list' && this._mode !== 'ignore-list') {
-                try {
-                    const doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
-                    doneLinesAll = (doneResult.lines || []).filter(l => l.type === 'task');
-                } catch (e) {
-                    console.warn('[Dashboard] @task @done query failed:', e);
-                }
+            } catch (e) {
+                console.warn('[Dashboard] fetch failed:', e);
+                todoResult = scheduledResult = overdueResult = dueResult = { lines: [] };
             }
+            doneLinesAll = (doneResult.lines || []).filter(l => l.type === 'task');
+            this._lastData = { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
         }
 
         if (ver !== this._renderVer) return;
@@ -901,53 +926,53 @@ class TodayDashboard {
             switch (action) {
                 case 'done': {
                     if (!task) return;
-                    target.style.pointerEvents = 'none';
-                    const row = target.closest('.db-task');
-                    if (row) row.classList.add('state-done');
+                    this._moveToDone(task.guid, today);
+                    if (this._panel) this._render(this._panel);
                     try {
                         await task.setTaskStatus('done');
                         await task.setMetaProperty('db-done-date', today);
-                        this._doneTasksMap.set(task.guid, task);
                     } catch (err) {
                         console.error('[Dashboard] done failed:', err);
-                        if (row) row.classList.remove('state-done');
-                        target.style.pointerEvents = '';
+                        this._moveToTodo(task.guid);
+                        if (this._panel) this._render(this._panel);
                     }
                     break;
                 }
                 case 'undone': {
                     if (!task) return;
-                    target.style.pointerEvents = 'none';
+                    this._moveToTodo(task.guid);
+                    if (this._panel) this._render(this._panel);
                     try {
                         await task.setTaskStatus('none');
                         await task.setMetaProperty('db-done-date', null);
-                        this._doneTasksMap.delete(task.guid);
-                        const row = target.closest('.db-task');
-                        if (row) row.classList.remove('state-done');
-                        if (this._panel) this._render(this._panel);
                     } catch (err) {
                         console.error('[Dashboard] undone failed:', err);
-                        target.style.pointerEvents = '';
+                        this._moveToDone(task.guid, today);
+                        if (this._panel) this._render(this._panel);
                     }
                     break;
                 }
                 case 'pin': {
                     if (!task) return;
-                    await task.setMetaProperty('db-pinned', this._viewDateHyphen());
+                    const pinDate = this._viewDateHyphen();
+                    this._patchTask(task.guid, { 'db-pinned': pinDate });
                     this._mode = 'plan';
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-pinned', pinDate);
                     break;
                 }
                 case 'unpin': {
                     if (!task) return;
-                    await task.setMetaProperty('db-pinned', null);
+                    this._patchTask(task.guid, { 'db-pinned': null });
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-pinned', null);
                     break;
                 }
                 case 'unassign': {
                     if (!task) return;
-                    await task.setMetaProperty('db-timeblock', null);
+                    this._patchTask(task.guid, { 'db-timeblock': null });
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-timeblock', null);
                     break;
                 }
                 case 'select-task': {
@@ -955,8 +980,10 @@ class TodayDashboard {
                         const time = this._selected.id;
                         this._selected = null;
                         if (task) {
-                            await task.setMetaProperty('db-timeblock', this._viewDateStr() + ':' + time);
+                            const tb = this._viewDateStr() + ':' + time;
+                            this._patchTask(task.guid, { 'db-timeblock': tb });
                             if (this._panel) this._render(this._panel);
+                            task.setMetaProperty('db-timeblock', tb);
                         }
                     } else if (this._selected?.type === 'task' && this._selected.id === guid) {
                         this._selected = null;
@@ -973,8 +1000,10 @@ class TodayDashboard {
                         const blockTask = byGuid.get(this._selected.id);
                         this._selected = null;
                         if (blockTask) {
-                            await blockTask.setMetaProperty('db-timeblock', this._viewDateStr() + ':' + time);
+                            const tb = this._viewDateStr() + ':' + time;
+                            this._patchTask(blockTask.guid, { 'db-timeblock': tb });
                             if (this._panel) this._render(this._panel);
+                            blockTask.setMetaProperty('db-timeblock', tb);
                         }
                     } else if (this._selected?.type === 'block' && this._selected.id === time) {
                         this._selected = null;
@@ -1008,14 +1037,16 @@ class TodayDashboard {
                 }
                 case 'ignore': {
                     if (!task) return;
-                    await task.setMetaProperty('db-ignored', 'true');
+                    this._patchTask(task.guid, { 'db-ignored': 'true' });
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-ignored', 'true');
                     break;
                 }
                 case 'unignore': {
                     if (!task) return;
-                    await task.setMetaProperty('db-ignored', null);
+                    this._patchTask(task.guid, { 'db-ignored': null });
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-ignored', null);
                     break;
                 }
                 // [RECURRING-START] recurring view interactions — remove when Thymer ships native recurring
@@ -1045,12 +1076,14 @@ class TodayDashboard {
                 case 'save-recurring': {
                     if (!task || !this._recurringDraft) return;
                     const { freq, day } = this._recurringDraft;
-                    await task.setMetaProperty('db-recurring-freq', freq);
-                    await task.setMetaProperty('db-recurring-day', day || null);
-                    await task.setMetaProperty('db-pinned', this._nextUpcomingDate(freq, day || null));
+                    const nextDate = this._nextUpcomingDate(freq, day || null);
+                    this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-pinned': nextDate });
                     this._expandedRecurring = null;
                     this._recurringDraft = null;
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-recurring-freq', freq);
+                    task.setMetaProperty('db-recurring-day', day || null);
+                    task.setMetaProperty('db-pinned', nextDate);
                     break;
                 }
                 case 'cancel-recurring': {
@@ -1063,9 +1096,11 @@ class TodayDashboard {
                 // [RECURRING-START] enable toggle — remove when Thymer ships native recurring
                 case 'enable-recurring': {
                     if (!task) return;
-                    await task.setMetaProperty('db-recurring-freq', 'daily');
-                    await task.setMetaProperty('db-pinned', this._viewDateHyphen());
+                    const recPinDate = this._viewDateHyphen();
+                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-pinned': recPinDate });
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-recurring-freq', 'daily');
+                    task.setMetaProperty('db-pinned', recPinDate);
                     break;
                 }
                 // [RECURRING-END]
@@ -1073,12 +1108,11 @@ class TodayDashboard {
                     if (!task) return;
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
-                    await Promise.all([
-                        task.setMetaProperty('db-recurring-freq', null),
-                        task.setMetaProperty('db-recurring-day',  null),
-                        task.setMetaProperty('db-recurring-next', null),
-                    ]);
+                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-next': null });
                     if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-recurring-freq', null);
+                    task.setMetaProperty('db-recurring-day',  null);
+                    task.setMetaProperty('db-recurring-next', null);
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
