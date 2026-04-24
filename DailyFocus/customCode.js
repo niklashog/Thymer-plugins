@@ -199,7 +199,7 @@ class TodayDashboard {
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);box-shadow:var(--color-shadow-cards)}' +
             '.db-block:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
             '.db-block--selected{background:var(--cards-hover-bg);box-shadow:0 0 0 2px var(--ed-link-color),var(--color-shadow-cards)}' +
-            '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:170px;padding:3px 0 4px}' +
+            '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:190px;padding:3px 0 4px}' +
             '.db-block-time-inner{display:flex;align-items:center;gap:6px;font-size:13px;opacity:.4;' +
             'padding:5px 6px;min-height:30px}' +
             '.db-block-label{width:120px;flex-shrink:0}' +
