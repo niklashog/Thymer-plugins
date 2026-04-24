@@ -24,8 +24,9 @@ class TodayDashboard {
         this._themeCache     = null;
         this._listenerAbort  = null;
         this._todayCache     = null;
-        this._lastChecked    = null;
-        this._checkInterval  = null;
+        this._lastChecked        = null;
+        this._checkInterval      = null;
+        this._recurringInProgress = new Set();
     }
 
     _todayStr() {
@@ -1177,20 +1178,26 @@ class TodayDashboard {
     }
 
     async _createNextOccurrence(task) {
+        if (this._recurringInProgress.has(task.guid)) return;
         const freq = task.props?.['db-recurring-freq'];
         if (!freq || !task.record) return;
-        const day      = task.props?.['db-recurring-day'] || null;
-        const nextDate = this._nextRecurringDate(freq, day);
-        const text     = this._getText(task);
-        const newTask  = await task.record.createLineItem(null, null, 'task', [
-            { type: 'text',     text },
-            { type: 'datetime', text: nextDate },
-        ], null);
-        if (newTask) {
-            await newTask.setMetaProperty('db-recurring-freq', freq);
-            if (day) await newTask.setMetaProperty('db-recurring-day', day);
-            await newTask.setMetaProperty('db-pinned', nextDate);
-            await task.setMetaProperty('db-recurring-next', nextDate);
+        this._recurringInProgress.add(task.guid);
+        try {
+            const day      = task.props?.['db-recurring-day'] || null;
+            const nextDate = this._nextRecurringDate(freq, day);
+            const text     = this._getText(task);
+            const newTask  = await task.record.createLineItem(null, null, 'task', [
+                { type: 'text',     text },
+                { type: 'datetime', text: nextDate },
+            ], null);
+            if (newTask) {
+                await newTask.setMetaProperty('db-recurring-freq', freq);
+                if (day) await newTask.setMetaProperty('db-recurring-day', day);
+                await newTask.setMetaProperty('db-pinned', nextDate);
+                await task.setMetaProperty('db-recurring-next', nextDate);
+            }
+        } finally {
+            this._recurringInProgress.delete(task.guid);
         }
     }
     // [RECURRING-END]
