@@ -362,6 +362,7 @@ class TodayDashboard {
         const recurringPreview = viewDate > this._todayD()
             ? allTodos.filter(t =>
                 t.props?.['db-recurring-freq'] &&
+                !t.props?.['db-recurring-next'] &&
                 !viewPinnedSet.has(t.guid) &&
                 this._wouldRecurOn(t, viewDate)
               )
