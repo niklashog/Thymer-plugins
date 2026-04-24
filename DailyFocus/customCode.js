@@ -27,6 +27,8 @@ class TodayDashboard {
         this._lastChecked        = null;
         this._checkInterval      = null;
         this._recurringInProgress = new Set();
+        this._dataCache          = null;
+        this._prefetchInFlight   = false;
         // [RECURRING-START] draft state for recurring task UI — remove when Thymer ships native recurring
         this._expandedRecurring = null;
         this._recurringDraft    = null;
@@ -281,10 +283,31 @@ class TodayDashboard {
         }, 60 * 1000);
         // [RECURRING-END]
 
+        this._prefetch();
+    }
+
+    async _prefetch() {
+        if (this._prefetchInFlight) return;
+        this._prefetchInFlight = true;
+        try {
+            const [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
+                this.plugin.data.searchByQuery('@task @todo',    150),
+                this.plugin.data.searchByQuery('@task @today',  100),
+                this.plugin.data.searchByQuery('@task @overdue',  50),
+                this.plugin.data.searchByQuery('@task @due',    100),
+                this.plugin.data.searchByQuery('@task @done',   100),
+            ]);
+            this._dataCache = { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
+        } catch (e) {
+            console.warn('[Dashboard] prefetch failed:', e);
+        } finally {
+            this._prefetchInFlight = false;
+        }
     }
 
     _scheduleRefresh() {
         if (this._refreshTimer) clearTimeout(this._refreshTimer);
+        this._prefetch();
         this._refreshTimer = setTimeout(() => {
             this._refreshTimer = null;
             if (!this._panel) return;
@@ -309,7 +332,10 @@ class TodayDashboard {
 
         if (!fromCallback && !el.querySelector('.db-root, .db-loading')) return;
 
-        if (!el.querySelector('.db-root')) {
+        const cache = this._dataCache;
+        this._dataCache = null;
+
+        if (!el.querySelector('.db-root') && !cache) {
             el.innerHTML = '<div class="db-loading">Loading tasks…</div>';
         }
 
@@ -318,25 +344,36 @@ class TodayDashboard {
         const viewDateHyphen = `${viewDate.slice(0,4)}-${viewDate.slice(4,6)}-${viewDate.slice(6,8)}`;
         const isViewingToday = viewDate === this._todayD();
 
-        const [todoResult, scheduledResult] = await Promise.all([
-            this.plugin.data.searchByQuery('@task @todo',  150),
-            this.plugin.data.searchByQuery('@task @today', 100),
-        ]);
+        let todoResult, scheduledResult, overdueResult, dueResult, doneLinesAll = [];
 
-        const [overdueResult, dueResult] = (this._mode === 'focus' || this._mode === 'ignore-list')
-            ? [{ lines: [] }, { lines: [] }]
-            : await Promise.all([
-                this.plugin.data.searchByQuery('@task @overdue', 50),
-                this.plugin.data.searchByQuery('@task @due',    100),
+        if (cache) {
+            todoResult      = cache.todoResult;
+            scheduledResult = cache.scheduledResult;
+            overdueResult   = (this._mode === 'focus' || this._mode === 'ignore-list') ? { lines: [] } : cache.overdueResult;
+            dueResult       = (this._mode === 'focus' || this._mode === 'ignore-list') ? { lines: [] } : cache.dueResult;
+            if (this._mode !== 'recurring-list' && this._mode !== 'ignore-list') {
+                doneLinesAll = (cache.doneResult?.lines || []).filter(l => l.type === 'task');
+            }
+        } else {
+            [todoResult, scheduledResult] = await Promise.all([
+                this.plugin.data.searchByQuery('@task @todo',  150),
+                this.plugin.data.searchByQuery('@task @today', 100),
             ]);
 
-        let doneLinesAll = [];
-        if (this._mode !== 'recurring-list' && this._mode !== 'ignore-list') {
-            try {
-                const doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
-                doneLinesAll = (doneResult.lines || []).filter(l => l.type === 'task');
-            } catch (e) {
-                console.warn('[Dashboard] @task @done query failed:', e);
+            [overdueResult, dueResult] = (this._mode === 'focus' || this._mode === 'ignore-list')
+                ? [{ lines: [] }, { lines: [] }]
+                : await Promise.all([
+                    this.plugin.data.searchByQuery('@task @overdue', 50),
+                    this.plugin.data.searchByQuery('@task @due',    100),
+                ]);
+
+            if (this._mode !== 'recurring-list' && this._mode !== 'ignore-list') {
+                try {
+                    const doneResult = await this.plugin.data.searchByQuery('@task @done', 100);
+                    doneLinesAll = (doneResult.lines || []).filter(l => l.type === 'task');
+                } catch (e) {
+                    console.warn('[Dashboard] @task @done query failed:', e);
+                }
             }
         }
 
