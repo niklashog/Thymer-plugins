@@ -945,6 +945,7 @@ class TodayDashboard {
                 case 'set-freq': {
                     if (!task) return;
                     await task.setMetaProperty('db-recurring-freq', target.dataset.freq);
+                    await task.setMetaProperty('db-recurring-day', null);
                     if (this._panel) this._render(this._panel);
                     break;
                 }
