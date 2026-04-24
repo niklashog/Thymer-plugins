@@ -27,6 +27,10 @@ class TodayDashboard {
         this._lastChecked        = null;
         this._checkInterval      = null;
         this._recurringInProgress = new Set();
+        // [RECURRING-START] draft state for recurring task UI — remove when Thymer ships native recurring
+        this._expandedRecurring = null;
+        this._recurringDraft    = null;
+        // [RECURRING-END]
     }
 
     _todayStr() {
@@ -99,22 +103,11 @@ class TodayDashboard {
             '.db-pin,.db-unpin,.db-nav,.db-ignore,.db-unignore,.db-recurring-btn{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
             '.db-pin:hover,.db-unpin:hover,.db-nav:hover,.db-ignore:hover,.db-unignore:hover,.db-recurring-btn:hover{opacity:.7}' +
-            // [RECURRING-START] button styling — remove when Thymer ships native recurring
+            // [RECURRING-START] recurring UI — remove when Thymer ships native recurring
             '.db-recurring-btn{display:inline-flex;align-items:center;gap:2px}' +
             '.db-recurring-btn--active{opacity:.6;color:var(--ed-link-color)}' +
             '.db-task--recurring-preview{opacity:.55}' +
             '.db-recurring-btn--active:hover{opacity:1}' +
-            '.db-freq-menu-wrap{position:relative;flex-shrink:0;display:inline-flex;align-items:center}' +
-            '.db-freq-menu-btn{background:none;border:none;cursor:pointer;font-size:15px;color:inherit;' +
-            'opacity:.25;padding:1px 5px;border-radius:4px;transition:opacity .15s;line-height:1}' +
-            '.db-freq-menu-btn:hover{opacity:.7}' +
-            '.db-freq-dropdown{position:absolute;top:calc(100% + 4px);right:0;background:var(--db-bg,white);' +
-            'border:1px solid var(--db-divider,rgba(128,128,128,.15));border-radius:8px;padding:4px;' +
-            'min-width:120px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.12)}' +
-            '.db-freq-dropdown-item{display:block;width:100%;text-align:left;background:none;border:none;' +
-            'cursor:pointer;color:inherit;font-size:13px;padding:7px 10px;border-radius:4px;transition:background .1s}' +
-            '.db-freq-dropdown-item:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
-            '.db-freq-dropdown-item--active{font-weight:600;color:var(--ed-link-color)}' +
             '.db-recurring-filter{background:none;border:none;cursor:pointer;font-size:12px;color:inherit;' +
             'opacity:.35;padding:2px 4px;border-radius:4px;transition:opacity .15s;white-space:nowrap}' +
             '.db-recurring-filter:hover{opacity:.6}' +
@@ -123,15 +116,42 @@ class TodayDashboard {
             '.db-recurring-notice-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
-            '.db-recurring-wrap{display:flex;flex-direction:column}' +
-            '.db-day-picker{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:2px 6px 10px 6px}' +
-            '.db-picker-label{font-size:11px;opacity:.4;flex-shrink:0}' +
-            '.db-day-btn{background:none;border:1px solid var(--db-divider,rgba(128,128,128,.15));border-radius:4px;' +
-            'cursor:pointer;font-size:11px;font-weight:600;padding:3px 7px;color:inherit;opacity:.45;transition:all .1s}' +
-            '.db-day-btn:hover{opacity:.8}' +
-            '.db-day-btn--active{background:var(--ed-link-color);color:white;opacity:1;border-color:transparent}' +
-            '.db-day-select{background:var(--db-bg,white);border:1px solid var(--db-divider,rgba(128,128,128,.15));' +
-            'border-radius:4px;cursor:pointer;font-size:11px;padding:3px 6px;color:inherit;outline:none}' +
+            '.db-recur-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:199}' +
+            '.db-recur-row{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;transition:background .1s}' +
+            '.db-recur-row:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
+            '.db-recur-row--expanded{background:var(--db-hover,rgba(128,128,128,.07));cursor:default}' +
+            '.db-recur-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-recur-summary{font-size:12px;opacity:.4;white-space:nowrap;flex-shrink:0}' +
+            '.db-recur-summary--unconfigured{color:#ef4444;opacity:.7}' +
+            '.db-recur-edit{background:var(--db-bg,white);border:1px solid var(--db-divider,rgba(128,128,128,.15));' +
+            'border-radius:8px;padding:16px;margin:4px 6px 12px 6px}' +
+            '.db-recur-pills{display:flex;gap:6px;margin-bottom:16px}' +
+            '.db-recur-pill{background:none;border:1px solid var(--db-divider,rgba(128,128,128,.2));border-radius:20px;' +
+            'cursor:pointer;font-size:12px;font-weight:500;padding:4px 12px;color:inherit;opacity:.6;transition:all .1s}' +
+            '.db-recur-pill:hover{opacity:1}' +
+            '.db-recur-pill--active{background:var(--ed-link-color);color:white;border-color:transparent;opacity:1}' +
+            '.db-recur-date-area{margin-bottom:16px;min-height:32px}' +
+            '.db-recur-days{display:flex;flex-wrap:wrap;gap:6px}' +
+            '.db-recur-day-btn{background:none;border:1px solid var(--db-divider,rgba(128,128,128,.2));border-radius:6px;' +
+            'cursor:pointer;font-size:12px;font-weight:500;padding:5px 10px;color:inherit;opacity:.5;transition:all .1s}' +
+            '.db-recur-day-btn:hover{opacity:.9}' +
+            '.db-recur-day-btn--active{background:var(--ed-link-color);color:white;border-color:transparent;opacity:1}' +
+            '.db-recur-select{background:var(--db-bg,white);border:1px solid var(--db-divider,rgba(128,128,128,.2));' +
+            'border-radius:6px;cursor:pointer;font-size:12px;padding:5px 8px;color:inherit;outline:none;margin-right:8px}' +
+            '.db-recur-actions{display:flex;align-items:center;gap:8px}' +
+            '.db-recur-save{background:var(--ed-link-color);color:white;border:none;border-radius:6px;cursor:pointer;' +
+            'font-size:12px;font-weight:600;padding:6px 16px;transition:opacity .1s}' +
+            '.db-recur-save:hover{opacity:.85}' +
+            '.db-recur-cancel{background:none;border:none;cursor:pointer;font-size:12px;color:inherit;' +
+            'opacity:.45;padding:6px 8px;transition:opacity .1s;border-radius:4px}' +
+            '.db-recur-cancel:hover{opacity:.8}' +
+            '.db-recur-delete{background:none;border:none;cursor:pointer;font-size:14px;color:#ef4444;opacity:.35;' +
+            'padding:4px 6px;margin-left:auto;border-radius:4px;transition:opacity .1s}' +
+            '.db-recur-delete:hover{opacity:.8}' +
+            '@media(max-width:600px){.db-recur-overlay:not([hidden]){display:block}' +
+            '.db-recur-edit{position:fixed;bottom:0;left:0;right:0;border-radius:16px 16px 0 0;border:none;' +
+            'border-top:1px solid var(--db-divider,rgba(128,128,128,.15));padding:20px 20px 32px;z-index:200;' +
+            'box-shadow:0 -4px 24px rgba(0,0,0,.15);margin:0}}' +
             // [RECURRING-END]
             '.db-task--ignored{opacity:.35}' +
             '.db-icon-hover{display:none}' +
@@ -579,7 +599,8 @@ class TodayDashboard {
                 </div>`).join('')
             : `<div class="db-empty">No recurring tasks — use the repeat button on any task to set a frequency</div>`;
 
-        return `<div class="db-header">
+        return `<div class="db-recur-overlay"${this._expandedRecurring ? '' : ' hidden'} data-action="cancel-recurring"></div>
+            <div class="db-header">
                 <div class="db-header-left">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Recurring tasks</span>
@@ -593,77 +614,86 @@ class TodayDashboard {
     }
 
     _recurringTaskRow(task) {
-        const text   = this._escape(this._getText(task));
-        const source     = this._escape(task.record?.getName() || '');
+        const text = this._escape(this._getText(task));
+        const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
             ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
-              // WIP: open-in-panel button goes here — blocked on Thymer SDK (createPanel + navigateTo doesn't open native record view)
             : '';
-        const freq   = task.props?.['db-recurring-freq'];
-        const day    = task.props?.['db-recurring-day'] || null;
-        const FREQS     = ['daily', 'weekly', 'monthly', 'yearly'];
-        const FREQ_LABEL = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' };
-        const dateLabel  = this._getTaskDate(task);
-        const freqMenu   = `<div class="db-freq-menu-wrap">
-            <button class="db-freq-menu-btn" data-action="open-freq-menu" data-guid="${task.guid}" title="Options"><i class="ti ti-dots"></i></button>
-            <div class="db-freq-dropdown" hidden>
-                ${FREQS.map(f => `<button class="db-freq-dropdown-item${freq === f ? ' db-freq-dropdown-item--active' : ''}" data-action="set-freq" data-guid="${task.guid}" data-freq="${f}">${FREQ_LABEL[f]}</button>`).join('')}
-                <button class="db-freq-dropdown-item" style="opacity:.5;margin-top:4px" data-action="remove-recurring" data-guid="${task.guid}">Remove recurring</button>
-            </div>
+        const freq = task.props?.['db-recurring-freq'];
+        const day  = task.props?.['db-recurring-day'] || null;
+        const summary = this._recurSummary(freq, day);
+        const summaryHTML = summary
+            ? `<span class="db-recur-summary">${this._escape(summary)}</span>`
+            : `<span class="db-recur-summary db-recur-summary--unconfigured">Configure</span>`;
+        const isExpanded = this._expandedRecurring === task.guid;
+        const row = `<div class="db-recur-row${isExpanded ? ' db-recur-row--expanded' : ''}"${isExpanded ? '' : ` data-action="expand-recurring" data-guid="${task.guid}"`}>
+            <span class="db-recur-name">${text}</span>
+            ${summaryHTML}
+            ${sourceHTML}
         </div>`;
-        return `<div class="db-recurring-wrap">
-            <div class="db-task listitem-task" data-guid="${task.guid}">
-                <div class="db-task-body">
-                    <span class="db-task-text">${text}</span>
-                    ${dateLabel ? `<span class="db-task-source">${dateLabel}</span>` : ''}
-                </div>
-                ${sourceHTML}
-                ${freqMenu}
-            </div>
-            ${this._dayPickerHTML(task.guid, freq, day)}
-        </div>`;
+        if (isExpanded) {
+            const draft = this._recurringDraft || { freq, day };
+            return row + this._recurringEditPanel(task.guid, draft.freq, draft.day);
+        }
+        return row;
     }
 
-    _dayPickerHTML(guid, freq, day) {
-        if (freq === 'daily') return '';
+    // [RECURRING-START] recurring UI helpers — remove when Thymer ships native recurring
+    _recurSummary(freq, day) {
+        if (freq === 'daily') return 'Every day';
         if (freq === 'weekly') {
-            const DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-            const active = day ? parseInt(day) : null;
-            const btns   = DAYS.map((label, i) => {
-                const iso = i + 1;
-                return `<button class="db-day-btn${active === iso ? ' db-day-btn--active' : ''}" data-action="set-recur-day" data-guid="${guid}" data-day="${iso}">${label}</button>`;
-            }).join('');
-            return `<div class="db-day-picker">${btns}</div>`;
+            if (!day) return null;
+            return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][parseInt(day) - 1] || null;
         }
         if (freq === 'monthly') {
-            const activeDay = day ? parseInt(day) : 0;
-            const options   = Array.from({length: 31}, (_, i) => i + 1)
-                .map(d => `<option value="${d}"${activeDay === d ? ' selected' : ''}>${d}</option>`).join('');
-            return `<div class="db-day-picker">
-                <span class="db-picker-label">Day of month</span>
-                <select class="db-day-select" data-action="set-recur-day" data-guid="${guid}">
-                    ${!activeDay ? '<option value="" disabled selected>Pick a day</option>' : ''}
-                    ${options}
-                </select>
-            </div>`;
+            return day ? `Day ${parseInt(day)}` : null;
         }
         if (freq === 'yearly') {
-            const [mm, dd] = day ? day.split('-').map(Number) : [0, 0];
-            const MONTHS   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-            const mOpts    = MONTHS.map((m, i) => `<option value="${i+1}"${mm === i+1 ? ' selected' : ''}>${m}</option>`).join('');
-            const dOpts    = Array.from({length: 31}, (_, i) => i + 1)
-                .map(d => `<option value="${d}"${dd === d ? ' selected' : ''}>${d}</option>`).join('');
-            return `<div class="db-day-picker">
-                <select class="db-recur-year-select db-recur-year-month db-day-select" data-guid="${guid}">
-                    ${!mm ? '<option value="" disabled selected>Month</option>' : ''}${mOpts}
-                </select>
-                <select class="db-recur-year-select db-recur-year-day db-day-select" data-guid="${guid}">
-                    ${!dd ? '<option value="" disabled selected>Day</option>' : ''}${dOpts}
-                </select>
-            </div>`;
+            if (!day) return null;
+            const [mm, dd] = day.split('-').map(Number);
+            return `${dd} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mm - 1]}`;
         }
-        return '';
+        return null;
     }
+
+    _recurringEditPanel(guid, draftFreq, draftDay) {
+        const FREQS = ['daily', 'weekly', 'monthly', 'yearly'];
+        const FREQ_LABEL = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' };
+        const pills = FREQS.map(f =>
+            `<button class="db-recur-pill${draftFreq === f ? ' db-recur-pill--active' : ''}" data-action="draft-freq" data-guid="${guid}" data-freq="${f}">${FREQ_LABEL[f]}</button>`
+        ).join('');
+        let dateArea = '';
+        if (draftFreq === 'weekly') {
+            const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            const active = draftDay ? parseInt(draftDay) : null;
+            dateArea = `<div class="db-recur-days">${DAYS.map((label, i) => {
+                const iso = i + 1;
+                return `<button class="db-recur-day-btn${active === iso ? ' db-recur-day-btn--active' : ''}" data-action="draft-day" data-guid="${guid}" data-day="${iso}">${label}</button>`;
+            }).join('')}</div>`;
+        } else if (draftFreq === 'monthly') {
+            const activeDay = draftDay ? parseInt(draftDay) : 0;
+            const options = Array.from({length: 31}, (_, i) => i + 1)
+                .map(d => `<option value="${d}"${activeDay === d ? ' selected' : ''}>${d}</option>`).join('');
+            dateArea = `<select class="db-recur-select db-recur-month-day" data-guid="${guid}">${!activeDay ? '<option value="" disabled selected>Day of month</option>' : ''}${options}</select>`;
+        } else if (draftFreq === 'yearly') {
+            const [mm, dd] = draftDay ? draftDay.split('-').map(Number) : [0, 0];
+            const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            const mOpts = MONTHS.map((m, i) => `<option value="${i+1}"${mm === i+1 ? ' selected' : ''}>${m}</option>`).join('');
+            const dOpts = Array.from({length: 31}, (_, i) => i + 1)
+                .map(d => `<option value="${d}"${dd === d ? ' selected' : ''}>${d}</option>`).join('');
+            dateArea = `<select class="db-recur-select db-recur-year-month" data-guid="${guid}">${!mm ? '<option value="" disabled selected>Month</option>' : ''}${mOpts}</select><select class="db-recur-select db-recur-year-day" data-guid="${guid}">${!dd ? '<option value="" disabled selected>Day</option>' : ''}${dOpts}</select>`;
+        }
+        return `<div class="db-recur-edit">
+            <div class="db-recur-pills">${pills}</div>
+            <div class="db-recur-date-area">${dateArea}</div>
+            <div class="db-recur-actions">
+                <button class="db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
+                <button class="db-recur-cancel" data-action="cancel-recurring">Cancel</button>
+                <button class="db-recur-delete" data-action="remove-recurring" data-guid="${guid}" title="Remove recurring"><i class="ti ti-trash"></i></button>
+            </div>
+        </div>`;
+    }
+    // [RECURRING-END]
 
     _getTaskDate(task) {
         const seg = (task.segments || []).find(s => s.type === 'datetime');
@@ -935,30 +965,48 @@ class TodayDashboard {
                     if (this._panel) this._render(this._panel);
                     break;
                 }
-                case 'open-freq-menu': {
-                    const freqWrap = target.closest('.db-freq-menu-wrap');
-                    const drop = freqWrap?.querySelector('.db-freq-dropdown');
-                    if (!drop) return;
-                    drop.hidden = !drop.hidden;
-                    if (!drop.hidden) document.addEventListener('click', () => { drop.hidden = true; }, { once: true });
-                    break;
-                }
-                case 'set-freq': {
+                // [RECURRING-START] recurring view interactions — remove when Thymer ships native recurring
+                case 'expand-recurring': {
                     if (!task) return;
-                    await task.setMetaProperty('db-recurring-freq', target.dataset.freq);
-                    await task.setMetaProperty('db-recurring-day', null);
+                    this._expandedRecurring = guid;
+                    this._recurringDraft = {
+                        freq: task.props?.['db-recurring-freq'] || 'daily',
+                        day:  task.props?.['db-recurring-day']  || null,
+                    };
                     if (this._panel) this._render(this._panel);
                     break;
                 }
-                case 'set-recur-day': {
-                    if (!task) return;
-                    const val  = target.dataset.day;
-                    const freq = task.props?.['db-recurring-freq'];
-                    await task.setMetaProperty('db-recurring-day', val);
-                    await task.setMetaProperty('db-pinned', this._nextUpcomingDate(freq, val));
+                case 'draft-freq': {
+                    if (!this._recurringDraft) return;
+                    this._recurringDraft.freq = target.dataset.freq;
+                    this._recurringDraft.day  = null;
                     if (this._panel) this._render(this._panel);
                     break;
                 }
+                case 'draft-day': {
+                    if (!this._recurringDraft) return;
+                    this._recurringDraft.day = target.dataset.day;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'save-recurring': {
+                    if (!task || !this._recurringDraft) return;
+                    const { freq, day } = this._recurringDraft;
+                    await task.setMetaProperty('db-recurring-freq', freq);
+                    await task.setMetaProperty('db-recurring-day', day || null);
+                    await task.setMetaProperty('db-pinned', this._nextUpcomingDate(freq, day || null));
+                    this._expandedRecurring = null;
+                    this._recurringDraft = null;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'cancel-recurring': {
+                    this._expandedRecurring = null;
+                    this._recurringDraft = null;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                // [RECURRING-END]
                 // [RECURRING-START] enable toggle — remove when Thymer ships native recurring
                 case 'enable-recurring': {
                     if (!task) return;
@@ -970,6 +1018,8 @@ class TodayDashboard {
                 // [RECURRING-END]
                 case 'remove-recurring': {
                     if (!task) return;
+                    this._expandedRecurring = null; // [RECURRING]
+                    this._recurringDraft    = null; // [RECURRING]
                     await Promise.all([
                         task.setMetaProperty('db-recurring-freq', null),
                         task.setMetaProperty('db-recurring-day',  null),
@@ -986,6 +1036,8 @@ class TodayDashboard {
                 }
                 case 'set-mode': {
                     this._mode = target.dataset.mode;
+                    this._expandedRecurring = null; // [RECURRING]
+                    this._recurringDraft    = null; // [RECURRING]
                     if (this._mode === 'plan' && this._viewDate < this._todayD()) this._viewDate = null;
                     if (this._panel) this._render(this._panel);
                     break;
@@ -1008,28 +1060,20 @@ class TodayDashboard {
             }
         }, { signal });
 
-        el.addEventListener('change', async e => {
-            const target = e.target;
-            if (target.matches('select[data-action="set-recur-day"]')) {
-                const task = byGuid.get(target.dataset.guid);
-                if (!task) return;
-                const freq = task.props?.['db-recurring-freq'];
-                await task.setMetaProperty('db-recurring-day', target.value);
-                await task.setMetaProperty('db-pinned', this._nextUpcomingDate(freq, target.value));
-                if (this._panel) this._render(this._panel);
+        el.addEventListener('change', e => {
+            const t = e.target;
+            // [RECURRING-START] draft day selects — remove when Thymer ships native recurring
+            if (t.matches('.db-recur-month-day')) {
+                if (this._recurringDraft) this._recurringDraft.day = t.value;
                 return;
             }
-            // [RECURRING-START] yearly picker — remove when Thymer ships native recurring
-            if (target.matches('.db-recur-year-select')) {
-                const picker = target.closest('.db-day-picker');
-                const mm = picker.querySelector('.db-recur-year-month').value;
-                const dd = picker.querySelector('.db-recur-year-day').value;
-                if (!mm || !dd) return;
-                const task = byGuid.get(target.dataset.guid);
-                if (!task) return;
-                const dayVal = `${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
-                await task.setMetaProperty('db-recurring-day', dayVal);
-                await task.setMetaProperty('db-pinned', this._nextUpcomingDate('yearly', dayVal));
+            if (t.matches('.db-recur-year-month, .db-recur-year-day')) {
+                if (!this._recurringDraft) return;
+                const edit = t.closest('.db-recur-edit');
+                const mm = edit?.querySelector('.db-recur-year-month')?.value;
+                const dd = edit?.querySelector('.db-recur-year-day')?.value;
+                if (mm && dd) this._recurringDraft.day = `${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+                return;
             }
             // [RECURRING-END]
         }, { signal });
