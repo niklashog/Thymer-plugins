@@ -119,7 +119,7 @@ class TodayDashboard {
             '.db-recur-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:199}' +
             '.db-recur-row{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer;transition:background .1s}' +
             '.db-recur-row:hover{background:var(--db-hover,rgba(128,128,128,.07))}' +
-            '.db-recur-row--expanded{background:var(--db-hover,rgba(128,128,128,.07));cursor:default}' +
+            '.db-recur-row--expanded{background:var(--db-hover,rgba(128,128,128,.07))}' +
             '.db-recur-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-recur-summary{font-size:12px;opacity:.4;white-space:nowrap;flex-shrink:0}' +
             '.db-recur-summary--unconfigured{color:#ef4444;opacity:.7}' +
@@ -626,7 +626,7 @@ class TodayDashboard {
             ? `<span class="db-recur-summary">${this._escape(summary)}</span>`
             : `<span class="db-recur-summary db-recur-summary--unconfigured">Configure</span>`;
         const isExpanded = this._expandedRecurring === task.guid;
-        const row = `<div class="db-recur-row${isExpanded ? ' db-recur-row--expanded' : ''}"${isExpanded ? '' : ` data-action="expand-recurring" data-guid="${task.guid}"`}>
+        const row = `<div class="db-recur-row${isExpanded ? ' db-recur-row--expanded' : ''}" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
             <span class="db-recur-name">${text}</span>
             ${summaryHTML}
             ${sourceHTML}
