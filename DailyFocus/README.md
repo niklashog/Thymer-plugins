@@ -54,6 +54,15 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 
 ## Changelog
 
+### 2026-04-25
+- **Instant UI** — panel opens immediately, no loading delay
+- **Recurring preview** — future dates show a dimmed ghost of tasks that would recur that day
+- **UI overhaul** — new design across all views
+
+### 2026-04-24
+- **Recurring tasks (experimental)** — mark tasks as recurring (daily / weekly / monthly / yearly); auto-generates occurrences and catches up in the background
+- **Recurring tasks view** — accessible via ☰; tap a row to expand and edit its schedule
+
 ### 2026-04-23
 - Added **☰ menu** — sits in the top left corner of every view, starting point for plugin settings and tools
 - Added **Ignore list** — accessible via the ☰ menu. Hide tasks from Plan and Focus without deleting them. Restore at any time from the same view.
