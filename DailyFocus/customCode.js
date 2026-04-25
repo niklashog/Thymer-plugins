@@ -24,9 +24,6 @@ class TodayDashboard {
         this._themeCache     = null;
         this._listenerAbort  = null;
         this._todayCache     = null;
-        this._lastChecked        = null;
-        this._checkInterval      = null;
-        this._recurringInProgress = new Set();
         this._lastData           = null;
         this._prefetchInFlight   = false;
         // [RECURRING-START] draft state for recurring task UI — remove when Thymer ships native recurring
@@ -255,37 +252,10 @@ class TodayDashboard {
             this._render(panel, true);
         });
 
-        this.plugin.events.on('lineitem.updated', async ev => {
-            // [RECURRING-START] native completion detection — remove when Thymer ships native recurring
-            if (ev.status === 'done') {
-                try {
-                    const task = await ev.getLineItem();
-                    if (task?.props?.['db-recurring-freq'] && !task.props?.['db-recurring-next']) {
-                        await this._createNextOccurrence(task);
-                    }
-                } catch (e) {
-                    console.warn('[Dashboard] recurring check failed:', e);
-                }
-            }
-            // [RECURRING-END]
-            this._scheduleRefresh();
-        });
+        this.plugin.events.on('lineitem.updated', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.created', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.deleted', () => this._scheduleRefresh());
 
-        // [RECURRING-START] catch-up on load + daily interval — remove when Thymer ships native recurring
-        this._runRecurringCatchUp();
-        const _d = new Date();
-        this._lastChecked = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
-        this._checkInterval = setInterval(() => {
-            const d = new Date();
-            const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            if (this._lastChecked === today) return;
-            this._lastChecked = today;
-            this._todayCache = null;
-            this._runRecurringCatchUp().then(() => this._scheduleRefresh());
-        }, 60 * 1000);
-        // [RECURRING-END]
 
         this._prefetch();
     }
@@ -469,8 +439,7 @@ class TodayDashboard {
         const recurringPreview = viewDate > this._todayD()
             ? allTodos.filter(t =>
                 t.props?.['db-recurring-freq'] &&
-                !t.props?.['db-recurring-next'] &&
-                !viewPinnedSet.has(t.guid) &&
+!viewPinnedSet.has(t.guid) &&
                 this._wouldRecurOn(t, viewDate)
               )
             : [];
@@ -954,17 +923,41 @@ class TodayDashboard {
             switch (action) {
                 case 'done': {
                     if (!task) return;
-                    this._moveToDone(task.guid, today);
-                    if (this._panel) this._render(this._panel);
-                    try {
-                        await task.setTaskStatus('done');
-                        await task.setMetaProperty('db-done-date', today);
-                        const journal = await this._journalRecord(this._todayD());
-                        if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
-                    } catch (err) {
-                        console.error('[Dashboard] done failed:', err);
-                        this._moveToTodo(task.guid);
+                    const isRecurring = !!task.props?.['db-recurring-freq'];
+                    if (isRecurring) {
+                        // [RECURRING-START] recurring done — advance date, journal transclusion, stay as todo
+                        const freq     = task.props['db-recurring-freq'];
+                        const day      = task.props?.['db-recurring-day'] || null;
+                        const nextDate = this._nextRecurringDate(freq, day);
+                        const lines    = this._lastData?.todoResult?.lines;
+                        if (lines) lines.splice(lines.findIndex(l => l.guid === task.guid), 1);
                         if (this._panel) this._render(this._panel);
+                        try {
+                            const journal = await this._journalRecord(this._todayD());
+                            if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
+                            await task.setSegments([
+                                ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                                { type: 'text',     text: ' ' },
+                                { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
+                            ]);
+                        } catch (err) {
+                            console.error('[Dashboard] recurring done failed:', err);
+                            this._scheduleRefresh();
+                        }
+                        // [RECURRING-END]
+                    } else {
+                        this._moveToDone(task.guid, today);
+                        if (this._panel) this._render(this._panel);
+                        try {
+                            await task.setTaskStatus('done');
+                            await task.setMetaProperty('db-done-date', today);
+                            const journal = await this._journalRecord(this._todayD());
+                            if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
+                        } catch (err) {
+                            console.error('[Dashboard] done failed:', err);
+                            this._moveToTodo(task.guid);
+                            if (this._panel) this._render(this._panel);
+                        }
                     }
                     break;
                 }
@@ -1148,11 +1141,10 @@ class TodayDashboard {
                     if (!task) return;
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
-                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-next': null });
+                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', null);
                     task.setMetaProperty('db-recurring-day',  null);
-                    task.setMetaProperty('db-recurring-next', null);
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
@@ -1332,44 +1324,6 @@ class TodayDashboard {
         return false;
     }
 
-    async _runRecurringCatchUp() {
-        try {
-            const result = await this.plugin.data.searchByQuery('@task @done', 200);
-            const missed = (result.lines || []).filter(l =>
-                l.type === 'task' &&
-                l.props?.['db-recurring-freq'] &&
-                !l.props?.['db-recurring-next']
-            );
-            for (const task of missed) {
-                await this._createNextOccurrence(task);
-            }
-        } catch (e) {
-            console.warn('[Dashboard] recurring catch-up failed:', e);
-        }
-    }
-
-    async _createNextOccurrence(task) {
-        if (this._recurringInProgress.has(task.guid)) return;
-        const freq = task.props?.['db-recurring-freq'];
-        if (!freq || !task.record) return;
-        this._recurringInProgress.add(task.guid);
-        try {
-            const day      = task.props?.['db-recurring-day'] || null;
-            const nextDate = this._nextRecurringDate(freq, day);
-            const text     = this._getText(task);
-            const newTask  = await task.record.createLineItem(null, null, 'task', [
-                { type: 'text',     text: text + ' ' },
-                { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
-            ], null);
-            if (newTask) {
-                await task.setMetaProperty('db-recurring-next', nextDate);
-                await newTask.setMetaProperty('db-recurring-freq', freq);
-                if (day) await newTask.setMetaProperty('db-recurring-day', day);
-            }
-        } finally {
-            this._recurringInProgress.delete(task.guid);
-        }
-    }
     // [RECURRING-END]
 
     _journalCollectionGuid() {
