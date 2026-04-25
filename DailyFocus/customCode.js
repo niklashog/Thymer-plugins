@@ -30,6 +30,7 @@ class TodayDashboard {
         this._expandedRecurring       = null;
         this._recurringDraft          = null;
         this._completedRecurringDates = {}; // guid → comma-separated YYYYMMDD, persists across _lastData refreshes
+        this._rescheduledRecurring    = {}; // guid → YYYYMMDD start date when rescheduled to future
         // [RECURRING-END]
     }
 
@@ -401,10 +402,12 @@ class TodayDashboard {
             if (l.props?.['db-pinned'] === viewDateHyphen) return true;
             const seg = (l.segments || []).find(s => s.type === 'datetime');
             if (seg?.text?.d !== viewDate) return false;
-            // [RECURRING-START] exclude recurring tasks already completed on this date
+            // [RECURRING-START] exclude recurring tasks already completed on this date or rescheduled away
             const recurDone = l.props?.['db-recurring-done-dates'];
             if (recurDone?.split(',').includes(viewDate)) return false;
             if (this._completedRecurringDates[l.guid]?.split(',').includes(viewDate)) return false;
+            const rescheduled = this._rescheduledRecurring[l.guid];
+            if (rescheduled && rescheduled > viewDate) return false;
             // [RECURRING-END]
             return true;
         });
@@ -424,16 +427,18 @@ class TodayDashboard {
             const isScheduled = scheduledGuids.has(l.guid);
             const isDated     = datedGuids.has(l.guid);
             const hasPinProp  = !!l.props?.['db-pinned'];
-            // [RECURRING-START] don't show recurring tasks already completed today
+            // [RECURRING-START] don't show recurring tasks already completed or rescheduled away from today
             const recurDone   = l.props?.['db-recurring-done-dates'];
             const isRecurringCompleted = !!(
                 recurDone?.split(',').includes(viewDate) ||
                 this._completedRecurringDates[l.guid]?.split(',').includes(viewDate)
             );
+            const rescheduledStart = this._rescheduledRecurring[l.guid];
+            const isRescheduledAway = !!(rescheduledStart && rescheduledStart > viewDate);
             // [RECURRING-END]
-            if (isOverdue && !isPinned)                                             planOverdue.push(l);
-            if (isPinned    && !isRecurringCompleted)                               todayPinned.push(l);
-            if (isScheduled && !isPinned && !isOverdue && !isRecurringCompleted)    scheduled.push(l);
+            if (isOverdue && !isPinned)                                                              planOverdue.push(l);
+            if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                          todayPinned.push(l);
+            if (isScheduled && !isPinned && !isOverdue && !isRecurringCompleted && !isRescheduledAway) scheduled.push(l);
             if (!isDated && !isPinned && !isScheduled && !isOverdue)                inbox.push(l);
             if (!isDated && !hasPinProp && !isScheduled && !isOverdue)              planInbox.push(l);
         }
@@ -1177,6 +1182,7 @@ class TodayDashboard {
                         { type: 'datetime', text: { d: startDate } },
                     ];
                     this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-recurring-start': startDate });
+                    if (startDate > this._todayD()) this._rescheduledRecurring[task.guid] = startDate;
                     // Patch segments and remove from scheduledResult if new date is not today
                     const cachedLine = (this._lastData?.todoResult?.lines || []).find(l => l.guid === task.guid);
                     if (cachedLine) cachedLine.segments = newSegs;
