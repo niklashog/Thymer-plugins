@@ -1017,7 +1017,7 @@ class TodayDashboard {
                         try {
                             await task.setTaskStatus('done');
                             await task.setMetaProperty('db-done-date', today);
-                            const journal = await this._journalRecord(this._todayD());
+                            const journal = await this._journalRecord();
                             if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
                         } catch (err) {
                             console.error('[Dashboard] done failed:', err);
@@ -1401,40 +1401,16 @@ class TodayDashboard {
 
     // [RECURRING-END]
 
-    _journalCollectionGuid() {
-        if (this._journalColGuid) return this._journalColGuid;
-        const saved = this.plugin.getConfiguration().journalCollectionGuid;
-        if (saved) { this._journalColGuid = saved; return saved; }
-        const pattern = /^S-(.+)-P000000000-0-\d{8}$/;
-        const all = [
-            ...(this._lastData?.todoResult?.lines || []),
-            ...(this._lastData?.doneResult?.lines || []),
-        ];
-        for (const t of all) {
-            const match = t.record?.guid?.match(pattern);
-            if (match) {
-                this._journalColGuid = match[1];
-                this._saveJournalCollectionGuid(match[1]);
-                return match[1];
-            }
+    async _journalRecord() {
+        if (!this._journalCollection) {
+            const collections = await this.plugin.data.getAllCollections();
+            this._journalCollection = collections.find(c => c.isJournalPlugin()) || null;
         }
-        return null;
-    }
-
-    async _saveJournalCollectionGuid(colGuid) {
-        const pluginApi = this.plugin.data.getPluginByGuid(this.plugin.getGuid());
-        if (!pluginApi) return;
-        const config = pluginApi.getConfiguration();
-        config.journalCollectionGuid = colGuid;
-        await pluginApi.saveConfiguration(config);
-    }
-
-    async _journalRecord(dateStr) {
-        const colGuid = this._journalCollectionGuid();
-        if (!colGuid) return null;
-        const recordGuid = `S-${colGuid}-P000000000-0-${dateStr}`;
+        if (!this._journalCollection) return null;
+        const user = this.plugin.data.getActiveUsers()[0];
+        if (!user) return null;
         try {
-            return await this.plugin.data.getRecord(recordGuid);
+            return await this._journalCollection.getJournalRecord(user);
         } catch (e) {
             return null;
         }
