@@ -31,7 +31,7 @@ Used to decide what goes into your day.
 
 Tap a task in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Navigate forward to future dates with `←` / `→`. Switch back with **← Focus**.
 
-### Recurring tasks *(experimental)*
+### Recurring tasks
 
 Accessible via the ☰ menu. Lists all tasks marked as recurring. Tap a row to expand and set its schedule — choose a frequency (daily / weekly / monthly / yearly) and, where applicable, a day. Remove the recurring setting via the trash icon.
 

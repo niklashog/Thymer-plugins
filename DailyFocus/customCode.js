@@ -120,10 +120,6 @@ class TodayDashboard {
             '.db-recurring-notice-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
-            '.db-dev-banner{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;margin-bottom:14px;' +
-            'border-radius:var(--ed-radius-block);background:var(--ed-container-bg-color);' +
-            'border:1px solid var(--ed-container-border-color);font-size:12px;line-height:1.5;opacity:.85}' +
-            '.db-dev-banner i{flex-shrink:0;margin-top:1px;opacity:.7}' +
             '.db-recur-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:199}' +
             '.db-recur-row{display:flex;align-items:center;gap:8px;padding:10px 14px;' +
             'border-radius:var(--ed-radius-block);cursor:pointer;transition:background .1s,box-shadow .1s;' +
@@ -630,10 +626,6 @@ class TodayDashboard {
                 </div>
             </div>
             <div class="db-root">
-                <div class="db-dev-banner">
-                    <i class="ti ti-flask"></i>
-                    <strong>Recurring tasks is experimental.</strong> The feature is under active development and may change or lose data. Use for testing only.
-                </div>
             ${this._section('Overdue',  overdue,  'overdue')}
             ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
             ${recurringNotice}
@@ -712,10 +704,6 @@ class TodayDashboard {
                 </div>
             </div>
             <div class="db-root">
-                <div class="db-dev-banner">
-                    <i class="ti ti-flask"></i>
-                    <strong>Recurring tasks is experimental.</strong> The feature is under active development and may change or lose data. Use for testing only.
-                </div>
                 ${sections}
             </div>`;
     }
