@@ -424,11 +424,18 @@ class TodayDashboard {
             const isScheduled = scheduledGuids.has(l.guid);
             const isDated     = datedGuids.has(l.guid);
             const hasPinProp  = !!l.props?.['db-pinned'];
-            if (isOverdue && !isPinned)                                planOverdue.push(l);
-            if (isPinned)                                              todayPinned.push(l);
-            if (isScheduled && !isPinned && !isOverdue)                scheduled.push(l);
-            if (!isDated && !isPinned && !isScheduled && !isOverdue)   inbox.push(l);
-            if (!isDated && !hasPinProp && !isScheduled && !isOverdue) planInbox.push(l);
+            // [RECURRING-START] don't show recurring tasks already completed today
+            const recurDone   = l.props?.['db-recurring-done-dates'];
+            const isRecurringCompleted = !!(
+                recurDone?.split(',').includes(viewDate) ||
+                this._completedRecurringDates[l.guid]?.split(',').includes(viewDate)
+            );
+            // [RECURRING-END]
+            if (isOverdue && !isPinned)                                             planOverdue.push(l);
+            if (isPinned    && !isRecurringCompleted)                               todayPinned.push(l);
+            if (isScheduled && !isPinned && !isOverdue && !isRecurringCompleted)    scheduled.push(l);
+            if (!isDated && !isPinned && !isScheduled && !isOverdue)                inbox.push(l);
+            if (!isDated && !hasPinProp && !isScheduled && !isOverdue)              planInbox.push(l);
         }
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
