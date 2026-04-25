@@ -1,5 +1,6 @@
 {
     "name": "Daily Focus",
+    "description": "A workspace-wide task dashboard that aggregates tasks from across your entire Thymer workspace. Operates in two modes — Focus for executing your day, Plan for deciding what matters.",
     "icon": "gauge",
     "type": "global"
 }
