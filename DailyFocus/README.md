@@ -62,6 +62,9 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 
 ## Changelog
 
+### 2026-04-26
+- **Fix** — journal transclusions now work correctly across multiple workspaces or accounts open in the same browser
+
 ### 2026-04-25 (recurring rethink)
 - **One task forever** — recurring tasks no longer create copies on each occurrence; a single task advances to the next date when checked off
 - **Ghost traces** — past days in Focus show recurring history: completed occurrences appear with strikethrough, missed ones appear dimmed
