@@ -925,6 +925,9 @@ class TodayDashboard {
         }
 
         if (section === 'today') {
+            const unpinBtn = task.props?.['db-pinned']
+                ? `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`
+                : '';
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body">
@@ -932,7 +935,7 @@ class TodayDashboard {
                 </div>
                 ${sourceHTML}
                 ${recurToggle}<!-- [RECURRING] -->
-                <button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>
+                ${unpinBtn}
             </div>`;
         }
 
