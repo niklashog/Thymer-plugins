@@ -1161,8 +1161,7 @@ class TodayDashboard {
                     break;
                 }
                 case 'toggle-menu': {
-                    const menuWrap = target.closest('.db-menu-wrap') ?? target.querySelector('.db-menu-wrap');
-                    const drop = menuWrap?.querySelector('.db-dropdown');
+                    const drop = el.querySelector('.db-dropdown');
                     if (!drop) return;
                     drop.hidden = !drop.hidden;
                     if (!drop.hidden) document.addEventListener('click', () => { drop.hidden = true; }, { once: true });
