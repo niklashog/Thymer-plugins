@@ -75,6 +75,9 @@ class TodayDashboard {
     }
 
     load() {
+        console.log('[Dashboard] $config:', JSON.stringify(this.plugin.collectionRoot.kv.$config));
+        console.log('[Dashboard] $config_meta:', JSON.stringify(this.plugin.collectionRoot.kv.$config_meta));
+        console.log('[Dashboard] collectionRoot methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.collectionRoot)));
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 32px 32px;}' +
             '.db-section{margin-bottom:32px}' +
