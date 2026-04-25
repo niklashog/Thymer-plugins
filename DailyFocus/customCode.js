@@ -1011,7 +1011,7 @@ class TodayDashboard {
         if (trigger && drop) {
             trigger.addEventListener('click', () => {
                 drop.hidden = !drop.hidden;
-                if (!drop.hidden) document.addEventListener('click', () => { drop.hidden = true; }, { once: true });
+                if (!drop.hidden) setTimeout(() => document.addEventListener('click', () => { drop.hidden = true; }, { once: true }), 0);
             }, { signal });
         }
 
