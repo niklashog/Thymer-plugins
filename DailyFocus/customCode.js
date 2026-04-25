@@ -78,6 +78,7 @@ class TodayDashboard {
     }
 
     load() {
+        this.plugin.data.getAllCollections().then(r => console.log('[Dashboard] getAllCollections:', JSON.stringify(r).slice(0, 500)));
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 32px 32px;}' +
             '.db-section{margin-bottom:32px}' +
