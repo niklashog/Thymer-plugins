@@ -78,7 +78,6 @@ class TodayDashboard {
     }
 
     load() {
-        console.log('[Dashboard] plugin prototype:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin)));
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 32px 32px;}' +
             '.db-section{margin-bottom:32px}' +
