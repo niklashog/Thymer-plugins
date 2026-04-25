@@ -193,9 +193,10 @@ class TodayDashboard {
             'cursor:pointer;color:inherit;font-size:14px;padding:10px 14px;border-radius:var(--ed-radius-normal);transition:background .1s,color .1s}' +
             '.db-dropdown-item:hover{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text)}' +
             '.db-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;' +
-            'padding:10px 14px;border-radius:var(--ed-radius-block);' +
+            'padding:10px 14px;border-radius:var(--ed-radius-block);cursor:pointer;' +
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'box-shadow:var(--color-shadow-cards);margin-bottom:4px}' +
+            'box-shadow:var(--color-shadow-cards);margin-bottom:4px;transition:background .1s}' +
+            '.db-setting-row:hover{background:var(--cards-hover-bg)}' +
             '.db-setting-label{font-size:14px;flex:1}' +
             '.db-setting-toggle{background:none;border:1px solid var(--sidebar-border-color);cursor:pointer;color:inherit;' +
             'font-size:12px;font-weight:500;padding:4px 12px;border-radius:var(--ed-radius-pill);' +
@@ -690,9 +691,9 @@ class TodayDashboard {
     _buildSettingsHTML() {
         const row = (label, key) => {
             const on = !!this._settings[key];
-            return `<div class="db-setting-row">
+            return `<div class="db-setting-row" data-action="toggle-setting" data-setting="${key}">
                 <span class="db-setting-label">${label}</span>
-                <button class="db-setting-toggle${on ? ' db-setting-toggle--on' : ''}" data-action="toggle-setting" data-setting="${key}">${on ? 'On' : 'Off'}</button>
+                <button class="db-setting-toggle${on ? ' db-setting-toggle--on' : ''}" tabindex="-1">${on ? 'On' : 'Off'}</button>
             </div>`;
         };
         return `<div class="db-header">
@@ -1290,8 +1291,11 @@ class TodayDashboard {
                     if (key) {
                         this._settings[key] = !this._settings[key];
                         const on = !!this._settings[key];
-                        target.textContent = on ? 'On' : 'Off';
-                        target.classList.toggle('db-setting-toggle--on', on);
+                        const btn = target.querySelector('.db-setting-toggle');
+                        if (btn) {
+                            btn.textContent = on ? 'On' : 'Off';
+                            btn.classList.toggle('db-setting-toggle--on', on);
+                        }
                         this._saveSettings();
                     }
                     break;
