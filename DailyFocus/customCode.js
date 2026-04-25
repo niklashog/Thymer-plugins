@@ -426,7 +426,11 @@ class TodayDashboard {
         const doneTasks      = isViewingToday
             ? [...this._doneTasksMap.values()]
             : doneLinesAll.filter(l => l.props?.['db-done-date'] === viewDateHyphen);
-        const viewPinned     = allTodos.filter(l => l.props?.['db-pinned'] === viewDateHyphen);
+        const viewPinned     = allTodos.filter(l => {
+            if (l.props?.['db-pinned'] === viewDateHyphen) return true;
+            const seg = (l.segments || []).find(s => s.type === 'datetime');
+            return seg?.text?.d === viewDate;
+        });
         const viewPinnedSet  = new Set(viewPinned.map(l => l.guid));
 
         // Time blocks — date-stamped format "YYYYMMDD:HH:MM", only show for the viewed date
@@ -1343,13 +1347,12 @@ class TodayDashboard {
             const text     = this._getText(task);
             const newTask  = await task.record.createLineItem(null, null, 'task', [
                 { type: 'text',     text },
-                { type: 'datetime', text: nextDate },
+                { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
             ], null);
             if (newTask) {
                 await task.setMetaProperty('db-recurring-next', nextDate);
                 await newTask.setMetaProperty('db-recurring-freq', freq);
                 if (day) await newTask.setMetaProperty('db-recurring-day', day);
-                await newTask.setMetaProperty('db-pinned', nextDate);
             }
         } finally {
             this._recurringInProgress.delete(task.guid);
