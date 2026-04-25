@@ -27,8 +27,9 @@ class TodayDashboard {
         this._lastData           = null;
         this._prefetchInFlight   = false;
         // [RECURRING-START] draft state for recurring task UI — remove when Thymer ships native recurring
-        this._expandedRecurring = null;
-        this._recurringDraft    = null;
+        this._expandedRecurring       = null;
+        this._recurringDraft          = null;
+        this._completedRecurringDates = {}; // guid → comma-separated YYYYMMDD, persists across _lastData refreshes
         // [RECURRING-END]
     }
 
@@ -403,6 +404,7 @@ class TodayDashboard {
             // [RECURRING-START] exclude recurring tasks already completed on this date
             const recurDone = l.props?.['db-recurring-done-dates'];
             if (recurDone?.split(',').includes(viewDate)) return false;
+            if (this._completedRecurringDates[l.guid]?.split(',').includes(viewDate)) return false;
             // [RECURRING-END]
             return true;
         });
@@ -453,7 +455,9 @@ class TodayDashboard {
                 if (!t.props?.['db-recurring-freq']) return false;
                 if (viewPinnedSet.has(t.guid)) return false;
                 const dates = t.props?.['db-recurring-done-dates'];
-                return dates?.split(',').includes(viewDate);
+                if (dates?.split(',').includes(viewDate)) return true;
+                // Fallback: in-memory record bridges the gap before _lastData refreshes
+                return this._completedRecurringDates[t.guid]?.split(',').includes(viewDate) ?? false;
               })
             : [];
         const recurringMissedGhosts = viewDate < this._todayD()
@@ -976,6 +980,7 @@ class TodayDashboard {
                         const doneDate = this._todayD();
                         const existing = task.props?.['db-recurring-done-dates'] || '';
                         const newDoneDates = existing ? existing + ',' + doneDate : doneDate;
+                        this._completedRecurringDates[task.guid] = newDoneDates; // persist across _lastData refreshes
                         const newSegments  = [
                             ...(task.segments || []).filter(s => s.type !== 'datetime'),
                             { type: 'text',     text: ' ' },
