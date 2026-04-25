@@ -1290,7 +1290,9 @@ class TodayDashboard {
                     if (key) {
                         this._settings[key] = !this._settings[key];
                         this._saveSettings();
-                        if (this._panel) this._render(this._panel);
+                        const on = !!this._settings[key];
+                        target.textContent = on ? 'On' : 'Off';
+                        target.classList.toggle('db-setting-toggle--on', on);
                     }
                     break;
                 }
