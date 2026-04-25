@@ -32,6 +32,15 @@ class TodayDashboard {
         this._completedRecurringDates = {}; // guid → comma-separated YYYYMMDD, persists across _lastData refreshes
         this._rescheduledRecurring    = {}; // guid → YYYYMMDD start date when rescheduled to future
         // [RECURRING-END]
+        this._settings = { ...(plugin.getConfiguration().settings || {}) };
+    }
+
+    async _saveSettings() {
+        const pluginApi = this.plugin.data.getPluginByGuid(this.plugin.getGuid());
+        if (!pluginApi) return;
+        const config = pluginApi.getConfiguration();
+        config.settings = this._settings;
+        await pluginApi.saveConfiguration(config);
     }
 
     _todayStr() {
@@ -183,6 +192,11 @@ class TodayDashboard {
             '.db-dropdown-item{display:block;width:100%;text-align:left;background:none;border:none;' +
             'cursor:pointer;color:inherit;font-size:13px;padding:7px 10px;border-radius:var(--ed-radius-normal);transition:background .1s}' +
             '.db-dropdown-item:hover{background:var(--cmdpal-hover-bg-color)}' +
+            '.db-setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 6px;font-size:13px}' +
+            '.db-setting-label{opacity:.8}' +
+            '.db-setting-toggle{background:var(--ed-container-bg-2);border:none;cursor:pointer;color:inherit;' +
+            'font-size:12px;padding:4px 10px;border-radius:var(--ed-radius-normal);opacity:.6;transition:opacity .1s,background .1s}' +
+            '.db-setting-toggle--on{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text);opacity:1}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center}' +
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
@@ -442,6 +456,7 @@ class TodayDashboard {
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
         const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
             : this._mode === 'recurring-list' ? 'recurring-list'
+            : this._mode === 'settings' ? 'settings'
             : (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan'
             : 'focus';
 
@@ -487,9 +502,11 @@ class TodayDashboard {
             ? this._buildIgnoreListHTML(allTodos, ignoredTasks)
             : effectiveMode === 'recurring-list'
                 ? this._buildRecurringHTML(allTodosRaw.filter(l => l.props?.['db-recurring-freq']))
-                : effectiveMode === 'focus'
-                    ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
-                    : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview);
+                : effectiveMode === 'settings'
+                    ? this._buildSettingsHTML()
+                    : effectiveMode === 'focus'
+                        ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
+                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview);
 
         this._applyTheme(el);
         if (this._listenerAbort) this._listenerAbort.abort();
@@ -506,6 +523,7 @@ class TodayDashboard {
                 <button class="db-dropdown-item" data-action="set-mode" data-mode="plan">Plan</button>
                 <button class="db-dropdown-item" data-action="set-mode" data-mode="recurring-list">Recurring tasks</button>
                 <button class="db-dropdown-item" data-action="set-mode" data-mode="ignore-list">Ignore list</button>
+                <button class="db-dropdown-item" data-action="set-mode" data-mode="settings">Settings</button>
             </div>
         </div>`;
     }
@@ -662,6 +680,32 @@ class TodayDashboard {
                     </div>
                     ${ignoredTasks.map(t => this._ignoreListTaskRow(t, true)).join('')}
                 </div>` : ''}
+            </div>`;
+    }
+
+    _buildSettingsHTML() {
+        const sidebarEnabled = !!this._settings.sidebarCountEnabled;
+        return `<div class="db-header">
+                <div class="db-header-left">
+                    ${this._menuHTML()}
+                    <span class="db-header-crumb">Settings</span>
+                </div>
+                <div class="db-header-right">
+                    <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+                </div>
+            </div>
+            <div class="db-root">
+                <div class="db-section">
+                    <div class="db-section-header">
+                        <span class="db-section-title">Sidebar</span>
+                    </div>
+                    <div class="db-setting-row">
+                        <span class="db-setting-label">Show today's task count in status bar</span>
+                        <button class="db-setting-toggle${sidebarEnabled ? ' db-setting-toggle--on' : ''}" data-action="toggle-setting" data-setting="sidebarCountEnabled">
+                            ${sidebarEnabled ? 'On' : 'Off'}
+                        </button>
+                    </div>
+                </div>
             </div>`;
     }
 
@@ -1223,6 +1267,15 @@ class TodayDashboard {
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
+                case 'toggle-setting': {
+                    const key = target.dataset.setting;
+                    if (key) {
+                        this._settings[key] = !this._settings[key];
+                        this._saveSettings();
+                        if (this._panel) this._render(this._panel);
+                    }
+                    break;
+                }
                 case 'toggle-recurring-filter': {
                     this._hideRecurring = !this._hideRecurring;
                     if (this._panel) this._render(this._panel);
