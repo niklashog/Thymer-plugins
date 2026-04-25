@@ -853,6 +853,7 @@ class TodayDashboard {
         const doneBtn  = isFuture
             ? `<div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>`
             : `<div class="db-done line-check-div clickable" data-action="done" data-guid="${task.guid}"></div>`;
+        const disabledDoneBtn = `<div class="db-done line-check-div" style="cursor:default" data-guid="${task.guid}"></div>`;
         // [RECURRING-START] freq button — remove when Thymer ships native recurring
         const freq       = task.props?.['db-recurring-freq'];
         const recurToggle = freq
@@ -929,7 +930,7 @@ class TodayDashboard {
                 ? `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`
                 : '';
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
-                ${doneBtn}
+                ${disabledDoneBtn}
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
                 </div>
@@ -941,7 +942,7 @@ class TodayDashboard {
 
         if (section === 'inbox' || section === 'overdue') {
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
-                ${doneBtn}
+                ${disabledDoneBtn}
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
                 </div>
