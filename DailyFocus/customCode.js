@@ -1161,7 +1161,7 @@ class TodayDashboard {
                     break;
                 }
                 case 'toggle-menu': {
-                    const menuWrap = target.closest('.db-menu-wrap');
+                    const menuWrap = target.closest('.db-menu-wrap') ?? target.querySelector('.db-menu-wrap');
                     const drop = menuWrap?.querySelector('.db-dropdown');
                     if (!drop) return;
                     drop.hidden = !drop.hidden;
