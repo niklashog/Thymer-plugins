@@ -273,7 +273,6 @@ class TodayDashboard {
         this.plugin.events.on('lineitem.updated', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.created', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.deleted', () => this._scheduleRefresh());
-        this.plugin.events.on('panel.closed', () => this._saveSettings());
 
 
         this._prefetch();
@@ -1293,6 +1292,7 @@ class TodayDashboard {
                         const on = !!this._settings[key];
                         target.textContent = on ? 'On' : 'Off';
                         target.classList.toggle('db-setting-toggle--on', on);
+                        this._saveSettings();
                     }
                     break;
                 }
@@ -1302,7 +1302,6 @@ class TodayDashboard {
                     break;
                 }
                 case 'set-mode': {
-                    if (this._mode === 'settings') this._saveSettings();
                     this._mode = target.dataset.mode;
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
