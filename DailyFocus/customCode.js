@@ -566,7 +566,7 @@ class TodayDashboard {
         const unassignedDone = isToday ? doneTasks.filter(t => !timeBlocks[t.guid]) : [];
 
         return `<div class="db-header">
-                <div class="db-header-left" data-action="toggle-menu">
+                <div class="db-header-left">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Focus</span>
                     <span class="db-header-sep">/</span>
@@ -629,7 +629,7 @@ class TodayDashboard {
         const dateLabel  = this._viewDateLabel();
         const focusTitle = dateLabel === 'Today' ? "Today's Focus" : `${dateLabel}'s Focus`;
         return `<div class="db-header">
-                <div class="db-header-left" data-action="toggle-menu">
+                <div class="db-header-left">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Plan</span>
                     <span class="db-header-sep">/</span>
@@ -653,7 +653,7 @@ class TodayDashboard {
 
     _buildIgnoreListHTML(activeTasks, ignoredTasks) {
         return `<div class="db-header">
-                <div class="db-header-left" data-action="toggle-menu">
+                <div class="db-header-left">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Ignore list</span>
                     <span class="db-header-sep">/</span>
@@ -686,7 +686,7 @@ class TodayDashboard {
     _buildSettingsHTML() {
         const sidebarEnabled = !!this._settings.sidebarCountEnabled;
         return `<div class="db-header">
-                <div class="db-header-left" data-action="toggle-menu">
+                <div class="db-header-left">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Settings</span>
                 </div>
@@ -738,7 +738,7 @@ class TodayDashboard {
 
         return `<div class="db-recur-overlay"${this._expandedRecurring ? '' : ' hidden'} data-action="cancel-recurring"></div>
             <div class="db-header">
-                <div class="db-header-left" data-action="toggle-menu">
+                <div class="db-header-left">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Recurring tasks</span>
                     <span class="db-header-sep">/</span>
@@ -1010,6 +1010,16 @@ class TodayDashboard {
         for (const l of ignoredTasks) byGuid.set(l.guid, l);
         const today  = this._todayStr();
 
+        const headerLeft = el.querySelector('.db-header-left');
+        const drop       = el.querySelector('.db-dropdown');
+        if (headerLeft && drop) {
+            headerLeft.addEventListener('click', e => {
+                if (e.target.closest('.db-dropdown')) return;
+                drop.hidden = !drop.hidden;
+                if (!drop.hidden) document.addEventListener('click', () => { drop.hidden = true; }, { once: true });
+            }, { signal });
+        }
+
         el.addEventListener('click', async e => {
             const target = e.target.closest('[data-action]');
             if (!target) return;
@@ -1158,13 +1168,6 @@ class TodayDashboard {
                         highlight: true,
                         workspaceGuid: this.plugin.getWorkspaceGuid(),
                     });
-                    break;
-                }
-                case 'toggle-menu': {
-                    const drop = el.querySelector('.db-dropdown');
-                    if (!drop) return;
-                    drop.hidden = !drop.hidden;
-                    if (!drop.hidden) document.addEventListener('click', () => { drop.hidden = true; }, { once: true });
                     break;
                 }
                 case 'ignore': {
