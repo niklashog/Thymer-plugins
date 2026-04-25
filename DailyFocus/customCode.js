@@ -1009,9 +1009,10 @@ class TodayDashboard {
         const trigger = el.querySelector('.db-menu-trigger');
         const drop    = el.querySelector('.db-dropdown');
         if (trigger && drop) {
-            trigger.addEventListener('click', () => {
+            trigger.addEventListener('click', e => {
+                e.stopPropagation();
                 drop.hidden = !drop.hidden;
-                if (!drop.hidden) setTimeout(() => document.addEventListener('click', () => { drop.hidden = true; }, { once: true }), 0);
+                if (!drop.hidden) document.addEventListener('click', () => { drop.hidden = true; }, { once: true });
             }, { signal });
         }
 
