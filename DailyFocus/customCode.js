@@ -930,7 +930,7 @@ class TodayDashboard {
                 ? `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`
                 : '';
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
-                ${disabledDoneBtn}
+                ${doneBtn}
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
                 </div>
@@ -942,7 +942,7 @@ class TodayDashboard {
 
         if (section === 'inbox' || section === 'overdue') {
             return `<div class="db-task listitem-task" data-guid="${task.guid}">
-                ${disabledDoneBtn}
+                ${doneBtn}
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
                 </div>
