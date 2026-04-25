@@ -1405,9 +1405,8 @@ class TodayDashboard {
 
     _journalCollectionGuid() {
         if (this._journalColGuid) return this._journalColGuid;
-        const lsKey = `db-journal-col-${this.plugin.getWorkspaceGuid()}`;
-        const cached = localStorage.getItem(lsKey);
-        if (cached) { this._journalColGuid = cached; return cached; }
+        const saved = this.plugin.getConfiguration().journalCollectionGuid;
+        if (saved) { this._journalColGuid = saved; return saved; }
         const pattern = /^S-(.+)-P000000000-0-\d{8}$/;
         const all = [
             ...(this._lastData?.todoResult?.lines || []),
@@ -1417,11 +1416,19 @@ class TodayDashboard {
             const match = t.record?.guid?.match(pattern);
             if (match) {
                 this._journalColGuid = match[1];
-                localStorage.setItem(lsKey, match[1]);
+                this._saveJournalCollectionGuid(match[1]);
                 return match[1];
             }
         }
         return null;
+    }
+
+    async _saveJournalCollectionGuid(colGuid) {
+        const pluginApi = this.plugin.data.getPluginByGuid(this.plugin.getGuid());
+        if (!pluginApi) return;
+        const config = pluginApi.getConfiguration();
+        config.journalCollectionGuid = colGuid;
+        await pluginApi.saveConfiguration(config);
     }
 
     async _journalRecord(dateStr) {
