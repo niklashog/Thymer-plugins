@@ -32,7 +32,8 @@ class TodayDashboard {
         this._completedRecurringDates = {}; // guid → comma-separated YYYYMMDD, persists across _lastData refreshes
         this._rescheduledRecurring    = {}; // guid → YYYYMMDD start date when rescheduled to future
         // [RECURRING-END]
-        this._settings = { ...(plugin.getConfiguration().settings || {}) };
+        this._settings   = { ...(plugin.getConfiguration().settings || {}) };
+        this._planSearch = '';
     }
 
     async _saveSettings() {
@@ -197,6 +198,12 @@ class TodayDashboard {
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
             'box-shadow:var(--color-shadow-cards);margin-bottom:4px;transition:background .1s}' +
             '.db-setting-row:hover{background:var(--cards-hover-bg)}' +
+            '.db-plan-search{width:100%;box-sizing:border-box;margin-bottom:20px;' +
+            'background:var(--input-bg-color);border:1px solid var(--input-border-color);' +
+            'border-radius:var(--ed-radius-block);padding:8px 12px;font-size:14px;' +
+            'color:inherit;outline:none;transition:border-color .15s}' +
+            '.db-plan-search:focus{border-color:var(--ed-link-color)}' +
+            '.db-plan-search::placeholder{opacity:.4}' +
             '.db-setting-label{font-size:14px;flex:1}' +
             '.db-setting-toggle{background:none;border:1px solid var(--sidebar-border-color);cursor:pointer;color:inherit;' +
             'font-size:12px;font-weight:500;padding:4px 12px;border-radius:var(--ed-radius-pill);' +
@@ -651,6 +658,7 @@ class TodayDashboard {
                 </div>
             </div>
             <div class="db-root">
+            <input class="db-plan-search" type="text" placeholder="Search tasks…" value="${this._escape(this._planSearch)}">
             ${this._section('Overdue',  overdue,  'overdue')}
             ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
             ${recurringNotice}
@@ -1018,6 +1026,25 @@ class TodayDashboard {
         for (const l of allTasks)     byGuid.set(l.guid, l);
         for (const l of ignoredTasks) byGuid.set(l.guid, l);
         const today  = this._todayStr();
+
+        const searchInput = el.querySelector('.db-plan-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                this._planSearch = searchInput.value;
+                const term = this._planSearch.toLowerCase().trim();
+                const searchableSections = el.querySelectorAll('.db-section--overdue, .db-section--inbox');
+                for (const section of searchableSections) {
+                    let visibleCount = 0;
+                    for (const row of section.querySelectorAll('.db-task')) {
+                        const text = row.textContent.toLowerCase();
+                        const match = !term || text.includes(term);
+                        row.hidden = !match;
+                        if (match) visibleCount++;
+                    }
+                    section.hidden = term.length > 0 && visibleCount === 0;
+                }
+            }, { signal });
+        }
 
         const trigger = el.querySelector('.db-menu-trigger');
         const drop    = el.querySelector('.db-dropdown');
