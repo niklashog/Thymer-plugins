@@ -49,6 +49,7 @@ A hamburger menu (☰) sits in the top left corner of every view:
 - **Plan** — switch to Plan mode
 - **Recurring tasks** — manage recurring schedules
 - **Ignore list** — hide tasks from Plan and Focus
+- **Settings** — configure plugin behaviour
 
 ## Task interactions
 
@@ -63,6 +64,8 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 ## Changelog
 
 ### 2026-04-26
+- **Settings** — new view accessible via ☰; configure plugin behaviour. Current options: hide completed tasks in Focus, disable journal transclusions
+- **Menu trigger** — clicking the hamburger icon or the view name opens the menu
 - **Fix** — journal transclusions now work correctly across multiple workspaces or accounts open in the same browser
 
 ### 2026-04-25 (recurring rethink)
