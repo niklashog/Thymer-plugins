@@ -192,11 +192,16 @@ class TodayDashboard {
             '.db-dropdown-item{display:block;width:100%;text-align:left;background:none;border:none;' +
             'cursor:pointer;color:inherit;font-size:14px;padding:10px 14px;border-radius:var(--ed-radius-normal);transition:background .1s,color .1s}' +
             '.db-dropdown-item:hover{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text)}' +
-            '.db-setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 6px;font-size:13px}' +
-            '.db-setting-label{opacity:.8}' +
-            '.db-setting-toggle{background:var(--ed-container-bg-2);border:none;cursor:pointer;color:inherit;' +
-            'font-size:12px;padding:4px 10px;border-radius:var(--ed-radius-normal);opacity:.6;transition:opacity .1s,background .1s}' +
-            '.db-setting-toggle--on{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text);opacity:1}' +
+            '.db-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;' +
+            'padding:10px 14px;border-radius:var(--ed-radius-block);' +
+            'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
+            'box-shadow:var(--color-shadow-cards);margin-bottom:4px}' +
+            '.db-setting-label{font-size:14px;flex:1}' +
+            '.db-setting-toggle{background:none;border:1px solid var(--sidebar-border-color);cursor:pointer;color:inherit;' +
+            'font-size:12px;font-weight:500;padding:4px 12px;border-radius:var(--ed-radius-pill);' +
+            'opacity:.5;transition:all .1s;white-space:nowrap}' +
+            '.db-setting-toggle:hover{opacity:.9}' +
+            '.db-setting-toggle--on{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text);border-color:transparent;opacity:1}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center}' +
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
