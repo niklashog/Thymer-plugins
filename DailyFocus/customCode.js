@@ -1289,10 +1289,11 @@ class TodayDashboard {
                     const key = target.dataset.setting;
                     if (key) {
                         this._settings[key] = !this._settings[key];
-                        this._saveSettings();
                         const on = !!this._settings[key];
                         target.textContent = on ? 'On' : 'Off';
                         target.classList.toggle('db-setting-toggle--on', on);
+                        clearTimeout(this._saveSettingsTimer);
+                        this._saveSettingsTimer = setTimeout(() => this._saveSettings(), 500);
                     }
                     break;
                 }
