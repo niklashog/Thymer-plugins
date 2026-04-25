@@ -960,7 +960,10 @@ class TodayDashboard {
                         await task.setTaskStatus('done');
                         await task.setMetaProperty('db-done-date', today);
                         const journal = await this._journalRecord(this._todayD());
-                        if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
+                        if (journal) {
+                            console.log('[Dashboard] journal record methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(journal)));
+                            await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
+                        }
                     } catch (err) {
                         console.error('[Dashboard] done failed:', err);
                         this._moveToTodo(task.guid);
