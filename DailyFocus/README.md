@@ -64,6 +64,8 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 - **Instant UI** — panel opens immediately, no loading delay
 - **Recurring preview** — future dates show a dimmed ghost of tasks that would recur that day
 - **UI overhaul** — new design across all views
+- **Journal transclusion** — completing a task automatically adds a transclusion to today's journal page
+- **Native due dates** — recurring tasks show their scheduled date natively in Thymer; set immediately when configuring a recurring schedule
 
 ### 2026-04-24
 - **Recurring tasks (experimental)** — mark tasks as recurring (daily / weekly / monthly / yearly); auto-generates occurrences and catches up in the background
