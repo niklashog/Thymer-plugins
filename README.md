@@ -12,4 +12,4 @@ A collection of plugins for [Thymer](https://thymer.com).
 |---|---|---|
 | [BetterKanBan](./BetterKanBan) | Global | Kanban boards with dependency tracking |
 | [Coinflip](./Coinflip) | Global | Flip a coin from the status bar |
-| [Daily Focus](./DailyFocus) | Global | Tasks with Focus and Plan modes, time block scheduling, and day navigation |
+| [Daily Focus](./DailyFocus) | Global | Tasks with Focus and Plan modes, time block scheduling, day navigation, and recurring tasks |
