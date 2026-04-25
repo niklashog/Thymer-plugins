@@ -399,7 +399,12 @@ class TodayDashboard {
         const viewPinned     = allTodos.filter(l => {
             if (l.props?.['db-pinned'] === viewDateHyphen) return true;
             const seg = (l.segments || []).find(s => s.type === 'datetime');
-            return seg?.text?.d === viewDate;
+            if (seg?.text?.d !== viewDate) return false;
+            // [RECURRING-START] exclude recurring tasks already completed on this date
+            const recurDone = l.props?.['db-recurring-done-dates'];
+            if (recurDone?.split(',').includes(viewDate)) return false;
+            // [RECURRING-END]
+            return true;
         });
         const viewPinnedSet  = new Set(viewPinned.map(l => l.guid));
 
@@ -430,7 +435,7 @@ class TodayDashboard {
             : (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan'
             : 'focus';
 
-        // [RECURRING-START] unconfigured count + future preview for plan and focus
+        // [RECURRING-START] unconfigured count, future preview, past ghost traces
         const unconfiguredRecurring = allTodosRaw.filter(l =>
             l.props?.['db-recurring-freq'] &&
             l.props['db-recurring-freq'] !== 'daily' &&
@@ -439,9 +444,26 @@ class TodayDashboard {
         const recurringPreview = viewDate > this._todayD()
             ? allTodos.filter(t =>
                 t.props?.['db-recurring-freq'] &&
-!viewPinnedSet.has(t.guid) &&
+                !viewPinnedSet.has(t.guid) &&
                 this._wouldRecurOn(t, viewDate)
               )
+            : [];
+        const recurringDoneGhosts = viewDate <= this._todayD()
+            ? allTodos.filter(t => {
+                if (!t.props?.['db-recurring-freq']) return false;
+                if (viewPinnedSet.has(t.guid)) return false;
+                const dates = t.props?.['db-recurring-done-dates'];
+                return dates?.split(',').includes(viewDate);
+              })
+            : [];
+        const recurringMissedGhosts = viewDate < this._todayD()
+            ? allTodos.filter(t => {
+                if (!t.props?.['db-recurring-freq']) return false;
+                if (viewPinnedSet.has(t.guid)) return false;
+                if (!this._wouldRecurOn(t, viewDate)) return false;
+                const dates = t.props?.['db-recurring-done-dates'];
+                return !dates?.split(',').includes(viewDate);
+              })
             : [];
         // [RECURRING-END]
 
@@ -452,7 +474,7 @@ class TodayDashboard {
             : effectiveMode === 'recurring-list'
                 ? this._buildRecurringHTML(allTodosRaw.filter(l => l.props?.['db-recurring-freq']))
                 : effectiveMode === 'focus'
-                    ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview)
+                    ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
                     : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview);
 
         this._applyTheme(el);
@@ -474,7 +496,7 @@ class TodayDashboard {
         </div>`;
     }
 
-    _buildFocusHTML(today, scheduled, doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview = []) {
+    _buildFocusHTML(today, scheduled, doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview = [], recurringDoneGhosts = [], recurringMissedGhosts = []) {
         const isToday        = this._viewDateStr() === this._todayD();
         const pinnedGuids         = new Set(today.map(t => t.guid));
         const doneGuids           = new Set(doneTasks.map(t => t.guid));
@@ -527,7 +549,7 @@ class TodayDashboard {
                 </div>
             </div>
             <div class="db-root">
-            ${(unassigned.length || unassignedDone.length) ? `
+            ${(unassigned.length || unassignedDone.length || recurringDoneGhosts.length || recurringMissedGhosts.length) ? `
             <div class="db-section db-section--today">
                 <div class="db-section-header">
                     <span class="db-section-title">Unscheduled</span>
@@ -538,6 +560,8 @@ class TodayDashboard {
                     <div class="db-block-body">
                         ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
                         ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
+                        ${recurringDoneGhosts.map(t => this._taskRow(t, 'recurring-done')).join('')}
+                        ${recurringMissedGhosts.map(t => this._taskRow(t, 'recurring-missed')).join('')}
                     </div>
                 </div>
             </div>` : ''}
@@ -840,6 +864,26 @@ class TodayDashboard {
             </div>`;
         }
 
+        // [RECURRING-START] ghost traces for past/today views
+        if (section === 'recurring-done') {
+            return `<div class="db-task listitem-task state-done db-task--recurring-done" data-guid="${task.guid}">
+                <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
+                <span class="db-task-text--sel">${text}</span>
+                ${sourceHTML}
+            </div>`;
+        }
+
+        if (section === 'recurring-missed') {
+            return `<div class="db-task listitem-task db-task--recurring-missed" data-guid="${task.guid}">
+                <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
+                <div class="db-task-body">
+                    <span class="db-task-text" style="opacity:.4">${text}</span>
+                </div>
+                ${sourceHTML}
+            </div>`;
+        }
+        // [RECURRING-END]
+
         if (isPast) {
             const isDone = section === 'done';
             return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}" data-guid="${task.guid}">
@@ -925,22 +969,33 @@ class TodayDashboard {
                     if (!task) return;
                     const isRecurring = !!task.props?.['db-recurring-freq'];
                     if (isRecurring) {
-                        // [RECURRING-START] recurring done — advance date, journal transclusion, stay as todo
+                        // [RECURRING-START] recurring done — ghost trace, advance date, stay as todo
                         const freq     = task.props['db-recurring-freq'];
                         const day      = task.props?.['db-recurring-day'] || null;
                         const nextDate = this._nextRecurringDate(freq, day);
-                        const lines    = this._lastData?.todoResult?.lines;
-                        if (lines) lines.splice(lines.findIndex(l => l.guid === task.guid), 1);
+                        const doneDate = this._todayD();
+                        const existing = task.props?.['db-recurring-done-dates'] || '';
+                        const newDoneDates = existing ? existing + ',' + doneDate : doneDate;
+                        const newSegments  = [
+                            ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                            { type: 'text',     text: ' ' },
+                            { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
+                        ];
+                        // Optimistic patch — reflect final state immediately so any intermediate
+                        // event-triggered refresh doesn't bring the task back into today's view
+                        const lines = this._lastData?.todoResult?.lines;
+                        const cachedTask = lines?.find(l => l.guid === task.guid);
+                        if (cachedTask) {
+                            if (!cachedTask.props) cachedTask.props = {};
+                            cachedTask.props['db-pinned']                = null;
+                            cachedTask.props['db-recurring-done-dates']  = newDoneDates;
+                            cachedTask.segments                          = newSegments;
+                        }
                         if (this._panel) this._render(this._panel);
                         try {
-                            const journal = await this._journalRecord(this._todayD());
-                            if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
-                            await task.setSegments([
-                                ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                                { type: 'text',     text: ' ' },
-                                { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
-                            ]);
-                            if (task.props?.['db-pinned']) await task.setMetaProperty('db-pinned', null);
+                            await task.setMetaProperty('db-pinned', null);
+                            await task.setMetaProperty('db-recurring-done-dates', newDoneDates);
+                            await task.setSegments(newSegments);
                         } catch (err) {
                             console.error('[Dashboard] recurring done failed:', err);
                             this._scheduleRefresh();
