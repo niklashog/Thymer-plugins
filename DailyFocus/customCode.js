@@ -988,7 +988,6 @@ class TodayDashboard {
                         this._completedRecurringDates[task.guid] = newDoneDates; // persist across _lastData refreshes
                         const newSegments  = [
                             ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                            { type: 'text',     text: ' ' },
                             { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
                         ];
                         // Optimistic patch — reflect final state immediately so any intermediate
@@ -1169,7 +1168,6 @@ class TodayDashboard {
                     const startDate = nextDate.replace(/-/g, '');
                     const newSegs   = [
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                        { type: 'text', text: ' ' },
                         { type: 'datetime', text: { d: startDate } },
                     ];
                     this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-recurring-start': startDate });
@@ -1208,7 +1206,6 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-start', recStartDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                        { type: 'text',     text: ' ' },
                         { type: 'datetime', text: { d: recStartDate } },
                     ]);
                     break;
