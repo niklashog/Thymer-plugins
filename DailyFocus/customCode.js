@@ -470,6 +470,8 @@ class TodayDashboard {
         const recurringMissedGhosts = viewDate < this._todayD()
             ? allTodos.filter(t => {
                 if (!t.props?.['db-recurring-freq']) return false;
+                const start = t.props?.['db-recurring-start'];
+                if (!start || viewDate < start) return false; // no history before schedule was set
                 if (viewPinnedSet.has(t.guid)) return false;
                 if (!this._wouldRecurOn(t, viewDate)) return false;
                 const dates = t.props?.['db-recurring-done-dates'];
@@ -1167,17 +1169,19 @@ class TodayDashboard {
                 case 'save-recurring': {
                     if (!task || !this._recurringDraft) return;
                     const { freq, day } = this._recurringDraft;
-                    const nextDate = this._nextUpcomingDate(freq, day || null);
-                    this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null });
+                    const nextDate  = this._nextUpcomingDate(freq, day || null);
+                    const startDate = nextDate.replace(/-/g, '');
+                    this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-recurring-start': startDate });
                     this._expandedRecurring = null;
                     this._recurringDraft = null;
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', freq);
                     task.setMetaProperty('db-recurring-day', day || null);
+                    task.setMetaProperty('db-recurring-start', startDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
                         { type: 'text',     text: ' ' },
-                        { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
+                        { type: 'datetime', text: { d: startDate } },
                     ]);
                     break;
                 }
@@ -1191,14 +1195,16 @@ class TodayDashboard {
                 // [RECURRING-START] enable toggle — remove when Thymer ships native recurring
                 case 'enable-recurring': {
                     if (!task) return;
-                    const recPinDate = this._viewDateHyphen();
-                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily' });
+                    const recPinDate  = this._viewDateHyphen();
+                    const recStartDate = recPinDate.replace(/-/g, '');
+                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', 'daily');
+                    task.setMetaProperty('db-recurring-start', recStartDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
                         { type: 'text',     text: ' ' },
-                        { type: 'datetime', text: { d: recPinDate.replace(/-/g, '') } },
+                        { type: 'datetime', text: { d: recStartDate } },
                     ]);
                     break;
                 }
