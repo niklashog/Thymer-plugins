@@ -1038,10 +1038,10 @@ class TodayDashboard {
                     for (const row of section.querySelectorAll('.db-task')) {
                         const text = row.textContent.toLowerCase();
                         const match = !term || text.includes(term);
-                        row.hidden = !match;
+                        row.style.display = match ? '' : 'none';
                         if (match) visibleCount++;
                     }
-                    section.hidden = term.length > 0 && visibleCount === 0;
+                    section.style.display = term.length > 0 && visibleCount === 0 ? 'none' : '';
                 }
             }, { signal });
         }
