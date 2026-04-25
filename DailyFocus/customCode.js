@@ -201,7 +201,8 @@ class TodayDashboard {
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
             '.db-header{display:flex;align-items:center;padding:24px 0 28px;width:100%;box-sizing:border-box}' +
-            '.db-header-left{display:flex;align-items:center;gap:8px;flex:1;cursor:pointer}' +
+            '.db-header-left{display:flex;align-items:center;gap:8px;flex:1}' +
+            '.db-menu-trigger{display:flex;align-items:center;gap:8px;cursor:pointer}' +
             '.db-header-right{display:flex;align-items:center;justify-content:flex-end;flex:1}' +
             '.db-header-crumb{font-size:16px;opacity:.4;font-weight:500;padding:2px 0}' +
             '.db-header-sep{font-size:16px;opacity:.2;margin:0 4px;padding:2px 0}' +
@@ -515,9 +516,13 @@ class TodayDashboard {
         this._reapplySelection(el);
     }
 
-    _menuHTML() {
+    _menuHTML(crumb) {
         return `<div class="db-menu-wrap">
-            <button class="db-hamburger"><i class="ti ti-menu-2"></i></button>
+            <div class="db-menu-trigger">
+                <button class="db-hamburger"><i class="ti ti-menu-2"></i></button>
+                <span class="db-header-crumb">${crumb}</span>
+                <span class="db-header-sep">/</span>
+            </div>
             <div class="db-dropdown" hidden>
                 <button class="db-dropdown-item" data-action="set-mode" data-mode="focus">Focus</button>
                 <button class="db-dropdown-item" data-action="set-mode" data-mode="plan">Plan</button>
@@ -567,9 +572,7 @@ class TodayDashboard {
 
         return `<div class="db-header">
                 <div class="db-header-left">
-                    ${this._menuHTML()}
-                    <span class="db-header-crumb">Focus</span>
-                    <span class="db-header-sep">/</span>
+                    ${this._menuHTML('Focus')}
                 </div>
                 <div class="db-day-nav">
                     <button class="db-day-nav-btn" data-action="prev-day">←</button>
@@ -630,9 +633,7 @@ class TodayDashboard {
         const focusTitle = dateLabel === 'Today' ? "Today's Focus" : `${dateLabel}'s Focus`;
         return `<div class="db-header">
                 <div class="db-header-left">
-                    ${this._menuHTML()}
-                    <span class="db-header-crumb">Plan</span>
-                    <span class="db-header-sep">/</span>
+                    ${this._menuHTML('Plan')}
                 </div>
                 <div class="db-day-nav">
                     <button class="db-day-nav-btn" data-action="prev-day" ${this._viewDateStr() <= this._todayD() ? 'disabled' : ''}>←</button>
@@ -654,9 +655,7 @@ class TodayDashboard {
     _buildIgnoreListHTML(activeTasks, ignoredTasks) {
         return `<div class="db-header">
                 <div class="db-header-left">
-                    ${this._menuHTML()}
-                    <span class="db-header-crumb">Ignore list</span>
-                    <span class="db-header-sep">/</span>
+                    ${this._menuHTML('Ignore list')}
                 </div>
                 <div class="db-header-right">
                     <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
@@ -687,8 +686,7 @@ class TodayDashboard {
         const sidebarEnabled = !!this._settings.sidebarCountEnabled;
         return `<div class="db-header">
                 <div class="db-header-left">
-                    ${this._menuHTML()}
-                    <span class="db-header-crumb">Settings</span>
+                    ${this._menuHTML('Settings')}
                 </div>
                 <div class="db-header-right">
                     <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
@@ -739,9 +737,7 @@ class TodayDashboard {
         return `<div class="db-recur-overlay"${this._expandedRecurring ? '' : ' hidden'} data-action="cancel-recurring"></div>
             <div class="db-header">
                 <div class="db-header-left">
-                    ${this._menuHTML()}
-                    <span class="db-header-crumb">Recurring tasks</span>
-                    <span class="db-header-sep">/</span>
+                    ${this._menuHTML('Recurring tasks')}
                 </div>
                 <div class="db-header-right">
                     <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
@@ -1010,11 +1006,10 @@ class TodayDashboard {
         for (const l of ignoredTasks) byGuid.set(l.guid, l);
         const today  = this._todayStr();
 
-        const headerLeft = el.querySelector('.db-header-left');
-        const drop       = el.querySelector('.db-dropdown');
-        if (headerLeft && drop) {
-            headerLeft.addEventListener('click', e => {
-                if (e.target.closest('.db-dropdown')) return;
+        const trigger = el.querySelector('.db-menu-trigger');
+        const drop    = el.querySelector('.db-dropdown');
+        if (trigger && drop) {
+            trigger.addEventListener('click', () => {
                 drop.hidden = !drop.hidden;
                 if (!drop.hidden) document.addEventListener('click', () => { drop.hidden = true; }, { once: true });
             }, { signal });
