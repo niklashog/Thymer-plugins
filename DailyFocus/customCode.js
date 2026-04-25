@@ -201,7 +201,7 @@ class TodayDashboard {
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
             '.db-header{display:flex;align-items:center;padding:24px 0 28px;width:100%;box-sizing:border-box}' +
-            '.db-header-left{display:flex;align-items:center;gap:8px;flex:1}' +
+            '.db-header-left{display:flex;align-items:center;gap:8px;flex:1;cursor:pointer}' +
             '.db-header-right{display:flex;align-items:center;justify-content:flex-end;flex:1}' +
             '.db-header-crumb{font-size:16px;opacity:.4;font-weight:500;padding:2px 0}' +
             '.db-header-sep{font-size:16px;opacity:.2;margin:0 4px;padding:2px 0}' +
@@ -517,7 +517,7 @@ class TodayDashboard {
 
     _menuHTML() {
         return `<div class="db-menu-wrap">
-            <button class="db-hamburger" data-action="toggle-menu"><i class="ti ti-menu-2"></i></button>
+            <button class="db-hamburger"><i class="ti ti-menu-2"></i></button>
             <div class="db-dropdown" hidden>
                 <button class="db-dropdown-item" data-action="set-mode" data-mode="focus">Focus</button>
                 <button class="db-dropdown-item" data-action="set-mode" data-mode="plan">Plan</button>
@@ -566,7 +566,7 @@ class TodayDashboard {
         const unassignedDone = isToday ? doneTasks.filter(t => !timeBlocks[t.guid]) : [];
 
         return `<div class="db-header">
-                <div class="db-header-left">
+                <div class="db-header-left" data-action="toggle-menu">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Focus</span>
                     <span class="db-header-sep">/</span>
@@ -629,7 +629,7 @@ class TodayDashboard {
         const dateLabel  = this._viewDateLabel();
         const focusTitle = dateLabel === 'Today' ? "Today's Focus" : `${dateLabel}'s Focus`;
         return `<div class="db-header">
-                <div class="db-header-left">
+                <div class="db-header-left" data-action="toggle-menu">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Plan</span>
                     <span class="db-header-sep">/</span>
@@ -653,7 +653,7 @@ class TodayDashboard {
 
     _buildIgnoreListHTML(activeTasks, ignoredTasks) {
         return `<div class="db-header">
-                <div class="db-header-left">
+                <div class="db-header-left" data-action="toggle-menu">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Ignore list</span>
                     <span class="db-header-sep">/</span>
@@ -686,7 +686,7 @@ class TodayDashboard {
     _buildSettingsHTML() {
         const sidebarEnabled = !!this._settings.sidebarCountEnabled;
         return `<div class="db-header">
-                <div class="db-header-left">
+                <div class="db-header-left" data-action="toggle-menu">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Settings</span>
                 </div>
@@ -738,7 +738,7 @@ class TodayDashboard {
 
         return `<div class="db-recur-overlay"${this._expandedRecurring ? '' : ' hidden'} data-action="cancel-recurring"></div>
             <div class="db-header">
-                <div class="db-header-left">
+                <div class="db-header-left" data-action="toggle-menu">
                     ${this._menuHTML()}
                     <span class="db-header-crumb">Recurring tasks</span>
                     <span class="db-header-sep">/</span>
