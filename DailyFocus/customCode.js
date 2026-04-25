@@ -617,7 +617,7 @@ class TodayDashboard {
             <div class="db-root">
                 <div class="db-dev-banner">
                     <i class="ti ti-flask"></i>
-                    <strong>Recurring tasks is experimental.</strong> This feature is under active development and may change or lose data. Use for testing only.
+                    <strong>Recurring tasks is experimental.</strong> The feature is under active development and may change or lose data. Use for testing only.
                 </div>
             ${this._section('Overdue',  overdue,  'overdue')}
             ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
@@ -699,7 +699,7 @@ class TodayDashboard {
             <div class="db-root">
                 <div class="db-dev-banner">
                     <i class="ti ti-flask"></i>
-                    <strong>Recurring tasks is experimental.</strong> This feature is under active development and may change or lose data. Use for testing only.
+                    <strong>Recurring tasks is experimental.</strong> The feature is under active development and may change or lose data. Use for testing only.
                 </div>
                 ${sections}
             </div>`;
