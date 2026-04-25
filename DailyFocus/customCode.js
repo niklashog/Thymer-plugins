@@ -1171,18 +1171,26 @@ class TodayDashboard {
                     const { freq, day } = this._recurringDraft;
                     const nextDate  = this._nextUpcomingDate(freq, day || null);
                     const startDate = nextDate.replace(/-/g, '');
+                    const newSegs   = [
+                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                        { type: 'text', text: ' ' },
+                        { type: 'datetime', text: { d: startDate } },
+                    ];
                     this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-recurring-start': startDate });
+                    // Patch segments and remove from scheduledResult if new date is not today
+                    const cachedLine = (this._lastData?.todoResult?.lines || []).find(l => l.guid === task.guid);
+                    if (cachedLine) cachedLine.segments = newSegs;
+                    if (startDate !== this._todayD() && this._lastData?.scheduledResult?.lines) {
+                        const idx = this._lastData.scheduledResult.lines.findIndex(l => l.guid === task.guid);
+                        if (idx !== -1) this._lastData.scheduledResult.lines.splice(idx, 1);
+                    }
                     this._expandedRecurring = null;
                     this._recurringDraft = null;
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', freq);
                     task.setMetaProperty('db-recurring-day', day || null);
                     task.setMetaProperty('db-recurring-start', startDate);
-                    task.setSegments([
-                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                        { type: 'text',     text: ' ' },
-                        { type: 'datetime', text: { d: startDate } },
-                    ]);
+                    task.setSegments(newSegs);
                     break;
                 }
                 case 'cancel-recurring': {
