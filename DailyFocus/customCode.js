@@ -1116,6 +1116,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-pinned', nextDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                        { type: 'text',     text: ' ' },
                         { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
                     ]);
                     break;
