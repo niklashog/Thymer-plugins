@@ -12,16 +12,14 @@ A workspace-wide task dashboard that aggregates tasks from across your entire Th
 
 ## Modes
 
-### Focus (default when tasks exist)
+### Focus
 
 Shows what you're working on today, organized by time.
 
-- **Unscheduled** — tasks pinned to today or scheduled for today that haven't been assigned a time block yet
+- **Unscheduled** — tasks pinned to today or scheduled for today without a time block
 - **Day Plan** — time slots from Early Morning through Evening; tap a task then a slot (or vice versa) to assign it
 
-Navigate to past or future days using the `←` / `→` arrows in the header to review or plan other days.
-
-Switch to Plan mode with the **Plan →** button in the header.
+Navigate to past or future days with `←` / `→`. Future days show a dimmed preview of tasks that would recur on that day. Switch to Plan with the **Plan →** button.
 
 ### Plan
 
@@ -29,26 +27,34 @@ Used to decide what goes into your day.
 
 - **Overdue** — tasks past their due date, highlighted in red
 - **Today's Focus** — tasks pinned for today
-- **Inbox** — all undated todos with no scheduled date
+- **Inbox** — all undated todos; use **Hide/Show recurring** to filter recurring tasks out
 
-Tap a task body in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Switch back with the **← Focus** button.
+Tap a task in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Navigate forward to future dates with `←` / `→`. Switch back with **← Focus**.
+
+### Recurring tasks *(experimental)*
+
+Accessible via the ☰ menu. Lists all tasks marked as recurring. Tap a row to expand and set its schedule — choose a frequency (daily / weekly / monthly / yearly) and, where applicable, a day. Remove the recurring setting via the trash icon.
 
 ### Ignore list
 
-Accessible via the ☰ menu in the top left corner of any view. Ignore tasks to hide them from Plan and Focus without deleting them. Ignored tasks are listed separately and can be restored at any time with a single click.
+Accessible via the ☰ menu. Hide tasks from Plan and Focus without deleting them. Ignored tasks are listed separately and can be restored at any time with a single click.
 
 ## Menu
 
-A hamburger menu (☰) sits in the top left corner of every view. Currently contains:
+A hamburger menu (☰) sits in the top left corner of every view:
 
+- **Focus** — switch to Focus mode
+- **Plan** — switch to Plan mode
+- **Recurring tasks** — manage recurring schedules
 - **Ignore list** — hide tasks from Plan and Focus
 
 ## Task interactions
 
-- **Circle button** — mark a task done (or undo it from the done state). Done tasks appear with strikethrough and reduced opacity.
-- **Source name / arrow icon** — the source document name and `↗` icon are a single clickable area that navigates directly to the task itself in its source document, scrolling to and highlighting it.
+- **Checkbox** — mark a task done (or undo from the done state). Done tasks appear with strikethrough and reduced opacity.
+- **Repeat icon** — mark a task as recurring or remove its recurring schedule.
+- **Source name / ↗ icon** — navigates directly to the task in its source document, scrolling to and highlighting it.
 - **× button** — unpin from Today's Focus or remove from a time block.
-- **Task text** (in Focus mode) — tap to select a task, then tap a time block to assign it; tap again to deselect.
+- **Task text** (Focus mode) — tap to select a task, then tap a time block to assign it; tap again to deselect.
 
 The dashboard refreshes automatically when tasks are created, updated, or completed elsewhere in the workspace.
 
