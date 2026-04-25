@@ -186,12 +186,12 @@ class TodayDashboard {
             '.db-hamburger{background:none;border:none;cursor:pointer;color:inherit;font-size:18px;' +
             'line-height:1;padding:1px 5px;opacity:.3;transition:opacity .15s;border-radius:4px}' +
             '.db-hamburger:hover{opacity:.7}' +
-            '.db-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:var(--cmdpal-bg-color);' +
-            'border:1px solid var(--cards-border-color);border-radius:var(--ed-radius-block);padding:4px;' +
-            'min-width:160px;z-index:100;box-shadow:var(--color-shadow-hover)}' +
+            '.db-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:var(--cmdpal-bg-color);' +
+            'border-radius:var(--ed-radius-block);padding:4px;' +
+            'min-width:180px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.35)}' +
             '.db-dropdown-item{display:block;width:100%;text-align:left;background:none;border:none;' +
-            'cursor:pointer;color:inherit;font-size:13px;padding:7px 10px;border-radius:var(--ed-radius-normal);transition:background .1s}' +
-            '.db-dropdown-item:hover{background:var(--cmdpal-hover-bg-color)}' +
+            'cursor:pointer;color:inherit;font-size:14px;padding:10px 14px;border-radius:var(--ed-radius-normal);transition:background .1s,color .1s}' +
+            '.db-dropdown-item:hover{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text)}' +
             '.db-setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 6px;font-size:13px}' +
             '.db-setting-label{opacity:.8}' +
             '.db-setting-toggle{background:var(--ed-container-bg-2);border:none;cursor:pointer;color:inherit;' +
