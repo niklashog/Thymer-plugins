@@ -78,7 +78,6 @@ class TodayDashboard {
     }
 
     load() {
-        this.plugin.data.getAllCollections().then(r => console.log('[Dashboard] getAllCollections:', JSON.stringify(r).slice(0, 500)));
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 32px 32px;}' +
             '.db-section{margin-bottom:32px}' +
@@ -1365,6 +1364,9 @@ class TodayDashboard {
 
     _journalCollectionGuid() {
         if (this._journalColGuid) return this._journalColGuid;
+        const lsKey = `db-journal-col-${this.plugin.getWorkspaceGuid()}`;
+        const cached = localStorage.getItem(lsKey);
+        if (cached) { this._journalColGuid = cached; return cached; }
         const pattern = /^S-(.+)-P000000000-0-\d{8}$/;
         const all = [
             ...(this._lastData?.todoResult?.lines || []),
@@ -1372,7 +1374,11 @@ class TodayDashboard {
         ];
         for (const t of all) {
             const match = t.record?.guid?.match(pattern);
-            if (match) { this._journalColGuid = match[1]; return match[1]; }
+            if (match) {
+                this._journalColGuid = match[1];
+                localStorage.setItem(lsKey, match[1]);
+                return match[1];
+            }
         }
         return null;
     }
