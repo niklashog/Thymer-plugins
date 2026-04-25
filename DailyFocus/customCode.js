@@ -273,6 +273,7 @@ class TodayDashboard {
         this.plugin.events.on('lineitem.updated', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.created', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.deleted', () => this._scheduleRefresh());
+        this.plugin.events.on('panel.closed', () => this._saveSettings());
 
 
         this._prefetch();
@@ -1292,8 +1293,6 @@ class TodayDashboard {
                         const on = !!this._settings[key];
                         target.textContent = on ? 'On' : 'Off';
                         target.classList.toggle('db-setting-toggle--on', on);
-                        clearTimeout(this._saveSettingsTimer);
-                        this._saveSettingsTimer = setTimeout(() => this._saveSettings(), 500);
                     }
                     break;
                 }
