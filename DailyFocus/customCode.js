@@ -506,7 +506,7 @@ class TodayDashboard {
                 : effectiveMode === 'settings'
                     ? this._buildSettingsHTML()
                     : effectiveMode === 'focus'
-                        ? this._buildFocusHTML(todayPinned, scheduled, doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
+                        ? this._buildFocusHTML(todayPinned, scheduled, this._settings.hideDoneInFocus ? [] : doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
                         : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview);
 
         this._applyTheme(el);
@@ -683,7 +683,13 @@ class TodayDashboard {
     }
 
     _buildSettingsHTML() {
-        const sidebarEnabled = !!this._settings.sidebarCountEnabled;
+        const row = (label, key) => {
+            const on = !!this._settings[key];
+            return `<div class="db-setting-row">
+                <span class="db-setting-label">${label}</span>
+                <button class="db-setting-toggle${on ? ' db-setting-toggle--on' : ''}" data-action="toggle-setting" data-setting="${key}">${on ? 'On' : 'Off'}</button>
+            </div>`;
+        };
         return `<div class="db-header">
                 <div class="db-header-left">
                     ${this._menuHTML('Settings')}
@@ -695,14 +701,21 @@ class TodayDashboard {
             <div class="db-root">
                 <div class="db-section">
                     <div class="db-section-header">
+                        <span class="db-section-title">Focus</span>
+                    </div>
+                    ${row('Hide completed tasks', 'hideDoneInFocus')}
+                </div>
+                <div class="db-section">
+                    <div class="db-section-header">
+                        <span class="db-section-title">Journal</span>
+                    </div>
+                    ${row('Add transclusion to journal when completing a task', 'journalTransclusions')}
+                </div>
+                <div class="db-section">
+                    <div class="db-section-header">
                         <span class="db-section-title">Sidebar</span>
                     </div>
-                    <div class="db-setting-row">
-                        <span class="db-setting-label">Show today's task count in status bar</span>
-                        <button class="db-setting-toggle${sidebarEnabled ? ' db-setting-toggle--on' : ''}" data-action="toggle-setting" data-setting="sidebarCountEnabled">
-                            ${sidebarEnabled ? 'On' : 'Off'}
-                        </button>
-                    </div>
+                    ${row('Show today\'s task count in status bar', 'sidebarCountEnabled')}
                 </div>
             </div>`;
     }
@@ -1067,8 +1080,10 @@ class TodayDashboard {
                         try {
                             await task.setTaskStatus('done');
                             await task.setMetaProperty('db-done-date', today);
-                            const journal = await this._journalRecord();
-                            if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
+                            if (this._settings.journalTransclusions !== false) {
+                                const journal = await this._journalRecord();
+                                if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
+                            }
                         } catch (err) {
                             console.error('[Dashboard] done failed:', err);
                             this._moveToTodo(task.guid);
