@@ -75,9 +75,6 @@ class TodayDashboard {
     }
 
     load() {
-        console.log('[Dashboard] $config:', JSON.stringify(this.plugin.collectionRoot.kv.$config));
-        console.log('[Dashboard] $config_meta:', JSON.stringify(this.plugin.collectionRoot.kv.$config_meta));
-        console.log('[Dashboard] collectionRoot methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.collectionRoot)));
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 32px 32px;}' +
             '.db-section{margin-bottom:32px}' +
@@ -943,6 +940,7 @@ class TodayDashboard {
                                 { type: 'text',     text: ' ' },
                                 { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
                             ]);
+                            if (task.props?.['db-pinned']) await task.setMetaProperty('db-pinned', null);
                         } catch (err) {
                             console.error('[Dashboard] recurring done failed:', err);
                             this._scheduleRefresh();
@@ -1103,13 +1101,12 @@ class TodayDashboard {
                     if (!task || !this._recurringDraft) return;
                     const { freq, day } = this._recurringDraft;
                     const nextDate = this._nextUpcomingDate(freq, day || null);
-                    this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-pinned': nextDate });
+                    this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null });
                     this._expandedRecurring = null;
                     this._recurringDraft = null;
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', freq);
                     task.setMetaProperty('db-recurring-day', day || null);
-                    task.setMetaProperty('db-pinned', nextDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
                         { type: 'text',     text: ' ' },
@@ -1128,10 +1125,9 @@ class TodayDashboard {
                 case 'enable-recurring': {
                     if (!task) return;
                     const recPinDate = this._viewDateHyphen();
-                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-pinned': recPinDate });
+                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily' });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', 'daily');
-                    task.setMetaProperty('db-pinned', recPinDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
                         { type: 'text',     text: ' ' },
