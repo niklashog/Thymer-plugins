@@ -1114,6 +1114,10 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-freq', freq);
                     task.setMetaProperty('db-recurring-day', day || null);
                     task.setMetaProperty('db-pinned', nextDate);
+                    task.setSegments([
+                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                        { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
+                    ]);
                     break;
                 }
                 case 'cancel-recurring': {
@@ -1131,6 +1135,10 @@ class TodayDashboard {
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', 'daily');
                     task.setMetaProperty('db-pinned', recPinDate);
+                    task.setSegments([
+                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                        { type: 'datetime', text: { d: recPinDate.replace(/-/g, '') } },
+                    ]);
                     break;
                 }
                 // [RECURRING-END]
