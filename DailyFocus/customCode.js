@@ -857,9 +857,19 @@ class TodayDashboard {
             : `<button class="db-recurring-btn" data-action="enable-recurring" data-guid="${task.guid}" title="Set as recurring"><i class="ti ti-repeat"></i></button>`;
         // [RECURRING-END]
 
-        if (isPast || section === 'recurring-preview') {
+        if (section === 'recurring-preview') {
+            return `<div class="db-task listitem-task db-task--recurring-preview" data-guid="${task.guid}">
+                <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+                <div class="db-task-body">
+                    <span class="db-task-text">${text}</span>
+                </div>
+                ${sourceHTML}
+            </div>`;
+        }
+
+        if (isPast) {
             const isDone = section === 'done';
-            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${section === 'recurring-preview' ? ' db-task--recurring-preview' : ''}" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}" data-guid="${task.guid}">
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
                 </div>
