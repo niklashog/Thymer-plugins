@@ -1302,6 +1302,7 @@ class TodayDashboard {
                     break;
                 }
                 case 'set-mode': {
+                    if (this._mode === 'settings') this._saveSettings();
                     this._mode = target.dataset.mode;
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
