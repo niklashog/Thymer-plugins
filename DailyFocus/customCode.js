@@ -1348,7 +1348,7 @@ class TodayDashboard {
             const nextDate = this._nextRecurringDate(freq, day);
             const text     = this._getText(task);
             const newTask  = await task.record.createLineItem(null, null, 'task', [
-                { type: 'text',     text },
+                { type: 'text',     text: text + ' ' },
                 { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
             ], null);
             if (newTask) {
