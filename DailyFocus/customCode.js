@@ -78,8 +78,9 @@ class TodayDashboard {
     }
 
     load() {
-        console.log('[Dashboard] plugin.data keys:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.data)));
-        console.log('[Dashboard] plugin.views keys:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.views || {})));
+        console.log('[Dashboard] plugin.data:', Object.keys(this.plugin.data));
+        console.log('[Dashboard] plugin.views:', Object.keys(this.plugin.views || {}));
+        console.log('[Dashboard] plugin keys:', Object.keys(this.plugin));
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 32px 32px;}' +
             '.db-section{margin-bottom:32px}' +
