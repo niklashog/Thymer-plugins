@@ -717,12 +717,6 @@ class TodayDashboard {
                     </div>
                     ${row('Add transclusion to journal when completing a task', 'journalTransclusions')}
                 </div>
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">Sidebar</span>
-                    </div>
-                    ${row('Show today\'s task count in status bar', 'sidebarCountEnabled')}
-                </div>
             </div>`;
     }
 
