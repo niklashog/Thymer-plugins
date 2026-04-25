@@ -78,6 +78,8 @@ class TodayDashboard {
     }
 
     load() {
+        console.log('[Dashboard] plugin.data keys:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.data)));
+        console.log('[Dashboard] plugin.views keys:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.plugin.views || {})));
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 32px 32px;}' +
             '.db-section{margin-bottom:32px}' +
@@ -959,6 +961,8 @@ class TodayDashboard {
                     try {
                         await task.setTaskStatus('done');
                         await task.setMetaProperty('db-done-date', today);
+                        const journal = this._journalRecord(this._todayD());
+                        if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
                     } catch (err) {
                         console.error('[Dashboard] done failed:', err);
                         this._moveToTodo(task.guid);
@@ -1359,6 +1363,18 @@ class TodayDashboard {
         }
     }
     // [RECURRING-END]
+
+    _journalRecord(dateStr) {
+        const suffix = `-P000000000-0-${dateStr}`;
+        const all = [
+            ...(this._lastData?.todoResult?.lines  || []),
+            ...(this._lastData?.doneResult?.lines  || []),
+        ];
+        for (const t of all) {
+            if (t.record?.guid?.endsWith(suffix)) return t.record;
+        }
+        return null;
+    }
 
     _getText(lineItem) {
         return (lineItem.segments || [])
