@@ -21,7 +21,8 @@ class TodayDashboard {
         this._taskSheetSlot  = null;
         this._doneTasksMap   = new Map();
         this._viewDate       = null;
-        this._hideRecurring  = true; // [RECURRING] remove when Thymer ships native recurring
+        this._hideUndated    = false;
+        this._hideUpcoming   = true;
         this._themeCache     = null;
         this._listenerAbort  = null;
         this._todayCache     = null;
@@ -577,13 +578,23 @@ class TodayDashboard {
             );
             const rescheduledStart = this._rescheduledRecurring[l.guid];
             const isRescheduledAway = !!(rescheduledStart && rescheduledStart > viewDate);
+            const isRecurringToday = !!(l.props?.['db-recurring-freq'] && (l.segments || []).some(s => s.type === 'datetime' && s.text?.d === viewDate));
             // [RECURRING-END]
-            if (isOverdue && !isPinned)                                                                planOverdue.push(l);
-            if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                            todayPinned.push(l);
-            if (isScheduled && !isPinned && !isOverdue && !isRecurringCompleted && !isRescheduledAway) scheduled.push(l);
+            if (isOverdue && !isPinned)                                                                                             planOverdue.push(l);
+            if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                                                         todayPinned.push(l);
+            if ((isScheduled || isRecurringToday) && !isPinned && !isOverdue && !isRecurringCompleted && !isRescheduledAway)        scheduled.push(l);
             if (!isDated && !isPinned && !isScheduled && !isOverdue)    inbox.push(l);
             if (!isDated && !hasPinProp && !isScheduled && !isOverdue)  planInbox.push(l);
         }
+
+        const todayD = this._todayD().replace(/-/g, '');
+        const upcomingCutoff = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10).replace(/-/g,''); })();
+        const upcomingTasks = allTodos.filter(l => {
+            if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || l.props?.['db-pinned']) return false;
+            const seg = (l.segments || []).find(s => s.type === 'datetime');
+            const d = seg?.text?.d;
+            return d && d > todayD && d <= upcomingCutoff;
+        });
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
         const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
@@ -638,7 +649,7 @@ class TodayDashboard {
                     ? this._buildSettingsHTML()
                     : effectiveMode === 'focus'
                         ? this._buildFocusHTML(todayPinned, scheduled, this._settings.hideDoneInFocus ? [] : doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
-                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview, timeBlocks);
+                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, false, recurringPreview, timeBlocks, upcomingTasks);
 
         this._applyTheme(el);
         if (this._listenerAbort) this._listenerAbort.abort();
@@ -789,10 +800,13 @@ class TodayDashboard {
         </div>`;
     }
 
-    _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = [], timeBlocks = {}) {
-        // [RECURRING-START] filter + notice — remove when Thymer ships native recurring
-        const visInbox      = hideRecurring ? inbox.filter(t => !t.props?.['db-recurring-freq']) : inbox;
-        const toggleBtn     = `<button class="db-recurring-filter${hideRecurring ? ' db-recurring-filter--active' : ''}" data-action="toggle-recurring-filter" style="margin-left:auto">${hideRecurring ? 'Show recurring' : 'Hide recurring'}</button>`;
+    _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = [], timeBlocks = {}, upcomingTasks = []) {
+        const undatedBtn    = `<button class="db-recurring-filter${!this._hideUndated ? ' db-recurring-filter--active' : ''}" data-action="toggle-undated-filter">Unscheduled</button>`;
+        const upcomingBtn   = `<button class="db-recurring-filter${!this._hideUpcoming ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-filter" style="margin-left:auto">Upcoming</button>`;
+        let visInbox = inbox;
+        if (!this._hideUpcoming) visInbox = [...upcomingTasks, ...visInbox];
+        if (this._hideUndated)   visInbox = visInbox.filter(t => (t.segments || []).some(s => s.type === 'datetime'));
+        // [RECURRING-START]
         const recurringNotice = unconfiguredRecurring > 0
             ? `<div class="db-recurring-notice"><i class="ti ti-info-circle"></i>${unconfiguredRecurring} recurring task${unconfiguredRecurring > 1 ? 's' : ''} need${unconfiguredRecurring === 1 ? 's' : ''} a schedule — <button class="db-recurring-notice-btn" data-action="set-mode" data-mode="recurring-list">configure →</button></div>`
             : '';
@@ -826,7 +840,7 @@ class TodayDashboard {
             ${this._section('Overdue',  overdue,  'overdue')}
             ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
             ${recurringNotice}
-            ${this._section('Inbox',    visInbox, 'inbox', toggleBtn)}
+            ${this._section('Inbox',    visInbox, 'inbox', upcomingBtn + undatedBtn)}
         </div>`;
     }
 
@@ -1553,8 +1567,13 @@ class TodayDashboard {
                     this._reapplyPlanSearch(el);
                     break;
                 }
-                case 'toggle-recurring-filter': {
-                    this._hideRecurring = !this._hideRecurring;
+                case 'toggle-undated-filter': {
+                    this._hideUndated = !this._hideUndated;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'toggle-upcoming-filter': {
+                    this._hideUpcoming = !this._hideUpcoming;
                     if (this._panel) this._render(this._panel);
                     break;
                 }
@@ -1612,7 +1631,7 @@ class TodayDashboard {
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             }
-            section.style.display = visibleCount === 0 ? 'none' : '';
+            section.style.display = (term && visibleCount === 0) ? 'none' : '';
         }
     }
 
