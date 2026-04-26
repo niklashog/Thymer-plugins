@@ -1503,7 +1503,6 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-freq',  null);
                     task.setMetaProperty('db-recurring-day',   null);
                     task.setMetaProperty('db-recurring-start', null);
-                    task.setSegments((task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())));
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
