@@ -17,7 +17,6 @@ class TodayDashboard {
         this._refreshTimer   = null;
         this._renderVer      = 0;
         this._mode           = null;
-        this._selected       = null;
         this._taskSheet      = null;
         this._taskSheetSlot  = null;
         this._doneTasksMap   = new Map();
@@ -283,18 +282,12 @@ class TodayDashboard {
             'font-size:14px;padding:2px 0;transition:color .15s}' +
             '.db-mode-toggle:hover{color:var(--ed-link-hover-color)}' +
             '' +
-            '.db-block{display:flex;border-radius:var(--ed-radius-block);cursor:pointer;' +
-            'transition:background .1s,box-shadow .1s;min-height:52px;margin-bottom:6px;' +
+            '.db-block{border-radius:var(--ed-radius-block);margin-bottom:14px;' +
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);box-shadow:var(--color-shadow-cards)}' +
-            '.db-block:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
-            '.db-block--selected{background:var(--cards-hover-bg);box-shadow:0 0 0 2px var(--ed-link-color),var(--color-shadow-cards)}' +
-            '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:190px;padding:3px 0 4px}' +
-            '.db-block-time-inner{display:flex;align-items:center;gap:6px;font-size:13px;opacity:.4;' +
-            'padding:5px 6px;min-height:30px}' +
-            '.db-block-label{width:120px;flex-shrink:0;white-space:nowrap}' +
-            '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
-            '.db-block-body{flex:1;min-width:0;padding:4px 8px 8px 12px}' +
-            '.db-block-hint{font-size:12px;opacity:.18;padding:11px 0 14px 2px}' +
+            '.db-block-time{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 4px}' +
+            '.db-block-label{font-size:13px;font-weight:500;opacity:.5}' +
+            '.db-block-clock{font-size:12px;opacity:.35;font-variant-numeric:tabular-nums}' +
+            '.db-block-body{padding:0 8px 8px}' +
             '.db-day-nav{display:flex;align-items:center;gap:8px}' +
             '.db-day-nav-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);font-size:16px;' +
             'padding:2px 6px;transition:color .15s;border-radius:4px}' +
@@ -306,11 +299,8 @@ class TodayDashboard {
             '@media(max-width:600px){' +
             '.db-root{padding:12px 0;max-width:100%}' +
             '.db-header{padding:10px 0 16px}' +
-            '.db-block{flex-direction:column;min-height:0;margin-bottom:8px}' +
-            '.db-block-time{padding:4px 6px 0;min-width:0;width:100%}' +
-            '.db-block-time-inner{padding:4px 0;min-height:0}' +
-            '.db-block-body{padding:0 6px 10px 6px;width:100%}' +
-            '.db-block-hint{padding:4px 0 8px 2px}' +
+            '.db-block{margin-bottom:8px}' +
+            '.db-block-body{padding:0 6px 8px}' +
             '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
             '.db-task-source{display:none}' +
             '.db-task-source--link{max-width:10ch;overflow:hidden;text-overflow:ellipsis}' +
@@ -647,7 +637,6 @@ class TodayDashboard {
         if (this._listenerAbort) this._listenerAbort.abort();
         this._listenerAbort = new AbortController();
         this._attachListeners(el, allTasks, ignoredTasks, this._listenerAbort.signal);
-        this._reapplySelection(el);
         this._reapplyPlanSearch(el);
     }
 
@@ -734,7 +723,7 @@ class TodayDashboard {
                     ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
                 </div>
                 <div class="db-block">
-                    <div class="db-block-time"><div class="db-block-time-inner"><span class="db-block-label">When time is right</span></div></div>
+                    <div class="db-block-time"><span class="db-block-label">When time is right</span></div>
                     <div class="db-block-body">
                         ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
                         ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
@@ -747,7 +736,7 @@ class TodayDashboard {
                 <div class="db-section-header">
                     <span class="db-section-title">Day Plan</span>
                 </div>
-                ${SLOTS.map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
+                ${SLOTS.filter(s => !this._settings.hideEmptyBlocks || (assignedByTime[s.time] || []).length > 0).map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
             </div>
         </div>`; // closes db-root — db-topbar is a sibling, no wrapper needed
     }
@@ -787,14 +776,9 @@ class TodayDashboard {
     }
 
     _blockHTML(time, label, tasks, doneGuids = new Set()) {
-        return `<div class="db-block" data-action="select-block" data-time="${time}">
-            <div class="db-block-time"><div class="db-block-time-inner"><span class="db-block-label">${label}</span><span>→</span><span class="db-block-clock">${time}</span></div></div>
-            <div class="db-block-body">
-                ${tasks.length
-                    ? tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')
-                    : `<div class="db-block-hint">tap to select</div>`
-                }
-            </div>
+        return `<div class="db-block" data-time="${time}">
+            <div class="db-block-time"><span class="db-block-label">${label}</span><span class="db-block-clock">→ ${time}</span></div>
+            ${tasks.length ? `<div class="db-block-body">${tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')}</div>` : ''}
         </div>`;
     }
 
@@ -891,6 +875,7 @@ class TodayDashboard {
                         <span class="db-section-title">Focus</span>
                     </div>
                     ${row('Hide completed tasks', 'hideDoneInFocus')}
+                    ${row('Hide empty time blocks', 'hideEmptyBlocks')}
                 </div>
                 <div class="db-section">
                     <div class="db-section-header">
@@ -1394,10 +1379,6 @@ class TodayDashboard {
                     if (this._panel) this._render(this._panel);
                     break;
                 }
-                case 'select-block': {
-                    const time = target.dataset.time;
-                    break;
-                }
                 case 'open': {
                     if (!task?.record) return;
                     const panel = this.plugin.ui.getActivePanel();
@@ -1609,17 +1590,6 @@ class TodayDashboard {
                 if (match) visibleCount++;
             }
             section.style.display = visibleCount === 0 ? 'none' : '';
-        }
-    }
-
-    _reapplySelection(el) {
-        el.querySelectorAll('.db-task--selected').forEach(e => e.classList.remove('db-task--selected'));
-        el.querySelectorAll('.db-block--selected').forEach(e => e.classList.remove('db-block--selected'));
-        if (!this._selected) return;
-        if (this._selected.type === 'task') {
-            el.querySelector(`.db-task[data-guid="${this._selected.id}"]`)?.classList.add('db-task--selected');
-        } else {
-            el.querySelector(`.db-block[data-time="${this._selected.id}"]`)?.classList.add('db-block--selected');
         }
     }
 
