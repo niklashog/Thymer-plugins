@@ -1086,6 +1086,8 @@ class TodayDashboard {
     _taskRow(task, section) {
         const text       = this._getTaskTextHTML(task);
         const dateChip   = this._getDateChipHTML(task);
+        const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-waiting', billable:'state-billable', discuss:'state-discuss', alert:'state-alert', starred:'state-starred' };
+        const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
         const source     = this._escape(task.record?.getName() || '');
         const sourceHTML = source
             ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
@@ -1136,7 +1138,7 @@ class TodayDashboard {
 
         if (isPast) {
             const isDone = section === 'done';
-            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-guid="${task.guid}">
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
                 </div>
@@ -1160,7 +1162,7 @@ class TodayDashboard {
                 : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
                 ${dateChip}${sourceHTML}
@@ -1174,7 +1176,7 @@ class TodayDashboard {
                 : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
@@ -1186,7 +1188,7 @@ class TodayDashboard {
         }
 
         if (section === 'inbox' || section === 'overdue') {
-            return `<div class="db-task listitem-task" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
@@ -1196,7 +1198,7 @@ class TodayDashboard {
             </div>`;
         }
 
-        return `<div class="db-task listitem-task" data-guid="${task.guid}">
+        return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
             ${doneBtn}
             <div class="db-task-body" data-action="open" data-guid="${task.guid}">
                 <span class="db-task-text">${text}</span>
