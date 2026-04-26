@@ -67,7 +67,7 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 
 If you clear your browser cache and browser data while the plugin is installed, the mobile browser may fail to load all panels and meta-properties required to run plugins on the next visit, resulting in a blank screen.
 
-**Fix:** switch your mobile browser to desktop mode, navigate around a little, then switch back to mobile mode. The panel layout resets and the app loads correctly.
+**Fix:** switch your mobile browser to desktop mode, navigate around a little, then switch back to mobile mode and the app should load correctly.
 
 ## Changelog
 
