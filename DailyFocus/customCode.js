@@ -55,7 +55,7 @@ class TodayDashboard {
             for (const task of allTasks) {
                 if (!DB_KEYS.some(k => task.props?.[k] != null)) continue;
                 if (task.props?.['db-recurring-freq'] != null) {
-                    const cleanSegs = (task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim()));
+                    const cleanSegs = this._stripDateSegments(task.segments);
                     if (cleanSegs.length !== (task.segments || []).length) {
                         await task.setSegments(cleanSegs);
                     }
@@ -113,6 +113,10 @@ class TodayDashboard {
     _makeDateSegment(yyyymmdd) {
         const dt = DateTime.dateOnly(+yyyymmdd.slice(0,4), +yyyymmdd.slice(4,6) - 1, +yyyymmdd.slice(6,8));
         return { type: 'datetime', text: dt.value() };
+    }
+
+    _stripDateSegments(segments) {
+        return (segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim()));
     }
 
     _viewDateHyphen() {
@@ -1268,7 +1272,7 @@ class TodayDashboard {
                         try {
                             const nextYMD = nextDate.replace(/-/g, '');
                             const newSegs = [
-                                ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
+                                ...this._stripDateSegments(task.segments),
                                 { type: 'text', text: ' ' }, this._makeDateSegment(nextYMD),
                             ];
                             await task.setMetaProperty('db-pinned', null);
@@ -1464,7 +1468,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-day', day || null);
                     task.setMetaProperty('db-recurring-start', startDate);
                     task.setSegments([
-                        ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
+                        ...this._stripDateSegments(task.segments),
                         { type: 'text', text: ' ' }, this._makeDateSegment(startDate),
                     ]);
                     break;
@@ -1487,7 +1491,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-start', recStartDate);
                     task.setMetaProperty('db-pinned', recPinDate);
                     task.setSegments([
-                        ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
+                        ...this._stripDateSegments(task.segments),
                         { type: 'text', text: ' ' }, this._makeDateSegment(recStartDate),
                     ]);
                     break;
