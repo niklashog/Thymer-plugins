@@ -64,6 +64,7 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 ## Changelog
 
 ### 2026-04-26
+- **Search** — search box in Plan view filters Overdue and Inbox tasks in real time
 - **Settings** — new view accessible via ☰; configure plugin behaviour. Current options: hide completed tasks in Focus, disable journal transclusions
 - **Menu trigger** — clicking the hamburger icon or the view name opens the menu
 - **Fix** — journal transclusions now work correctly across multiple workspaces or accounts open in the same browser
