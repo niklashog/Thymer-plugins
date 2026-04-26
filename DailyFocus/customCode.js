@@ -158,15 +158,15 @@ class TodayDashboard {
             '.db-done{flex-shrink:0;cursor:pointer;align-self:center;margin-top:0!important;margin-right:0!important}' +
             '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
             '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
-            '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;cursor:pointer}' +
-            '.db-task-text{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-            '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
+            '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;cursor:pointer}' +
+            '.db-task-text{min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-task-text--sel{min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
             'text-overflow:ellipsis;cursor:pointer}' +
             '.db-ref-chip{display:inline-flex;align-items:center;gap:2px;color:var(--ed-link-color);cursor:pointer;' +
             'border-radius:3px;padding:0 2px;transition:opacity .15s;white-space:nowrap}' +
             '.db-ref-chip:hover{opacity:.7}' +
             '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
-            '.db-date-chip{flex-shrink:0;margin-left:6px;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
+            '.db-date-chip{flex-shrink:0;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
             'border-radius:3px;padding:1px 4px;font-size:13px;white-space:nowrap}' +
             '.db-date-chip--overdue{color:var(--ed-error-color);background:transparent}' +
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
@@ -1124,9 +1124,9 @@ class TodayDashboard {
             return `<div class="db-task listitem-task db-task--recurring-preview" data-guid="${task.guid}">
                 <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
                 <div class="db-task-body">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
-                ${dateChip}${sourceHTML}
+                ${sourceHTML}
             </div>`;
         }
 
@@ -1134,8 +1134,10 @@ class TodayDashboard {
         if (section === 'recurring-done') {
             return `<div class="db-task listitem-task state-done db-task--recurring-done" data-guid="${task.guid}">
                 <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
-                <span class="db-task-text--sel">${text}</span>
-                ${dateChip}${sourceHTML}
+                <div class="db-task-body">
+                    <span class="db-task-text--sel">${text}</span>${dateChip}
+                </div>
+                ${sourceHTML}
             </div>`;
         }
 
@@ -1143,9 +1145,9 @@ class TodayDashboard {
             return `<div class="db-task listitem-task db-task--recurring-missed" data-guid="${task.guid}">
                 <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
                 <div class="db-task-body">
-                    <span class="db-task-text" style="opacity:.4">${text}</span>
+                    <span class="db-task-text" style="opacity:.4">${text}</span>${dateChip}
                 </div>
-                ${dateChip}${sourceHTML}
+                ${sourceHTML}
             </div>`;
         }
         // [RECURRING-END]
@@ -1154,9 +1156,9 @@ class TodayDashboard {
             const isDone = section === 'done';
             return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-guid="${task.guid}">
                 <div class="db-task-body">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
-                ${dateChip}${sourceHTML}
+                ${sourceHTML}
             </div>`;
         }
 
@@ -1165,8 +1167,10 @@ class TodayDashboard {
         if (section === 'done') {
             return `<div class="db-task listitem-task state-done" data-guid="${task.guid}">
                 <div class="db-done line-check-div clickable" data-action="undone" data-guid="${task.guid}"></div>
-                <span class="db-task-text--sel">${text}</span>
-                ${dateChip}${sourceHTML}
+                <div class="db-task-body">
+                    <span class="db-task-text--sel">${text}</span>${dateChip}
+                </div>
+                ${sourceHTML}
             </div>`;
         }
 
@@ -1178,9 +1182,10 @@ class TodayDashboard {
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
                 ${doneBtn}
-                <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
-                ${dateChip}${sourceHTML}
-                ${pinBtn}
+                <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
+                    <span class="db-task-text--sel">${text}</span>${dateChip}
+                </div>
+                ${sourceHTML}${pinBtn}
             </div>${inlinePanel}`;
         }
 
@@ -1193,10 +1198,9 @@ class TodayDashboard {
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
-                ${dateChip}${sourceHTML}
-                ${recurToggle}<!-- [RECURRING] -->
+                ${sourceHTML}${recurToggle}<!-- [RECURRING] -->
                 ${pinBtn}
             </div>${inlinePanel}`;
         }
@@ -1205,20 +1209,18 @@ class TodayDashboard {
             return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
-                ${dateChip}${sourceHTML}
-                ${recurToggle}<!-- [RECURRING] -->
+                ${sourceHTML}${recurToggle}<!-- [RECURRING] -->
             </div>`;
         }
 
         return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
             ${doneBtn}
             <div class="db-task-body" data-action="open" data-guid="${task.guid}">
-                <span class="db-task-text">${text}</span>
+                <span class="db-task-text">${text}</span>${dateChip}
                 ${source ? `<span class="db-task-source">${source}</span>` : ''}
             </div>
-            ${dateChip}
         </div>`;
     }
 
