@@ -1,4 +1,4 @@
-# Daily Focus Dashboard
+# Daily Focus - Tasks
 
 **Type:** Global Plugin
 
