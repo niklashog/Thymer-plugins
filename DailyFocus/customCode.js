@@ -161,6 +161,10 @@ class TodayDashboard {
             '.db-task-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
             'text-overflow:ellipsis;cursor:pointer}' +
+            '.db-ref-chip{display:inline-flex;align-items:center;gap:2px;color:var(--ed-link-color);cursor:pointer;' +
+            'border-radius:3px;padding:0 2px;transition:opacity .15s;white-space:nowrap}' +
+            '.db-ref-chip:hover{opacity:.7}' +
+            '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
             '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;gap:2px;padding-right:4px}' +
             '.db-task-source--link{font-size:11px;color:var(--ed-link-color);white-space:nowrap;' +
@@ -944,7 +948,7 @@ class TodayDashboard {
     }
 
     _recurringTaskRow(task) {
-        const text = this._escape(this._getText(task));
+        const text = this._getTaskTextHTML(task);
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
             ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
@@ -1077,7 +1081,7 @@ class TodayDashboard {
     }
 
     _taskRow(task, section) {
-        const text       = this._escape(this._getText(task));
+        const text       = this._getTaskTextHTML(task);
         const source     = this._escape(task.record?.getName() || '');
         const sourceHTML = source
             ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
@@ -1388,6 +1392,18 @@ class TodayDashboard {
                         subId: null,
                         itemGuid: task.guid,
                         highlight: true,
+                        workspaceGuid: this.plugin.getWorkspaceGuid(),
+                    });
+                    break;
+                }
+                case 'open-ref': {
+                    const refGuid = target.dataset.guid;
+                    if (!refGuid) return;
+                    const panel = this.plugin.ui.getActivePanel();
+                    if (panel) panel.navigateTo({
+                        type: 'edit_panel',
+                        rootId: refGuid,
+                        subId: null,
                         workspaceGuid: this.plugin.getWorkspaceGuid(),
                     });
                     break;
@@ -1728,11 +1744,27 @@ class TodayDashboard {
     _getText(lineItem) {
         return (lineItem.segments || [])
             .map(s => {
+                if (s.type === 'ref') return s.text?.title || this.plugin.data.getRecord(s.text?.guid)?.getName() || '';
                 if (typeof s.text === 'string') return s.text;
                 if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
                 return '';
             })
             .join('') || '(untitled)';
+    }
+
+    _getTaskTextHTML(task) {
+        const parts = (task.segments || []).map(s => {
+            if (s.type === 'ref') {
+                const guid = s.text?.guid;
+                if (!guid) return '';
+                const title = s.text?.title || this.plugin.data.getRecord(guid)?.getName() || '?';
+                return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}">${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
+            }
+            if (typeof s.text === 'string') return this._escape(s.text);
+            if (s.text && typeof s.text === 'object') return this._escape(s.text.title || s.text.link || '');
+            return '';
+        }).join('');
+        return parts || '(untitled)';
     }
 
     _escape(str) {
