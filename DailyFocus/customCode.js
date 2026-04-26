@@ -55,7 +55,7 @@ class TodayDashboard {
             for (const task of allTasks) {
                 if (!DB_KEYS.some(k => task.props?.[k] != null)) continue;
                 if (task.props?.['db-recurring-freq'] != null) {
-                    const cleanSegs = (task.segments || []).filter(s => s.type !== 'datetime');
+                    const cleanSegs = (task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim()));
                     if (cleanSegs.length !== (task.segments || []).length) {
                         await task.setSegments(cleanSegs);
                     }
@@ -1268,7 +1268,7 @@ class TodayDashboard {
                         try {
                             const nextYMD = nextDate.replace(/-/g, '');
                             const newSegs = [
-                                ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                                ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
                                 this._makeDateSegment(nextYMD),
                             ];
                             await task.setMetaProperty('db-pinned', null);
@@ -1464,7 +1464,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-day', day || null);
                     task.setMetaProperty('db-recurring-start', startDate);
                     task.setSegments([
-                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                        ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
                         this._makeDateSegment(startDate),
                     ]);
                     break;
@@ -1486,7 +1486,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-freq', 'daily');
                     task.setMetaProperty('db-recurring-start', recStartDate);
                     task.setSegments([
-                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                        ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
                         this._makeDateSegment(recStartDate),
                     ]);
                     break;
