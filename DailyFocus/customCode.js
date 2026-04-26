@@ -159,14 +159,14 @@ class TodayDashboard {
             '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
             '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
             '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;cursor:pointer}' +
-            '.db-task-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-task-text{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
             'text-overflow:ellipsis;cursor:pointer}' +
             '.db-ref-chip{display:inline-flex;align-items:center;gap:2px;color:var(--ed-link-color);cursor:pointer;' +
             'border-radius:3px;padding:0 2px;transition:opacity .15s;white-space:nowrap}' +
             '.db-ref-chip:hover{opacity:.7}' +
             '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
-            '.db-date-chip{flex-shrink:0;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
+            '.db-date-chip{flex-shrink:0;margin-left:6px;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
             'border-radius:3px;padding:1px 4px;font-size:13px;white-space:nowrap}' +
             '.db-date-chip--overdue{color:var(--ed-error-color);background:transparent}' +
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
