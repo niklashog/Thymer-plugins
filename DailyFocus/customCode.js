@@ -19,6 +19,7 @@ class TodayDashboard {
         this._mode           = null;
         this._selected       = null;
         this._taskSheet      = null;
+        this._taskSheetSlot  = null;
         this._doneTasksMap   = new Map();
         this._viewDate       = null;
         this._hideRecurring  = true; // [RECURRING] remove when Thymer ships native recurring
@@ -53,6 +54,12 @@ class TodayDashboard {
             const allTasks = [...(todos?.lines || []), ...(done?.lines || [])];
             for (const task of allTasks) {
                 if (!DB_KEYS.some(k => task.props?.[k] != null)) continue;
+                if (task.props?.['db-recurring-freq'] != null) {
+                    const cleanSegs = (task.segments || []).filter(s => s.type !== 'datetime');
+                    if (cleanSegs.length !== (task.segments || []).length) {
+                        await task.setSegments(cleanSegs);
+                    }
+                }
                 for (const key of DB_KEYS) {
                     if (task.props?.[key] != null) await task.setMetaProperty(key, null);
                 }
@@ -101,6 +108,11 @@ class TodayDashboard {
         const d = new Date(+dateStr.slice(0,4), +dateStr.slice(4,6)-1, +dateStr.slice(6,8));
         d.setDate(d.getDate() + days);
         return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    _makeDateSegment(yyyymmdd) {
+        const dt = DateTime.dateOnly(+yyyymmdd.slice(0,4), +yyyymmdd.slice(4,6) - 1, +yyyymmdd.slice(6,8));
+        return { type: 'datetime', text: dt.value() };
     }
 
     _viewDateHyphen() {
@@ -298,37 +310,57 @@ class TodayDashboard {
             '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
             '.db-task-source{display:none}' +
             '.db-task-source--link{max-width:10ch;overflow:hidden;text-overflow:ellipsis}' +
-            '.db-src-icon{display:inline-flex;align-items:center;justify-content:center;opacity:.3}' +
+            '.db-task-source-wrap{padding-right:0;gap:0}' +
+            '.db-src-icon{display:inline-flex;align-items:center;justify-content:center;opacity:.3;padding:1px 2px}' +
             '.db-src-icon:hover{opacity:.7}' +
             '.db-block .db-unpin{display:none}' +
             '}' +
-            '.db-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}' +
-            '.db-task-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--cards-bg);' +
-            'border-radius:16px 16px 0 0;z-index:200;max-height:85vh;overflow-y:auto;' +
-            'border-top:1px solid var(--sidebar-border-color)}' +
+            '.db-task--open{border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;margin-bottom:0!important}' +
+            '.db-task-inline{background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
+            'border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
+            'padding:12px 14px 14px;margin:0 0 4px;box-shadow:var(--color-shadow-cards)}' +
+            '.db-inline-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}' +
+            '.db-inline-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+            'padding:8px 4px;background:var(--cards-bg);border:1px solid var(--sidebar-border-color);' +
+            'border-radius:var(--ed-radius-normal);cursor:pointer;color:inherit;min-height:44px;' +
+            'transition:background .1s,box-shadow .1s;box-sizing:border-box}' +
+            '.db-inline-slot:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
+            '.db-inline-slot--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent}' +
+            '.db-inline-slot-label{font-size:11px;font-weight:500;text-align:center;line-height:1.3}' +
+            '.db-inline-slot-time{font-size:10px;opacity:.5;margin-top:2px}' +
+            '.db-pin-icon{display:inline-flex;align-items:center;justify-content:center;' +
+            'background:none;border:none;cursor:pointer;color:var(--ed-gray-text);' +
+            'opacity:.7;font-size:14px;padding:0 4px;border-radius:var(--ed-radius-normal);' +
+            'transition:opacity .15s;flex-shrink:0;line-height:1}' +
+            '.db-pin-icon:hover{opacity:.25}' +
+            '.db-sheet-overlay{display:none}' +
+            '.db-task-sheet{display:none}' +
+            '@media(max-width:600px){' +
+            '.db-task-inline{display:none}' +
+            '.db-sheet-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}' +
+            '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--cards-bg);' +
+            'border-radius:16px 16px 0 0;z-index:200;border-top:1px solid var(--sidebar-border-color);' +
+            'box-shadow:0 -4px 24px rgba(0,0,0,.18)}' +
             '.db-sheet-handle{width:36px;height:4px;background:var(--sidebar-border-color);' +
             'border-radius:2px;margin:12px auto 4px}' +
-            '.db-sheet-name{font-size:14px;font-weight:600;padding:12px 20px 14px;' +
-            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
+            '.db-sheet-name{font-size:14px;font-weight:600;padding:10px 20px 12px;' +
+            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ed-link-color);' +
             'border-bottom:1px solid var(--sidebar-border-color)}' +
-            '.db-sheet-slot{display:flex;align-items:center;width:100%;min-height:48px;' +
-            'padding:10px 20px;background:none;border:none;border-bottom:1px solid var(--sidebar-border-color);' +
-            'cursor:pointer;font-size:15px;color:inherit;text-align:left;transition:background .1s;box-sizing:border-box}' +
-            '.db-sheet-slot:last-child{border-bottom:none}' +
-            '.db-sheet-slot:active{background:var(--cards-hover-bg)}' +
-            '.db-sheet-slot--active{color:var(--ed-link-color)}' +
-            '.db-sheet-slot-label{flex:1}' +
-            '.db-sheet-slot-time{font-size:13px;opacity:.45;margin-right:10px}' +
-            '.db-sheet-divider{height:1px;background:var(--sidebar-border-color);margin:4px 0}' +
-            '.db-sheet-remove{display:block;width:100%;min-height:48px;padding:12px 20px;' +
-            'background:none;border:none;border-bottom:1px solid var(--sidebar-border-color);' +
-            'cursor:pointer;font-size:15px;color:var(--ed-error-color);text-align:left;' +
-            'transition:background .1s;box-sizing:border-box}' +
-            '.db-sheet-remove:active{background:var(--cards-hover-bg)}' +
-            '.db-sheet-cancel{display:block;width:100%;min-height:52px;padding:14px 20px;' +
-            'background:none;border:none;cursor:pointer;font-size:16px;font-weight:600;' +
-            'color:var(--ed-link-color);text-align:center;transition:background .1s;box-sizing:border-box}' +
-            '.db-sheet-cancel:active{background:var(--cards-hover-bg)}' +
+            '.db-sheet-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 20px}' +
+            '.db-sheet-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+            'padding:10px 6px;background:var(--cards-bg);border:1px solid var(--sidebar-border-color);' +
+            'border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-cards);' +
+            'cursor:pointer;color:inherit;min-height:52px;transition:background .1s,box-shadow .1s;box-sizing:border-box}' +
+            '.db-sheet-slot:active{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
+            '.db-sheet-slot--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent}' +
+            '.db-sheet-slot-label{font-size:12px;font-weight:500;text-align:center;line-height:1.3}' +
+            '.db-sheet-slot-time{font-size:11px;opacity:.5;margin-top:3px}' +
+            '.db-sheet-footer{display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 12px 28px;' +
+            'border-top:1px solid var(--sidebar-border-color)}' +
+            '.db-sheet-remove{background:none;border:none;cursor:pointer;font-size:13px;' +
+            'color:var(--ed-error-color);padding:10px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
+            '.db-sheet-remove:active{opacity:.6}' +
+            '}' +
             '.db-wipe-btn{width:100%;text-align:left;padding:10px 14px;background:none;border:none;cursor:pointer;' +
             'font-size:14px;color:var(--ed-error-color);opacity:.7;border-radius:var(--ed-radius-block);transition:opacity .1s,background .1s}' +
             '.db-wipe-btn:hover{opacity:1;background:var(--cards-hover-bg)}' +
@@ -367,9 +399,6 @@ class TodayDashboard {
         this.plugin.events.on('lineitem.updated', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.created', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.deleted', () => this._scheduleRefresh());
-
-
-        this._prefetch();
     }
 
     _patchTask(guid, propsUpdate) {
@@ -404,6 +433,7 @@ class TodayDashboard {
     }
 
     async _prefetch() {
+        if (!this._panel) return;
         if (this._prefetchInFlight) return;
         this._prefetchInFlight = true;
         try {
@@ -423,9 +453,10 @@ class TodayDashboard {
     }
 
     _scheduleRefresh() {
+        if (!this._panel) return;
+        if (!this._panel.getElement()?.isConnected) { this._panel = null; return; }
         if (this._refreshTimer) clearTimeout(this._refreshTimer);
-        if (this._panel) this._prefetch();
-        else this._lastData = null;
+        this._prefetch();
         this._refreshTimer = setTimeout(() => {
             this._refreshTimer = null;
             if (!this._panel) return;
@@ -546,11 +577,11 @@ class TodayDashboard {
             const rescheduledStart = this._rescheduledRecurring[l.guid];
             const isRescheduledAway = !!(rescheduledStart && rescheduledStart > viewDate);
             // [RECURRING-END]
-            if (isOverdue && !isPinned)                                                              planOverdue.push(l);
-            if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                          todayPinned.push(l);
+            if (isOverdue && !isPinned)                                                                planOverdue.push(l);
+            if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                            todayPinned.push(l);
             if (isScheduled && !isPinned && !isOverdue && !isRecurringCompleted && !isRescheduledAway) scheduled.push(l);
-            if (!isDated && !isPinned && !isScheduled && !isOverdue)                inbox.push(l);
-            if (!isDated && !hasPinProp && !isScheduled && !isOverdue)              planInbox.push(l);
+            if (!isDated && !isPinned && !isScheduled && !isOverdue)    inbox.push(l);
+            if (!isDated && !hasPinProp && !isScheduled && !isOverdue)  planInbox.push(l);
         }
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
@@ -606,7 +637,7 @@ class TodayDashboard {
                     ? this._buildSettingsHTML()
                     : effectiveMode === 'focus'
                         ? this._buildFocusHTML(todayPinned, scheduled, this._settings.hideDoneInFocus ? [] : doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
-                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview);
+                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview, timeBlocks);
 
         this._applyTheme(el);
         if (this._listenerAbort) this._listenerAbort.abort();
@@ -673,8 +704,7 @@ class TodayDashboard {
         let sheetHTML = '';
         if (this._taskSheet) {
             const sheetTask    = taskByGuid.get(this._taskSheet);
-            const rawSlot      = timeBlocks[this._taskSheet];
-            const currentSlot  = rawSlot ? rawSlot.slice(9) : null;
+            const currentSlot  = timeBlocks[this._taskSheet] || null;
             const isPinned     = pinnedGuids.has(this._taskSheet);
             sheetHTML = this._buildTaskSheetHTML(this._taskSheet, sheetTask, currentSlot, isPinned);
         }
@@ -718,33 +748,37 @@ class TodayDashboard {
         </div>`; // closes db-root — db-topbar is a sibling, no wrapper needed
     }
 
+    _buildTaskInlinePanel(guid, currentSlot) {
+        const slotsHTML = SLOTS.map(s => {
+            const active = currentSlot === s.time;
+            return `<button class="db-inline-slot${active ? ' db-inline-slot--active' : ''}" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
+                <span class="db-inline-slot-label">${s.label}</span>
+                <span class="db-inline-slot-time">→ ${s.time}</span>
+            </button>`;
+        }).join('');
+        return `<div class="db-task-inline">
+            <div class="db-inline-slots">${slotsHTML}</div>
+        </div>`;
+    }
+
     _buildTaskSheetHTML(guid, task, currentSlot, isPinned) {
         const text = task ? this._escape(this._getText(task)) : '';
         const slotsHTML = SLOTS.map(s => {
             const active = currentSlot === s.time;
             return `<button class="db-sheet-slot${active ? ' db-sheet-slot--active' : ''}" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
                 <span class="db-sheet-slot-label">${s.label}</span>
-                <span class="db-sheet-slot-time">${s.time}</span>
-                ${active ? '<i class="ti ti-check"></i>' : ''}
+                <span class="db-sheet-slot-time">→ ${s.time}</span>
             </button>`;
         }).join('');
-        const clearHTML = currentSlot
-            ? `<button class="db-sheet-slot" data-action="sheet-clear-slot" data-guid="${guid}">
-                <span class="db-sheet-slot-label" style="opacity:.5">No time block</span>
-               </button>`
-            : '';
-        const removeHTML = isPinned
-            ? `<div class="db-sheet-divider"></div>
-               <button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}">Remove from Today's Focus</button>`
+        const removeBtn = isPinned
+            ? `<button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}">Remove from today</button>`
             : '';
         return `<div class="db-sheet-overlay" data-action="close-task-sheet"></div>
             <div class="db-task-sheet">
                 <div class="db-sheet-handle"></div>
-                <div class="db-sheet-name">${text}</div>
-                <div class="db-sheet-slots">${slotsHTML}${clearHTML}</div>
-                ${removeHTML}
-                <div class="db-sheet-divider"></div>
-                <button class="db-sheet-cancel" data-action="close-task-sheet">Cancel</button>
+                <div class="db-sheet-name">Schedule ${text}</div>
+                <div class="db-sheet-slots">${slotsHTML}</div>
+                ${removeBtn ? `<div class="db-sheet-footer">${removeBtn}</div>` : ''}
             </div>`;
     }
 
@@ -760,7 +794,7 @@ class TodayDashboard {
         </div>`;
     }
 
-    _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = []) {
+    _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = [], timeBlocks = {}) {
         // [RECURRING-START] filter + notice — remove when Thymer ships native recurring
         const visInbox      = hideRecurring ? inbox.filter(t => !t.props?.['db-recurring-freq']) : inbox;
         const toggleBtn     = `<button class="db-recurring-filter${hideRecurring ? ' db-recurring-filter--active' : ''}" data-action="toggle-recurring-filter" style="margin-left:auto">${hideRecurring ? 'Show recurring' : 'Hide recurring'}</button>`;
@@ -770,7 +804,13 @@ class TodayDashboard {
         // [RECURRING-END]
         const dateLabel  = this._viewDateLabel();
         const focusTitle = dateLabel === 'Today' ? "Today's Focus" : `${dateLabel}'s Focus`;
-        return `<div class="db-header">
+        let sheetHTML = '';
+        if (this._taskSheet) {
+            const sheetTask   = today.find(t => t.guid === this._taskSheet);
+            const currentSlot = timeBlocks[this._taskSheet] || null;
+            sheetHTML = this._buildTaskSheetHTML(this._taskSheet, sheetTask, currentSlot, true);
+        }
+        return sheetHTML + `<div class="db-header">
                 <div class="db-header-left">
                     ${this._menuHTML('Plan')}
                 </div>
@@ -826,8 +866,8 @@ class TodayDashboard {
     }
 
     _buildSettingsHTML() {
-        const row = (label, key) => {
-            const on = !!this._settings[key];
+        const row = (label, key, defaultOn = false) => {
+            const on = this._settings[key] === undefined ? defaultOn : !!this._settings[key];
             return `<div class="db-setting-row" data-action="toggle-setting" data-setting="${key}">
                 <span class="db-setting-label">${label}</span>
                 <button class="db-setting-toggle${on ? ' db-setting-toggle--on' : ''}" tabindex="-1">${on ? 'On' : 'Off'}</button>
@@ -1118,32 +1158,34 @@ class TodayDashboard {
         }
 
         if (isFocus) {
-            const actionBtn = section === 'block'
-                ? `<button class="db-unpin" data-action="unassign" data-guid="${task.guid}" title="Remove from block">×</button>`
-                : section === 'focus-pinned'
-                    ? `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`
-                    : '';
-            return `<div class="db-task listitem-task" data-guid="${task.guid}">
+            const pinBtn = task.props?.['db-pinned']
+                ? `<button class="db-pin-icon" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
+                : '';
+            const isOpen = this._taskSheet === task.guid;
+            const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}" data-guid="${task.guid}">
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
                 ${sourceHTML}
-                ${actionBtn}
-            </div>`;
+                ${pinBtn}
+            </div>${inlinePanel}`;
         }
 
         if (section === 'today') {
-            const unpinBtn = task.props?.['db-pinned']
-                ? `<button class="db-unpin" data-action="unpin" data-guid="${task.guid}" title="Remove from Today">×</button>`
+            const pinBtn = task.props?.['db-pinned']
+                ? `<button class="db-pin-icon" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
                 : '';
-            return `<div class="db-task listitem-task" data-guid="${task.guid}">
+            const isOpen = this._taskSheet === task.guid;
+            const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}" data-guid="${task.guid}">
                 ${doneBtn}
-                <div class="db-task-body">
+                <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
                 </div>
                 ${sourceHTML}
                 ${recurToggle}<!-- [RECURRING] -->
-                ${unpinBtn}
-            </div>`;
+                ${pinBtn}
+            </div>${inlinePanel}`;
         }
 
         if (section === 'inbox' || section === 'overdue') {
@@ -1213,25 +1255,25 @@ class TodayDashboard {
                         const existing = task.props?.['db-recurring-done-dates'] || '';
                         const newDoneDates = existing ? existing + ',' + doneDate : doneDate;
                         this._completedRecurringDates[task.guid] = newDoneDates; // persist across _lastData refreshes
-                        const newSegments  = [
-                            ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                            { type: 'datetime', text: { d: nextDate.replace(/-/g, '') } },
-                        ];
                         // Optimistic patch — reflect final state immediately so any intermediate
                         // event-triggered refresh doesn't bring the task back into today's view
                         const lines = this._lastData?.todoResult?.lines;
                         const cachedTask = lines?.find(l => l.guid === task.guid);
                         if (cachedTask) {
                             if (!cachedTask.props) cachedTask.props = {};
-                            cachedTask.props['db-pinned']                = null;
-                            cachedTask.props['db-recurring-done-dates']  = newDoneDates;
-                            cachedTask.segments                          = newSegments;
+                            cachedTask.props['db-pinned']               = null;
+                            cachedTask.props['db-recurring-done-dates'] = newDoneDates;
                         }
                         if (this._panel) this._render(this._panel);
                         try {
+                            const nextYMD = nextDate.replace(/-/g, '');
+                            const newSegs = [
+                                ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                                this._makeDateSegment(nextYMD),
+                            ];
                             await task.setMetaProperty('db-pinned', null);
                             await task.setMetaProperty('db-recurring-done-dates', newDoneDates);
-                            await task.setSegments(newSegments);
+                            await task.setSegments(newSegs);
                         } catch (err) {
                             console.error('[Dashboard] recurring done failed:', err);
                             this._scheduleRefresh();
@@ -1243,7 +1285,7 @@ class TodayDashboard {
                         try {
                             await task.setTaskStatus('done');
                             await task.setMetaProperty('db-done-date', today);
-                            if (this._settings.journalTransclusions !== false) {
+                            if (this._settings.journalTransclusions === true) {
                                 const journal = await this._journalRecord();
                                 if (journal) await journal.createLineItem(null, null, 'ref', null, { itemref: task.guid });
                             }
@@ -1294,30 +1336,41 @@ class TodayDashboard {
                 }
                 case 'close-task-sheet': {
                     this._taskSheet = null;
+                    this._taskSheetSlot = null;
                     if (this._panel) this._render(this._panel);
                     break;
                 }
                 case 'sheet-assign-slot': {
-                    if (!task) { this._taskSheet = null; break; }
+                    if (!task) { this._taskSheet = null; this._taskSheetSlot = null; break; }
                     const slotTime = target.dataset.time;
-                    const tb = this._viewDateStr() + ':' + slotTime;
+                    const prevSlot = this._taskSheetSlot;
                     this._taskSheet = null;
-                    this._patchTask(task.guid, { 'db-timeblock': tb });
-                    if (this._panel) this._render(this._panel);
-                    task.setMetaProperty('db-timeblock', tb);
+                    this._taskSheetSlot = null;
+                    if (slotTime === prevSlot) {
+                        this._patchTask(task.guid, { 'db-timeblock': null });
+                        if (this._panel) this._render(this._panel);
+                        task.setMetaProperty('db-timeblock', null);
+                    } else {
+                        const tb = this._viewDateStr() + ':' + slotTime;
+                        this._patchTask(task.guid, { 'db-timeblock': tb });
+                        if (this._panel) this._render(this._panel);
+                        task.setMetaProperty('db-timeblock', tb);
+                    }
                     break;
                 }
                 case 'sheet-clear-slot': {
-                    if (!task) { this._taskSheet = null; break; }
+                    if (!task) { this._taskSheet = null; this._taskSheetSlot = null; break; }
                     this._taskSheet = null;
+                    this._taskSheetSlot = null;
                     this._patchTask(task.guid, { 'db-timeblock': null });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-timeblock', null);
                     break;
                 }
                 case 'sheet-unpin': {
-                    if (!task) { this._taskSheet = null; break; }
+                    if (!task) { this._taskSheet = null; this._taskSheetSlot = null; break; }
                     this._taskSheet = null;
+                    this._taskSheetSlot = null;
                     this._patchTask(task.guid, { 'db-pinned': null, 'db-timeblock': null });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-pinned', null);
@@ -1325,47 +1378,20 @@ class TodayDashboard {
                     break;
                 }
                 case 'select-task': {
-                    if (window.innerWidth <= 600) {
-                        this._taskSheet = guid;
+                    if (this._taskSheet === guid) {
+                        this._taskSheet = null;
+                        this._taskSheetSlot = null;
                         if (this._panel) this._render(this._panel);
                         break;
                     }
-                    if (this._selected?.type === 'block') {
-                        const time = this._selected.id;
-                        this._selected = null;
-                        if (task) {
-                            const tb = this._viewDateStr() + ':' + time;
-                            this._patchTask(task.guid, { 'db-timeblock': tb });
-                            if (this._panel) this._render(this._panel);
-                            task.setMetaProperty('db-timeblock', tb);
-                        }
-                    } else if (this._selected?.type === 'task' && this._selected.id === guid) {
-                        this._selected = null;
-                        this._reapplySelection(el);
-                    } else {
-                        this._selected = { type: 'task', id: guid };
-                        this._reapplySelection(el);
-                    }
+                    this._taskSheet = guid;
+                    const parsed = this._parseTimeblock(task?.props?.['db-timeblock']);
+                    this._taskSheetSlot = (parsed && parsed.date === this._viewDateStr()) ? parsed.time : null;
+                    if (this._panel) this._render(this._panel);
                     break;
                 }
                 case 'select-block': {
                     const time = target.dataset.time;
-                    if (this._selected?.type === 'task') {
-                        const blockTask = byGuid.get(this._selected.id);
-                        this._selected = null;
-                        if (blockTask) {
-                            const tb = this._viewDateStr() + ':' + time;
-                            this._patchTask(blockTask.guid, { 'db-timeblock': tb });
-                            if (this._panel) this._render(this._panel);
-                            blockTask.setMetaProperty('db-timeblock', tb);
-                        }
-                    } else if (this._selected?.type === 'block' && this._selected.id === time) {
-                        this._selected = null;
-                        this._reapplySelection(el);
-                    } else {
-                        this._selected = { type: 'block', id: time };
-                        this._reapplySelection(el);
-                    }
                     break;
                 }
                 case 'open': {
@@ -1424,15 +1450,9 @@ class TodayDashboard {
                     const { freq, day } = this._recurringDraft;
                     const nextDate  = this._nextUpcomingDate(freq, day || null);
                     const startDate = nextDate.replace(/-/g, '');
-                    const newSegs   = [
-                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                        { type: 'datetime', text: { d: startDate } },
-                    ];
                     this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-recurring-start': startDate });
                     if (startDate > this._todayD()) this._rescheduledRecurring[task.guid] = startDate;
-                    // Patch segments and remove from scheduledResult if new date is not today
-                    const cachedLine = (this._lastData?.todoResult?.lines || []).find(l => l.guid === task.guid);
-                    if (cachedLine) cachedLine.segments = newSegs;
+                    // Remove from scheduledResult if new date is not today
                     if (startDate !== this._todayD() && this._lastData?.scheduledResult?.lines) {
                         const idx = this._lastData.scheduledResult.lines.findIndex(l => l.guid === task.guid);
                         if (idx !== -1) this._lastData.scheduledResult.lines.splice(idx, 1);
@@ -1443,7 +1463,10 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-freq', freq);
                     task.setMetaProperty('db-recurring-day', day || null);
                     task.setMetaProperty('db-recurring-start', startDate);
-                    task.setSegments(newSegs);
+                    task.setSegments([
+                        ...(task.segments || []).filter(s => s.type !== 'datetime'),
+                        this._makeDateSegment(startDate),
+                    ]);
                     break;
                 }
                 case 'cancel-recurring': {
@@ -1464,7 +1487,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-start', recStartDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime'),
-                        { type: 'datetime', text: { d: recStartDate } },
+                        this._makeDateSegment(recStartDate),
                     ]);
                     break;
                 }
