@@ -1501,13 +1501,12 @@ class TodayDashboard {
                 // [RECURRING-START] enable toggle — remove when Thymer ships native recurring
                 case 'enable-recurring': {
                     if (!task) return;
-                    const recPinDate   = this._viewDateHyphen();
-                    const recStartDate = recPinDate.replace(/-/g, '');
-                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate, 'db-pinned': recPinDate });
+                    const recStartDate = this._viewDateHyphen().replace(/-/g, '');
+                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate, 'db-pinned': null });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', 'daily');
                     task.setMetaProperty('db-recurring-start', recStartDate);
-                    task.setMetaProperty('db-pinned', recPinDate);
+                    task.setMetaProperty('db-pinned', null);
                     task.setSegments([
                         ...this._stripDateSegments(task.segments),
                         { type: 'text', text: ' ' }, this._makeDateSegment(recStartDate),
@@ -1520,11 +1519,14 @@ class TodayDashboard {
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
                     delete this._rescheduledRecurring[task.guid]; // [RECURRING]
-                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-start': null });
+                    const pinDate = this._viewDateHyphen();
+                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-start': null, 'db-pinned': pinDate });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq',  null);
                     task.setMetaProperty('db-recurring-day',   null);
                     task.setMetaProperty('db-recurring-start', null);
+                    task.setMetaProperty('db-pinned', pinDate);
+                    task.setSegments(this._stripDateSegments(task.segments));
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
