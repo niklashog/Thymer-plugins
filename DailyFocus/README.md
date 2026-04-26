@@ -17,7 +17,7 @@ A workspace-wide task dashboard that aggregates tasks from across your entire Th
 Shows what you're working on today, organized by time.
 
 - **Unscheduled** — tasks pinned to today or scheduled for today without a time block
-- **Day Plan** — time slots from Early Morning through Evening; tap a task then a slot (or vice versa) to assign it
+- **Day Plan** — time slots from Early Morning through Evening; tap a task to open a scheduling panel, then pick a slot to assign it. Tap the active slot again to unassign.
 
 Navigate to past or future days with `←` / `→`. Future days show a dimmed preview of tasks that would recur on that day. Past days show a completion history for recurring tasks — completed occurrences appear with strikethrough, missed ones appear dimmed. Switch to Plan with the **Plan →** button.
 
@@ -56,8 +56,8 @@ A hamburger menu (☰) sits in the top left corner of every view:
 - **Checkbox** — mark a task done (or undo from the done state). Done tasks appear with strikethrough and reduced opacity. For recurring tasks, checking off advances the date to the next occurrence instead of marking permanently done.
 - **Repeat icon** — mark a task as recurring (defaults to daily) or remove its recurring schedule.
 - **Source name / ↗ icon** — navigates directly to the task in its source document, scrolling to and highlighting it.
-- **× button** — unpin from Today's Focus or remove from a time block.
-- **Task text** (Focus mode) — tap to select a task, then tap a time block to assign it; tap again to deselect.
+- **Pin icon** — unpin from Today's Focus. On mobile, "Remove from today" also appears in the scheduling sheet.
+- **Task text** (Focus mode) — tap to open the scheduling panel; pick a time slot to assign the task, or tap the active slot to remove the assignment.
 
 The dashboard refreshes automatically when tasks are created, updated, or completed elsewhere in the workspace.
 
