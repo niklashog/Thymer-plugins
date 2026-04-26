@@ -527,6 +527,7 @@ class TodayDashboard {
         this._listenerAbort = new AbortController();
         this._attachListeners(el, allTasks, ignoredTasks, this._listenerAbort.signal);
         this._reapplySelection(el);
+        this._reapplyPlanSearch(el);
     }
 
     _menuHTML(crumb) {
@@ -1031,18 +1032,7 @@ class TodayDashboard {
         if (searchInput) {
             searchInput.addEventListener('input', () => {
                 this._planSearch = searchInput.value;
-                const term = this._planSearch.toLowerCase().trim();
-                const searchableSections = el.querySelectorAll('.db-section--overdue, .db-section--inbox');
-                for (const section of searchableSections) {
-                    let visibleCount = 0;
-                    for (const row of section.querySelectorAll('.db-task')) {
-                        const text = row.textContent.toLowerCase();
-                        const match = !term || text.includes(term);
-                        row.style.display = match ? '' : 'none';
-                        if (match) visibleCount++;
-                    }
-                    section.style.display = term.length > 0 && visibleCount === 0 ? 'none' : '';
-                }
+                this._reapplyPlanSearch(el);
             }, { signal });
         }
 
@@ -1369,6 +1359,21 @@ class TodayDashboard {
             }
             // [RECURRING-END]
         }, { signal });
+    }
+
+    _reapplyPlanSearch(el) {
+        if (!this._planSearch) return;
+        const term = this._planSearch.toLowerCase().trim();
+        if (!term) return;
+        for (const section of el.querySelectorAll('.db-section--overdue, .db-section--inbox')) {
+            let visibleCount = 0;
+            for (const row of section.querySelectorAll('.db-task')) {
+                const match = row.textContent.toLowerCase().includes(term);
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            }
+            section.style.display = visibleCount === 0 ? 'none' : '';
+        }
     }
 
     _reapplySelection(el) {
