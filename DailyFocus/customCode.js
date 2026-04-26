@@ -296,6 +296,9 @@ class TodayDashboard {
             '.db-block-label{font-size:13px;font-weight:500;opacity:.5}' +
             '.db-block-clock{font-size:12px;opacity:.35;font-variant-numeric:tabular-nums}' +
             '.db-block-body{padding:0 8px 8px}' +
+            '.db-block-body .db-task{background:none;border:none;box-shadow:none;border-radius:0;margin-bottom:0;' +
+            'border-top:1px solid var(--sidebar-border-color);padding:8px 4px}' +
+            '.db-block-body .db-task:hover{background:none;box-shadow:none}' +
             '.db-day-nav{display:flex;align-items:center;gap:8px}' +
             '.db-day-nav-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);font-size:16px;' +
             'padding:2px 6px;transition:color .15s;border-radius:4px}' +
