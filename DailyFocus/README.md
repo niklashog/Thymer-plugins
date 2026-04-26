@@ -63,17 +63,13 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 
 ## Changelog
 
-### 2026-04-26 (mobile + search)
-- **Time block selection** — rebuilt for both mobile and desktop; tap a task to open a selection sheet, then pick a time slot or remove from Today's Focus
-- **Mobile** — unpin button and source link now visible on narrow screens; source truncated to 10 characters
-- **Search clear** — × button inside the search bar clears the filter; accessible via Tab and Space/Enter
-- **Fix** — clearing search now correctly restores all tasks
-- **Wipe Plugin Metadata** — new option under Settings → Data; removes all plugin data from tasks and clears plugin configuration
-
 ### 2026-04-26
-- **Search** — search box in Plan view filters Overdue and Inbox tasks in real time
+- **Time block selection** — rebuilt for both mobile and desktop; tap a task to open a selection sheet, then pick a time slot or remove from Today's Focus
+- **Search** — search box in Plan view filters Overdue and Inbox tasks in real time; × button clears the filter
 - **Settings** — new view accessible via ☰; configure plugin behaviour. Current options: hide completed tasks in Focus, disable journal transclusions
+- **Mobile** — unpin button and source link now visible on narrow screens; source truncated to 10 characters
 - **Menu trigger** — clicking the hamburger icon or the view name opens the menu
+- **Wipe Plugin Metadata** — new option under Settings → Data; removes all plugin data from tasks and clears plugin configuration
 - **Fix** — journal transclusions now work correctly across multiple workspaces or accounts open in the same browser
 
 ### 2026-04-25 (recurring rethink)
