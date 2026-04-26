@@ -1479,12 +1479,13 @@ class TodayDashboard {
                 // [RECURRING-START] enable toggle — remove when Thymer ships native recurring
                 case 'enable-recurring': {
                     if (!task) return;
-                    const recPinDate  = this._viewDateHyphen();
+                    const recPinDate   = this._viewDateHyphen();
                     const recStartDate = recPinDate.replace(/-/g, '');
-                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate });
+                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate, 'db-pinned': recPinDate });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', 'daily');
                     task.setMetaProperty('db-recurring-start', recStartDate);
+                    task.setMetaProperty('db-pinned', recPinDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
                         { type: 'text', text: ' ' }, this._makeDateSegment(recStartDate),
