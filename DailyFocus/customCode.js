@@ -1269,7 +1269,7 @@ class TodayDashboard {
                             const nextYMD = nextDate.replace(/-/g, '');
                             const newSegs = [
                                 ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
-                                this._makeDateSegment(nextYMD),
+                                { type: 'text', text: ' ' }, this._makeDateSegment(nextYMD),
                             ];
                             await task.setMetaProperty('db-pinned', null);
                             await task.setMetaProperty('db-recurring-done-dates', newDoneDates);
@@ -1465,7 +1465,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-start', startDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
-                        this._makeDateSegment(startDate),
+                        { type: 'text', text: ' ' }, this._makeDateSegment(startDate),
                     ]);
                     break;
                 }
@@ -1487,7 +1487,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-start', recStartDate);
                     task.setSegments([
                         ...(task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())),
-                        this._makeDateSegment(recStartDate),
+                        { type: 'text', text: ' ' }, this._makeDateSegment(recStartDate),
                     ]);
                     break;
                 }
