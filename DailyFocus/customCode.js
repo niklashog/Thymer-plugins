@@ -1496,10 +1496,13 @@ class TodayDashboard {
                     if (!task) return;
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
-                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null });
+                    delete this._rescheduledRecurring[task.guid]; // [RECURRING]
+                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-start': null });
                     if (this._panel) this._render(this._panel);
-                    task.setMetaProperty('db-recurring-freq', null);
-                    task.setMetaProperty('db-recurring-day',  null);
+                    task.setMetaProperty('db-recurring-freq',  null);
+                    task.setMetaProperty('db-recurring-day',   null);
+                    task.setMetaProperty('db-recurring-start', null);
+                    task.setSegments((task.segments || []).filter(s => s.type !== 'datetime' && !(s.type === 'text' && !s.text?.trim())));
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
