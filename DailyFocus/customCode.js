@@ -165,7 +165,7 @@ class TodayDashboard {
             'border-radius:3px;padding:0 2px;transition:opacity .15s;white-space:nowrap}' +
             '.db-ref-chip:hover{opacity:.7}' +
             '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
-            '.db-date-chip{display:inline;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
+            '.db-date-chip{flex-shrink:0;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
             'border-radius:3px;padding:1px 4px;font-size:13px;white-space:nowrap}' +
             '.db-date-chip--overdue{color:var(--ed-error-color);background:transparent}' +
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
@@ -1085,6 +1085,7 @@ class TodayDashboard {
 
     _taskRow(task, section) {
         const text       = this._getTaskTextHTML(task);
+        const dateChip   = this._getDateChipHTML(task);
         const source     = this._escape(task.record?.getName() || '');
         const sourceHTML = source
             ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
@@ -1109,7 +1110,7 @@ class TodayDashboard {
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
                 </div>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
             </div>`;
         }
 
@@ -1118,7 +1119,7 @@ class TodayDashboard {
             return `<div class="db-task listitem-task state-done db-task--recurring-done" data-guid="${task.guid}">
                 <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
                 <span class="db-task-text--sel">${text}</span>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
             </div>`;
         }
 
@@ -1128,7 +1129,7 @@ class TodayDashboard {
                 <div class="db-task-body">
                     <span class="db-task-text" style="opacity:.4">${text}</span>
                 </div>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
             </div>`;
         }
         // [RECURRING-END]
@@ -1139,7 +1140,7 @@ class TodayDashboard {
                 <div class="db-task-body">
                     <span class="db-task-text">${text}</span>
                 </div>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
             </div>`;
         }
 
@@ -1149,7 +1150,7 @@ class TodayDashboard {
             return `<div class="db-task listitem-task state-done" data-guid="${task.guid}">
                 <div class="db-done line-check-div clickable" data-action="undone" data-guid="${task.guid}"></div>
                 <span class="db-task-text--sel">${text}</span>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
             </div>`;
         }
 
@@ -1162,7 +1163,7 @@ class TodayDashboard {
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}" data-guid="${task.guid}">
                 ${doneBtn}
                 <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
                 ${pinBtn}
             </div>${inlinePanel}`;
         }
@@ -1178,7 +1179,7 @@ class TodayDashboard {
                 <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
                 </div>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
                 ${recurToggle}<!-- [RECURRING] -->
                 ${pinBtn}
             </div>${inlinePanel}`;
@@ -1190,7 +1191,7 @@ class TodayDashboard {
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
                     <span class="db-task-text">${text}</span>
                 </div>
-                ${sourceHTML}
+                ${dateChip}${sourceHTML}
                 ${recurToggle}<!-- [RECURRING] -->
             </div>`;
         }
@@ -1201,6 +1202,7 @@ class TodayDashboard {
                 <span class="db-task-text">${text}</span>
                 ${source ? `<span class="db-task-source">${source}</span>` : ''}
             </div>
+            ${dateChip}
         </div>`;
     }
 
@@ -1771,7 +1773,6 @@ class TodayDashboard {
     }
 
     _getTaskTextHTML(task) {
-        const todayD = this._todayD();
         const parts = (task.segments || []).map(s => {
             if (s.type === 'ref') {
                 const guid = s.text?.guid;
@@ -1779,18 +1780,22 @@ class TodayDashboard {
                 const title = s.text?.title || this.plugin.data.getRecord(guid)?.getName() || '?';
                 return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}">${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
             }
-            if (s.type === 'datetime') {
-                const d = s.text?.d;
-                if (!d) return '';
-                const label = this._formatDate(d);
-                const isOverdue = d < todayD.replace(/-/g, '');
-                return `<span class="db-date-chip${isOverdue ? ' db-date-chip--overdue' : ''}">${this._escape(label)}</span>`;
-            }
+            if (s.type === 'datetime') return '';
             if (typeof s.text === 'string') return this._escape(s.text);
             if (s.text && typeof s.text === 'object') return this._escape(s.text.title || s.text.link || '');
             return '';
         }).join('');
         return parts || '(untitled)';
+    }
+
+    _getDateChipHTML(task) {
+        const todayD = this._todayD().replace(/-/g, '');
+        const seg = (task.segments || []).find(s => s.type === 'datetime');
+        const d = seg?.text?.d;
+        if (!d) return '';
+        const label = this._formatDate(d);
+        const isOverdue = d < todayD;
+        return `<span class="db-date-chip${isOverdue ? ' db-date-chip--overdue' : ''}">${this._escape(label)}</span>`;
     }
 
     _escape(str) {
