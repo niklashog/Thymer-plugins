@@ -1086,7 +1086,7 @@ class TodayDashboard {
     _taskRow(task, section) {
         const text       = this._getTaskTextHTML(task);
         const dateChip   = this._getDateChipHTML(task);
-        const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-waiting', billable:'state-billable', discuss:'state-discuss', alert:'state-alert', starred:'state-starred' };
+        const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-blocked', billable:'state-dollar', discuss:'state-question', alert:'state-alert', starred:'state-starred' };
         const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
         const source     = this._escape(task.record?.getName() || '');
         const sourceHTML = source
