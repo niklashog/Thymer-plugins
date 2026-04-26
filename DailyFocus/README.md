@@ -2,7 +2,7 @@
 
 **Type:** Global Plugin
 
-A workspace-wide task dashboard that aggregates tasks from across your entire Thymer workspace. Operates in two modes — **Focus** for executing your day, **Plan** for deciding what matters.
+A workspace-wide task manager that aggregates tasks from across your entire Thymer workspace. Operates in two modes — **Focus** for executing your day, **Plan** for deciding what matters.
 
 ## Screenshots
 
