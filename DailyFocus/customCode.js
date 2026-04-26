@@ -165,6 +165,9 @@ class TodayDashboard {
             'border-radius:3px;padding:0 2px;transition:opacity .15s;white-space:nowrap}' +
             '.db-ref-chip:hover{opacity:.7}' +
             '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
+            '.db-date-chip{display:inline;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
+            'border-radius:3px;padding:1px 4px;font-size:13px;white-space:nowrap}' +
+            '.db-date-chip--overdue{color:var(--ed-error-color);background:transparent}' +
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
             '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;gap:2px;padding-right:4px}' +
             '.db-task-source--link{font-size:11px;color:var(--ed-link-color);white-space:nowrap;' +
@@ -1752,13 +1755,36 @@ class TodayDashboard {
             .join('') || '(untitled)';
     }
 
+    _formatDate(d) {
+        if (!d || d.length < 8) return '';
+        const year = +d.slice(0, 4), month = +d.slice(4, 6) - 1, day = +d.slice(6, 8);
+        const date = new Date(year, month, day);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const diff = Math.round((date - today) / 86400000);
+        if (diff === 0) return 'Today';
+        if (diff === 1) return 'Tomorrow';
+        if (diff === -1) return 'Yesterday';
+        const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const label = `${DAYS[date.getDay()]} ${MONTHS[date.getMonth()]} ${date.getDate()}`;
+        return date.getFullYear() !== today.getFullYear() ? `${label} ${date.getFullYear()}` : label;
+    }
+
     _getTaskTextHTML(task) {
+        const todayD = this._todayD();
         const parts = (task.segments || []).map(s => {
             if (s.type === 'ref') {
                 const guid = s.text?.guid;
                 if (!guid) return '';
                 const title = s.text?.title || this.plugin.data.getRecord(guid)?.getName() || '?';
                 return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}">${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
+            }
+            if (s.type === 'datetime') {
+                const d = s.text?.d;
+                if (!d) return '';
+                const label = this._formatDate(d);
+                const isOverdue = d < todayD.replace(/-/g, '');
+                return `<span class="db-date-chip${isOverdue ? ' db-date-chip--overdue' : ''}">${this._escape(label)}</span>`;
             }
             if (typeof s.text === 'string') return this._escape(s.text);
             if (s.text && typeof s.text === 'object') return this._escape(s.text.title || s.text.link || '');
