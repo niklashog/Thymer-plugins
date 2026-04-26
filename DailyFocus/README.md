@@ -64,7 +64,7 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 ## Changelog
 
 ### 2026-04-26 (mobile + search)
-- **Mobile Focus** — tapping a task in Focus opens a bottom sheet; pick a time slot or remove from Today's Focus without the old select-and-click workflow
+- **Time block selection** — rebuilt for both mobile and desktop; tap a task to open a selection sheet, then pick a time slot or remove from Today's Focus
 - **Mobile** — unpin button and source link now visible on narrow screens; source truncated to 10 characters
 - **Search clear** — × button inside the search bar clears the filter; accessible via Tab and Space/Enter
 - **Fix** — clearing search now correctly restores all tasks
