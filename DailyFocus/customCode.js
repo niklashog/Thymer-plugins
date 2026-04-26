@@ -18,6 +18,7 @@ class TodayDashboard {
         this._renderVer      = 0;
         this._mode           = null;
         this._selected       = null;
+        this._taskSheet      = null;
         this._doneTasksMap   = new Map();
         this._viewDate       = null;
         this._hideRecurring  = true; // [RECURRING] remove when Thymer ships native recurring
@@ -32,14 +33,50 @@ class TodayDashboard {
         this._completedRecurringDates = {}; // guid → comma-separated YYYYMMDD, persists across _lastData refreshes
         this._rescheduledRecurring    = {}; // guid → YYYYMMDD start date when rescheduled to future
         // [RECURRING-END]
-        this._settings   = { ...(plugin.getConfiguration().settings || {}) };
+        try { this._settings = { ...((plugin.getConfiguration()?.settings) || {}) }; }
+        catch (e) { this._settings = {}; }
         this._planSearch = '';
+        this._wipeState  = null;
+    }
+
+    async _wipePluginMetadata() {
+        const DB_KEYS = [
+            'db-pinned', 'db-timeblock', 'db-recurring-freq', 'db-recurring-day',
+            'db-recurring-done-dates', 'db-recurring-start', 'db-recurring-next',
+            'db-ignored', 'db-done-date',
+        ];
+        try {
+            const [todos, done] = await Promise.all([
+                this.plugin.data.searchByQuery('@task @todo', 1000),
+                this.plugin.data.searchByQuery('@task @done', 1000),
+            ]);
+            const allTasks = [...(todos?.lines || []), ...(done?.lines || [])];
+            for (const task of allTasks) {
+                if (!DB_KEYS.some(k => task.props?.[k] != null)) continue;
+                for (const key of DB_KEYS) {
+                    if (task.props?.[key] != null) await task.setMetaProperty(key, null);
+                }
+            }
+            const pluginApi = this.plugin.data.getPluginByGuid(this.plugin.getGuid());
+            if (pluginApi) {
+                const config = pluginApi.getConfiguration() ?? {};
+                delete config.settings;
+                await pluginApi.saveConfiguration(config);
+            }
+            this._settings  = {};
+            this._lastData  = null;
+            this._wipeState = 'done';
+        } catch (e) {
+            console.error('[DailyFocus] wipe failed:', e);
+            this._wipeState = 'done';
+        }
+        if (this._panel) this._render(this._panel);
     }
 
     async _saveSettings() {
         const pluginApi = this.plugin.data.getPluginByGuid(this.plugin.getGuid());
         if (!pluginApi) return;
-        const config = pluginApi.getConfiguration();
+        const config = pluginApi.getConfiguration() ?? {};
         config.settings = this._settings;
         await pluginApi.saveConfiguration(config);
     }
@@ -198,12 +235,19 @@ class TodayDashboard {
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
             'box-shadow:var(--color-shadow-cards);margin-bottom:4px;transition:background .1s}' +
             '.db-setting-row:hover{background:var(--cards-hover-bg)}' +
-            '.db-plan-search{width:100%;box-sizing:border-box;margin-bottom:20px;' +
+            '.db-search-wrap{position:relative;margin-bottom:20px}' +
+            '.db-plan-search{width:100%;box-sizing:border-box;' +
             'background:var(--input-bg-color);border:1px solid var(--input-border-color);' +
-            'border-radius:var(--ed-radius-block);padding:8px 12px;font-size:14px;' +
+            'border-radius:var(--ed-radius-block);padding:8px 34px 8px 12px;font-size:14px;' +
             'color:inherit;outline:none;transition:border-color .15s}' +
             '.db-plan-search:focus{border-color:var(--ed-link-color)}' +
             '.db-plan-search::placeholder{opacity:.4}' +
+            '.db-search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);' +
+            'background:none;border:none;cursor:pointer;color:var(--ed-gray-text);' +
+            'font-size:16px;line-height:1;padding:2px 4px;border-radius:var(--ed-radius-normal);' +
+            'transition:color .1s,background .1s}' +
+            '.db-search-clear:hover,.db-search-clear:focus{color:var(--ed-text-color);' +
+            'background:var(--cards-hover-bg);outline:none}' +
             '.db-setting-label{font-size:14px;flex:1}' +
             '.db-setting-toggle{background:none;border:1px solid var(--sidebar-border-color);cursor:pointer;color:inherit;' +
             'font-size:12px;font-weight:500;padding:4px 12px;border-radius:var(--ed-radius-pill);' +
@@ -252,11 +296,53 @@ class TodayDashboard {
             '.db-block-body{padding:0 6px 10px 6px;width:100%}' +
             '.db-block-hint{padding:4px 0 8px 2px}' +
             '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
-            '.db-task-source,.db-task-source--link,.db-task-source-wrap{display:none}' +
+            '.db-task-source{display:none}' +
+            '.db-task-source--link{max-width:10ch;overflow:hidden;text-overflow:ellipsis}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center;opacity:.3}' +
             '.db-src-icon:hover{opacity:.7}' +
-            '.db-unpin{display:none}' +
-            '}'
+            '.db-block .db-unpin{display:none}' +
+            '}' +
+            '.db-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}' +
+            '.db-task-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--cards-bg);' +
+            'border-radius:16px 16px 0 0;z-index:200;max-height:85vh;overflow-y:auto;' +
+            'border-top:1px solid var(--sidebar-border-color)}' +
+            '.db-sheet-handle{width:36px;height:4px;background:var(--sidebar-border-color);' +
+            'border-radius:2px;margin:12px auto 4px}' +
+            '.db-sheet-name{font-size:14px;font-weight:600;padding:12px 20px 14px;' +
+            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
+            'border-bottom:1px solid var(--sidebar-border-color)}' +
+            '.db-sheet-slot{display:flex;align-items:center;width:100%;min-height:48px;' +
+            'padding:10px 20px;background:none;border:none;border-bottom:1px solid var(--sidebar-border-color);' +
+            'cursor:pointer;font-size:15px;color:inherit;text-align:left;transition:background .1s;box-sizing:border-box}' +
+            '.db-sheet-slot:last-child{border-bottom:none}' +
+            '.db-sheet-slot:active{background:var(--cards-hover-bg)}' +
+            '.db-sheet-slot--active{color:var(--ed-link-color)}' +
+            '.db-sheet-slot-label{flex:1}' +
+            '.db-sheet-slot-time{font-size:13px;opacity:.45;margin-right:10px}' +
+            '.db-sheet-divider{height:1px;background:var(--sidebar-border-color);margin:4px 0}' +
+            '.db-sheet-remove{display:block;width:100%;min-height:48px;padding:12px 20px;' +
+            'background:none;border:none;border-bottom:1px solid var(--sidebar-border-color);' +
+            'cursor:pointer;font-size:15px;color:var(--ed-error-color);text-align:left;' +
+            'transition:background .1s;box-sizing:border-box}' +
+            '.db-sheet-remove:active{background:var(--cards-hover-bg)}' +
+            '.db-sheet-cancel{display:block;width:100%;min-height:52px;padding:14px 20px;' +
+            'background:none;border:none;cursor:pointer;font-size:16px;font-weight:600;' +
+            'color:var(--ed-link-color);text-align:center;transition:background .1s;box-sizing:border-box}' +
+            '.db-sheet-cancel:active{background:var(--cards-hover-bg)}' +
+            '.db-wipe-btn{width:100%;text-align:left;padding:10px 14px;background:none;border:none;cursor:pointer;' +
+            'font-size:14px;color:var(--ed-error-color);opacity:.7;border-radius:var(--ed-radius-block);transition:opacity .1s,background .1s}' +
+            '.db-wipe-btn:hover{opacity:1;background:var(--cards-hover-bg)}' +
+            '.db-wipe-confirm{padding:10px 14px;background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
+            'border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-cards)}' +
+            '.db-wipe-confirm-msg{font-size:13px;opacity:.7;margin:0 0 14px;line-height:1.5}' +
+            '.db-wipe-actions{display:flex;gap:8px;align-items:center}' +
+            '.db-wipe-confirm-btn{background:var(--ed-error-color);color:#fff;border:none;cursor:pointer;' +
+            'font-size:13px;font-weight:600;padding:6px 14px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
+            '.db-wipe-confirm-btn:hover{opacity:.85}' +
+            '.db-wipe-cancel-btn{background:none;border:none;cursor:pointer;font-size:13px;color:inherit;' +
+            'opacity:.45;padding:6px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
+            '.db-wipe-cancel-btn:hover{opacity:.8}' +
+            '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}'
         );
 
         this.plugin.ui.addCommandPaletteCommand({
@@ -584,7 +670,16 @@ class TodayDashboard {
             : [...viewPinned.filter(t => !timeBlocks[t.guid]), ...recurringPreview];
         const unassignedDone = isToday ? doneTasks.filter(t => !timeBlocks[t.guid]) : [];
 
-        return `<div class="db-header">
+        let sheetHTML = '';
+        if (this._taskSheet) {
+            const sheetTask    = taskByGuid.get(this._taskSheet);
+            const rawSlot      = timeBlocks[this._taskSheet];
+            const currentSlot  = rawSlot ? rawSlot.slice(9) : null;
+            const isPinned     = pinnedGuids.has(this._taskSheet);
+            sheetHTML = this._buildTaskSheetHTML(this._taskSheet, sheetTask, currentSlot, isPinned);
+        }
+
+        return sheetHTML + `<div class="db-header">
                 <div class="db-header-left">
                     ${this._menuHTML('Focus')}
                 </div>
@@ -623,6 +718,36 @@ class TodayDashboard {
         </div>`; // closes db-root — db-topbar is a sibling, no wrapper needed
     }
 
+    _buildTaskSheetHTML(guid, task, currentSlot, isPinned) {
+        const text = task ? this._escape(this._getText(task)) : '';
+        const slotsHTML = SLOTS.map(s => {
+            const active = currentSlot === s.time;
+            return `<button class="db-sheet-slot${active ? ' db-sheet-slot--active' : ''}" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
+                <span class="db-sheet-slot-label">${s.label}</span>
+                <span class="db-sheet-slot-time">${s.time}</span>
+                ${active ? '<i class="ti ti-check"></i>' : ''}
+            </button>`;
+        }).join('');
+        const clearHTML = currentSlot
+            ? `<button class="db-sheet-slot" data-action="sheet-clear-slot" data-guid="${guid}">
+                <span class="db-sheet-slot-label" style="opacity:.5">No time block</span>
+               </button>`
+            : '';
+        const removeHTML = isPinned
+            ? `<div class="db-sheet-divider"></div>
+               <button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}">Remove from Today's Focus</button>`
+            : '';
+        return `<div class="db-sheet-overlay" data-action="close-task-sheet"></div>
+            <div class="db-task-sheet">
+                <div class="db-sheet-handle"></div>
+                <div class="db-sheet-name">${text}</div>
+                <div class="db-sheet-slots">${slotsHTML}${clearHTML}</div>
+                ${removeHTML}
+                <div class="db-sheet-divider"></div>
+                <button class="db-sheet-cancel" data-action="close-task-sheet">Cancel</button>
+            </div>`;
+    }
+
     _blockHTML(time, label, tasks, doneGuids = new Set()) {
         return `<div class="db-block" data-action="select-block" data-time="${time}">
             <div class="db-block-time"><div class="db-block-time-inner"><span class="db-block-label">${label}</span><span>→</span><span class="db-block-clock">${time}</span></div></div>
@@ -659,7 +784,10 @@ class TodayDashboard {
                 </div>
             </div>
             <div class="db-root">
-            <input class="db-plan-search" type="text" placeholder="Search tasks…" value="${this._escape(this._planSearch)}">
+            <div class="db-search-wrap">
+                <input class="db-plan-search" type="text" placeholder="Search tasks…" value="${this._escape(this._planSearch)}">
+                <button class="db-search-clear" data-action="clear-search" aria-label="Clear search"${this._planSearch ? '' : ' hidden'}>×</button>
+            </div>
             ${this._section('Overdue',  overdue,  'overdue')}
             ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
             ${recurringNotice}
@@ -725,6 +853,22 @@ class TodayDashboard {
                         <span class="db-section-title">Journal</span>
                     </div>
                     ${row('Add transclusion to journal when completing a task', 'journalTransclusions')}
+                </div>
+                <div class="db-section">
+                    <div class="db-section-header">
+                        <span class="db-section-title">Data</span>
+                    </div>
+                    ${this._wipeState === 'confirm' ? `
+                    <div class="db-wipe-confirm">
+                        <p class="db-wipe-confirm-msg">Removes all plugin data from tasks — pins, time blocks, recurring settings, ignored status — and clears plugin configuration. Cannot be undone.</p>
+                        <div class="db-wipe-actions">
+                            <button class="db-wipe-confirm-btn" data-action="wipe-metadata-confirm">Confirm wipe</button>
+                            <button class="db-wipe-cancel-btn" data-action="wipe-metadata-cancel">Cancel</button>
+                        </div>
+                    </div>` : this._wipeState === 'wiping' ? `
+                    <div class="db-wipe-status">Wiping…</div>` : this._wipeState === 'done' ? `
+                    <div class="db-wipe-status">Done. Reload the page to complete the reset.</div>` : `
+                    <button class="db-wipe-btn" data-action="wipe-metadata">Wipe Plugin Metadata</button>`}
                 </div>
             </div>`;
     }
@@ -1029,9 +1173,11 @@ class TodayDashboard {
         const today  = this._todayStr();
 
         const searchInput = el.querySelector('.db-plan-search');
+        const searchClear = el.querySelector('.db-search-clear');
         if (searchInput) {
             searchInput.addEventListener('input', () => {
                 this._planSearch = searchInput.value;
+                if (searchClear) searchClear.hidden = !this._planSearch;
                 this._reapplyPlanSearch(el);
             }, { signal });
         }
@@ -1146,7 +1292,44 @@ class TodayDashboard {
                     task.setMetaProperty('db-timeblock', null);
                     break;
                 }
+                case 'close-task-sheet': {
+                    this._taskSheet = null;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'sheet-assign-slot': {
+                    if (!task) { this._taskSheet = null; break; }
+                    const slotTime = target.dataset.time;
+                    const tb = this._viewDateStr() + ':' + slotTime;
+                    this._taskSheet = null;
+                    this._patchTask(task.guid, { 'db-timeblock': tb });
+                    if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-timeblock', tb);
+                    break;
+                }
+                case 'sheet-clear-slot': {
+                    if (!task) { this._taskSheet = null; break; }
+                    this._taskSheet = null;
+                    this._patchTask(task.guid, { 'db-timeblock': null });
+                    if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-timeblock', null);
+                    break;
+                }
+                case 'sheet-unpin': {
+                    if (!task) { this._taskSheet = null; break; }
+                    this._taskSheet = null;
+                    this._patchTask(task.guid, { 'db-pinned': null, 'db-timeblock': null });
+                    if (this._panel) this._render(this._panel);
+                    task.setMetaProperty('db-pinned', null);
+                    task.setMetaProperty('db-timeblock', null);
+                    break;
+                }
                 case 'select-task': {
+                    if (window.innerWidth <= 600) {
+                        this._taskSheet = guid;
+                        if (this._panel) this._render(this._panel);
+                        break;
+                    }
                     if (this._selected?.type === 'block') {
                         const time = this._selected.id;
                         this._selected = null;
@@ -1297,6 +1480,22 @@ class TodayDashboard {
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
+                case 'wipe-metadata': {
+                    this._wipeState = 'confirm';
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'wipe-metadata-cancel': {
+                    this._wipeState = null;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'wipe-metadata-confirm': {
+                    this._wipeState = 'wiping';
+                    if (this._panel) this._render(this._panel);
+                    await this._wipePluginMetadata();
+                    break;
+                }
                 case 'toggle-setting': {
                     const key = target.dataset.setting;
                     if (key) {
@@ -1309,6 +1508,15 @@ class TodayDashboard {
                         }
                         this._saveSettings();
                     }
+                    break;
+                }
+                case 'clear-search': {
+                    this._planSearch = '';
+                    const si = el.querySelector('.db-plan-search');
+                    const sc = el.querySelector('.db-search-clear');
+                    if (si) { si.value = ''; si.focus(); }
+                    if (sc) sc.hidden = true;
+                    this._reapplyPlanSearch(el);
                     break;
                 }
                 case 'toggle-recurring-filter': {
@@ -1362,13 +1570,11 @@ class TodayDashboard {
     }
 
     _reapplyPlanSearch(el) {
-        if (!this._planSearch) return;
-        const term = this._planSearch.toLowerCase().trim();
-        if (!term) return;
+        const term = (this._planSearch || '').toLowerCase().trim();
         for (const section of el.querySelectorAll('.db-section--overdue, .db-section--inbox')) {
             let visibleCount = 0;
             for (const row of section.querySelectorAll('.db-task')) {
-                const match = row.textContent.toLowerCase().includes(term);
+                const match = !term || row.textContent.toLowerCase().includes(term);
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             }
@@ -1540,6 +1746,10 @@ class TodayDashboard {
 
 class Plugin extends AppPlugin {
     onLoad() {
-        new TodayDashboard(this).load();
+        try {
+            new TodayDashboard(this).load();
+        } catch (e) {
+            console.error('[DailyFocus] load failed:', e);
+        }
     }
 }
