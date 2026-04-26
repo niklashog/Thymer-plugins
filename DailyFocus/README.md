@@ -65,7 +65,7 @@ The dashboard refreshes automatically when tasks are created, updated, or comple
 
 **Mobile browser — blank screen after clearing cache or browser data**
 
-If you clear your browser cache and browser data while the plugin is installed, the mobile browser may fail to load all panels and meta-properties required to run plugins on the next visit, resulting in a blank screen. This appears to be a Thymer issue with restoring panel layout state after a cache clear.
+If you clear your browser cache and browser data while the plugin is installed, the mobile browser may fail to load all panels and meta-properties required to run plugins on the next visit, resulting in a blank screen.
 
 **Workaround:** switch your mobile browser to desktop mode, navigate around a little, then switch back to mobile mode. The panel layout resets and the app loads correctly.
 
