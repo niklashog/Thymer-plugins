@@ -75,14 +75,12 @@ If you clear your browser cache and browser data while the plugin is installed i
 ## Changelog
 
 ### 2026-04-27
-- **Focus time blocks** — redesigned as cards with a label/time heading row and tasks listed below; tasks use a separator line instead of individual card borders
-- **Hide empty time blocks** — setting to collapse time slots with no tasks assigned
-- **Ref chips** — task text that links to another note renders as a clickable chip with ↗ icon; tap to navigate to the note
-- **Due date chips** — due dates shown inline next to task name, never truncated; overdue dates highlighted in red
-- **Task status icons** — native Thymer statuses (important, started, waiting, billable, discuss, alert, starred) reflected as icons on each row
-- **Plan filters** — Inbox now has **Unscheduled** and **Upcoming** toggle buttons; Upcoming shows tasks due within 7 days; both are independent
-- **Recurring tasks** — activating recurring removes any pin; removing recurring auto-pins the task to the current day so it stays in Focus
-- **Fix** — recurring daily tasks now always appear in Focus on their scheduled day without needing a pin
+- **Focus redesign** — time blocks feel lighter and more list-like; cleaner separation between blocks and tasks
+- **Links in task names** — if a task references another note, it shows as a tappable link that opens the note directly
+- **Due dates** — shown next to the task name; overdue dates turn red
+- **Task status icons** — important, started, waiting and other native Thymer statuses now show up on each task row
+- **Upcoming filter** — new toggle in Plan Inbox to show tasks due within the next 7 days
+- **Fix** — toggling recurring on and off could leave a task in a weird state where it disappeared or got stuck
 
 ### 2026-04-26
 - **Time block selection** — rebuilt for both mobile and desktop; tap a task to open a selection sheet, then pick a time slot or remove from Today's Focus
