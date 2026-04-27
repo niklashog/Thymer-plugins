@@ -298,7 +298,7 @@ class TodayDashboard {
             '.db-block-body{padding:6px 8px 8px}' +
             '.db-block-body .db-task{background:none;border:none;box-shadow:none;border-radius:0;margin-bottom:0;' +
             'border-top:1px solid var(--ed-container-border-color);padding:8px 4px}' +
-            '.db-block-body .db-task:hover{background:var(--sidebar-bg-hover);box-shadow:none}' +
+            '.db-block-body .db-task:hover{background:var(--cards-hover-bg);box-shadow:none}' +
             '.db-block-body .db-task--open{border-left:1px solid var(--ed-container-border-color);' +
             'border-right:1px solid var(--ed-container-border-color);border-bottom:none;' +
             'border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0}' +
