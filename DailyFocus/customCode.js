@@ -815,6 +815,8 @@ class TodayDashboard {
         let visInbox = inbox;
         if (!this._hideUpcoming) visInbox = [...upcomingTasks, ...visInbox];
         if (this._hideUndated)   visInbox = visInbox.filter(t => (t.segments || []).some(s => s.type === 'datetime'));
+        const filtersHidingAll = visInbox.length === 0 && (inbox.length > 0 || upcomingTasks.length > 0);
+        const inboxEmptyMsg = filtersHidingAll ? "There's stuff here — you're just not looking at it." : null;
         // [RECURRING-START]
         const recurringNotice = unconfiguredRecurring > 0
             ? `<div class="db-recurring-notice"><i class="ti ti-info-circle"></i>${unconfiguredRecurring} recurring task${unconfiguredRecurring > 1 ? 's' : ''} need${unconfiguredRecurring === 1 ? 's' : ''} a schedule — <button class="db-recurring-notice-btn" data-action="set-mode" data-mode="recurring-list">configure →</button></div>`
@@ -849,7 +851,7 @@ class TodayDashboard {
             ${this._section('Overdue',  overdue,  'overdue')}
             ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
             ${recurringNotice}
-            ${this._section('Inbox',    visInbox, 'inbox', upcomingBtn + undatedBtn)}
+            ${this._section('Inbox',    visInbox, 'inbox', upcomingBtn + undatedBtn, inboxEmptyMsg)}
         </div>`;
     }
 
@@ -1072,11 +1074,11 @@ class TodayDashboard {
         </div>`;
     }
 
-    _section(title, tasks, type, headerExtra = '') {
-        const empty = {
+    _section(title, tasks, type, headerExtra = '', emptyMsg = null) {
+        const empty = emptyMsg ?? {
             overdue: 'No overdue tasks',
             today:   'Nothing pinned — tap a task in the inbox to add it',
-            inbox:   'No undated tasks',
+            inbox:   'Nothing here!',
         }[type];
 
         return `<div class="db-section db-section--${type}">
