@@ -27,7 +27,7 @@ Used to decide what goes into your day.
 
 - **Overdue** — tasks past their due date, highlighted in red
 - **Today's Focus** — tasks pinned for today
-- **Inbox** — all undated todos; use **Hide/Show recurring** to filter recurring tasks out
+- **Inbox** — undated todos, plus optionally upcoming tasks; filter with the **Unscheduled** and **Upcoming** buttons in the section header
 
 Tap a task in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Navigate forward to future dates with `←` / `→`. Switch back with **← Focus**.
 
@@ -54,7 +54,10 @@ A hamburger menu (☰) sits in the top left corner of every view:
 ## Task interactions
 
 - **Checkbox** — mark a task done (or undo from the done state). Done tasks appear with strikethrough and reduced opacity. For recurring tasks, checking off advances the date to the next occurrence instead of marking permanently done.
-- **Repeat icon** — mark a task as recurring (defaults to daily) or remove its recurring schedule.
+- **Repeat icon** — mark a task as recurring (defaults to daily) or remove its recurring schedule. Activating recurring clears any pin; removing recurring auto-pins the task to the current day.
+- **Note reference chip** — if a task links to another note, it renders as a clickable chip with ↗; tap to open the note.
+- **Due date chip** — tasks with a date show it inline next to the task name; overdue dates are highlighted in red.
+- **Task status icon** — native Thymer task statuses (important, started, waiting, etc.) are reflected as icons on each row.
 - **Source name / ↗ icon** — navigates directly to the task in its source document, scrolling to and highlighting it.
 - **Pin icon** — unpin from Today's Focus. On mobile, "Remove from today" also appears in the scheduling sheet.
 - **Task text** (Focus mode) — tap to open the scheduling panel; pick a time slot to assign the task, or tap the active slot to remove the assignment.
@@ -70,6 +73,16 @@ If you clear your browser cache and browser data while the plugin is installed i
 **Fix:** switch your mobile browser to desktop mode, navigate around a little, then switch back to mobile mode and the app should load correctly on next visit.
 
 ## Changelog
+
+### 2026-04-27
+- **Focus time blocks** — redesigned as cards with a label/time heading row and tasks listed below; tasks use a separator line instead of individual card borders
+- **Hide empty time blocks** — setting to collapse time slots with no tasks assigned
+- **Ref chips** — task text that links to another note renders as a clickable chip with ↗ icon; tap to navigate to the note
+- **Due date chips** — due dates shown inline next to task name, never truncated; overdue dates highlighted in red
+- **Task status icons** — native Thymer statuses (important, started, waiting, billable, discuss, alert, starred) reflected as icons on each row
+- **Plan filters** — Inbox now has **Unscheduled** and **Upcoming** toggle buttons; Upcoming shows tasks due within 7 days; both are independent
+- **Recurring tasks** — activating recurring removes any pin; removing recurring auto-pins the task to the current day so it stays in Focus
+- **Fix** — recurring daily tasks now always appear in Focus on their scheduled day without needing a pin
 
 ### 2026-04-26
 - **Time block selection** — rebuilt for both mobile and desktop; tap a task to open a selection sheet, then pick a time slot or remove from Today's Focus
