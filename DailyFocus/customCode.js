@@ -17,12 +17,12 @@ class TodayDashboard {
         this._refreshTimer   = null;
         this._renderVer      = 0;
         this._mode           = null;
-        this._selected       = null;
         this._taskSheet      = null;
         this._taskSheetSlot  = null;
         this._doneTasksMap   = new Map();
         this._viewDate       = null;
-        this._hideRecurring  = true; // [RECURRING] remove when Thymer ships native recurring
+        this._hideUndated    = false;
+        this._hideUpcoming   = true;
         this._themeCache     = null;
         this._listenerAbort  = null;
         this._todayCache     = null;
@@ -158,10 +158,17 @@ class TodayDashboard {
             '.db-done{flex-shrink:0;cursor:pointer;align-self:center;margin-top:0!important;margin-right:0!important}' +
             '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
             '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
-            '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;cursor:pointer}' +
-            '.db-task-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-            '.db-task-text--sel{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
+            '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;cursor:pointer}' +
+            '.db-task-text{min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-task-text--sel{min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
             'text-overflow:ellipsis;cursor:pointer}' +
+            '.db-ref-chip{display:inline-flex;align-items:center;gap:2px;color:var(--ed-link-color);cursor:pointer;' +
+            'border-radius:3px;padding:0 2px;transition:opacity .15s;white-space:nowrap}' +
+            '.db-ref-chip:hover{opacity:.7}' +
+            '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
+            '.db-date-chip{flex-shrink:0;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
+            'border-radius:3px;padding:1px 4px;font-size:13px;white-space:nowrap}' +
+            '.db-date-chip--overdue{color:var(--ed-error-color);background:transparent}' +
             '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
             '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;gap:2px;padding-right:4px}' +
             '.db-task-source--link{font-size:11px;color:var(--ed-link-color);white-space:nowrap;' +
@@ -283,18 +290,21 @@ class TodayDashboard {
             'font-size:14px;padding:2px 0;transition:color .15s}' +
             '.db-mode-toggle:hover{color:var(--ed-link-hover-color)}' +
             '' +
-            '.db-block{display:flex;border-radius:var(--ed-radius-block);cursor:pointer;' +
-            'transition:background .1s,box-shadow .1s;min-height:52px;margin-bottom:6px;' +
+            '.db-block{border-radius:var(--ed-radius-block);margin-bottom:14px;' +
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);box-shadow:var(--color-shadow-cards)}' +
-            '.db-block:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
-            '.db-block--selected{background:var(--cards-hover-bg);box-shadow:0 0 0 2px var(--ed-link-color),var(--color-shadow-cards)}' +
-            '.db-block-time{flex-shrink:0;align-self:flex-start;min-width:190px;padding:3px 0 4px}' +
-            '.db-block-time-inner{display:flex;align-items:center;gap:6px;font-size:13px;opacity:.4;' +
-            'padding:5px 6px;min-height:30px}' +
-            '.db-block-label{width:120px;flex-shrink:0;white-space:nowrap}' +
-            '.db-block-clock{font-variant-numeric:tabular-nums;flex-shrink:0}' +
-            '.db-block-body{flex:1;min-width:0;padding:4px 8px 8px 12px}' +
-            '.db-block-hint{font-size:12px;opacity:.18;padding:11px 0 14px 2px}' +
+            '.db-block-time{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 4px}' +
+            '.db-block-label{font-size:13px;font-weight:500;opacity:.5}' +
+            '.db-block-clock{font-size:12px;opacity:.35;font-variant-numeric:tabular-nums}' +
+            '.db-block-body{padding:6px 8px 8px}' +
+            '.db-block-body .db-task{background:none;border:none;box-shadow:none;border-radius:0;margin-bottom:0;' +
+            'border-top:1px solid var(--ed-container-border-color);padding:8px 4px}' +
+            '.db-block-body .db-task:hover{background:var(--cards-hover-bg);box-shadow:none}' +
+            '.db-block-body .db-task--open{border-left:1px solid var(--ed-container-border-color);' +
+            'border-right:1px solid var(--ed-container-border-color);border-bottom:none;' +
+            'border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0}' +
+            '.db-block-body .db-task-inline{border:1px solid var(--ed-container-border-color);border-top:none;' +
+            'border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
+            'background:var(--cards-bg);box-shadow:none;margin:0}' +
             '.db-day-nav{display:flex;align-items:center;gap:8px}' +
             '.db-day-nav-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);font-size:16px;' +
             'padding:2px 6px;transition:color .15s;border-radius:4px}' +
@@ -306,11 +316,8 @@ class TodayDashboard {
             '@media(max-width:600px){' +
             '.db-root{padding:12px 0;max-width:100%}' +
             '.db-header{padding:10px 0 16px}' +
-            '.db-block{flex-direction:column;min-height:0;margin-bottom:8px}' +
-            '.db-block-time{padding:4px 6px 0;min-width:0;width:100%}' +
-            '.db-block-time-inner{padding:4px 0;min-height:0}' +
-            '.db-block-body{padding:0 6px 10px 6px;width:100%}' +
-            '.db-block-hint{padding:4px 0 8px 2px}' +
+            '.db-block{margin-bottom:8px}' +
+            '.db-block-body{padding:0 6px 8px}' +
             '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
             '.db-task-source{display:none}' +
             '.db-task-source--link{max-width:10ch;overflow:hidden;text-overflow:ellipsis}' +
@@ -330,8 +337,8 @@ class TodayDashboard {
             'transition:background .1s,box-shadow .1s;box-sizing:border-box}' +
             '.db-inline-slot:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
             '.db-inline-slot--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent}' +
-            '.db-inline-slot-label{font-size:11px;font-weight:500;text-align:center;line-height:1.3}' +
-            '.db-inline-slot-time{font-size:10px;opacity:.5;margin-top:2px}' +
+            '.db-inline-slot-label{font-size:13px;font-weight:500;text-align:center;line-height:1.3}' +
+            '.db-inline-slot-time{font-size:11px;opacity:.5;margin-top:2px}' +
             '.db-pin-icon{display:inline-flex;align-items:center;justify-content:center;' +
             'background:none;border:none;cursor:pointer;color:var(--ed-gray-text);' +
             'opacity:.7;font-size:14px;padding:0 4px;border-radius:var(--ed-radius-normal);' +
@@ -580,13 +587,23 @@ class TodayDashboard {
             );
             const rescheduledStart = this._rescheduledRecurring[l.guid];
             const isRescheduledAway = !!(rescheduledStart && rescheduledStart > viewDate);
+            const isRecurringToday = !!(l.props?.['db-recurring-freq'] && (l.segments || []).some(s => s.type === 'datetime' && s.text?.d === viewDate));
             // [RECURRING-END]
-            if (isOverdue && !isPinned)                                                                planOverdue.push(l);
-            if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                            todayPinned.push(l);
-            if (isScheduled && !isPinned && !isOverdue && !isRecurringCompleted && !isRescheduledAway) scheduled.push(l);
+            if (isOverdue && !isPinned)                                                                                             planOverdue.push(l);
+            if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                                                         todayPinned.push(l);
+            if ((isScheduled || isRecurringToday) && !isPinned && !isOverdue && !isRecurringCompleted && !isRescheduledAway)        scheduled.push(l);
             if (!isDated && !isPinned && !isScheduled && !isOverdue)    inbox.push(l);
             if (!isDated && !hasPinProp && !isScheduled && !isOverdue)  planInbox.push(l);
         }
+
+        const todayD = this._todayD().replace(/-/g, '');
+        const upcomingCutoff = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10).replace(/-/g,''); })();
+        const upcomingTasks = allTodos.filter(l => {
+            if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || l.props?.['db-pinned']) return false;
+            const seg = (l.segments || []).find(s => s.type === 'datetime');
+            const d = seg?.text?.d;
+            return d && d > todayD && d <= upcomingCutoff;
+        });
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
         const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
@@ -641,13 +658,12 @@ class TodayDashboard {
                     ? this._buildSettingsHTML()
                     : effectiveMode === 'focus'
                         ? this._buildFocusHTML(todayPinned, scheduled, this._settings.hideDoneInFocus ? [] : doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
-                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, this._hideRecurring, recurringPreview, timeBlocks);
+                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, false, recurringPreview, timeBlocks, upcomingTasks);
 
         this._applyTheme(el);
         if (this._listenerAbort) this._listenerAbort.abort();
         this._listenerAbort = new AbortController();
         this._attachListeners(el, allTasks, ignoredTasks, this._listenerAbort.signal);
-        this._reapplySelection(el);
         this._reapplyPlanSearch(el);
     }
 
@@ -734,7 +750,7 @@ class TodayDashboard {
                     ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
                 </div>
                 <div class="db-block">
-                    <div class="db-block-time"><div class="db-block-time-inner"><span class="db-block-label">When time is right</span></div></div>
+                    <div class="db-block-time"><span class="db-block-label">When time is right</span></div>
                     <div class="db-block-body">
                         ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
                         ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
@@ -747,7 +763,7 @@ class TodayDashboard {
                 <div class="db-section-header">
                     <span class="db-section-title">Day Plan</span>
                 </div>
-                ${SLOTS.map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
+                ${SLOTS.filter(s => !this._settings.hideEmptyBlocks || (assignedByTime[s.time] || []).length > 0).map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
             </div>
         </div>`; // closes db-root — db-topbar is a sibling, no wrapper needed
     }
@@ -787,21 +803,21 @@ class TodayDashboard {
     }
 
     _blockHTML(time, label, tasks, doneGuids = new Set()) {
-        return `<div class="db-block" data-action="select-block" data-time="${time}">
-            <div class="db-block-time"><div class="db-block-time-inner"><span class="db-block-label">${label}</span><span>→</span><span class="db-block-clock">${time}</span></div></div>
-            <div class="db-block-body">
-                ${tasks.length
-                    ? tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')
-                    : `<div class="db-block-hint">tap to select</div>`
-                }
-            </div>
+        return `<div class="db-block" data-time="${time}">
+            <div class="db-block-time"><span class="db-block-label">${label}</span><span class="db-block-clock">→ ${time}</span></div>
+            ${tasks.length ? `<div class="db-block-body">${tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')}</div>` : ''}
         </div>`;
     }
 
-    _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = [], timeBlocks = {}) {
-        // [RECURRING-START] filter + notice — remove when Thymer ships native recurring
-        const visInbox      = hideRecurring ? inbox.filter(t => !t.props?.['db-recurring-freq']) : inbox;
-        const toggleBtn     = `<button class="db-recurring-filter${hideRecurring ? ' db-recurring-filter--active' : ''}" data-action="toggle-recurring-filter" style="margin-left:auto">${hideRecurring ? 'Show recurring' : 'Hide recurring'}</button>`;
+    _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = [], timeBlocks = {}, upcomingTasks = []) {
+        const undatedBtn    = `<button class="db-recurring-filter${!this._hideUndated ? ' db-recurring-filter--active' : ''}" data-action="toggle-undated-filter">Unscheduled</button>`;
+        const upcomingBtn   = `<button class="db-recurring-filter${!this._hideUpcoming ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-filter" style="margin-left:auto">Upcoming</button>`;
+        let visInbox = inbox;
+        if (!this._hideUpcoming) visInbox = [...upcomingTasks, ...visInbox];
+        if (this._hideUndated)   visInbox = visInbox.filter(t => (t.segments || []).some(s => s.type === 'datetime'));
+        const filtersHidingAll = visInbox.length === 0 && (inbox.length > 0 || upcomingTasks.length > 0);
+        const inboxEmptyMsg = filtersHidingAll ? "There's stuff here — you're just not looking at it." : null;
+        // [RECURRING-START]
         const recurringNotice = unconfiguredRecurring > 0
             ? `<div class="db-recurring-notice"><i class="ti ti-info-circle"></i>${unconfiguredRecurring} recurring task${unconfiguredRecurring > 1 ? 's' : ''} need${unconfiguredRecurring === 1 ? 's' : ''} a schedule — <button class="db-recurring-notice-btn" data-action="set-mode" data-mode="recurring-list">configure →</button></div>`
             : '';
@@ -835,7 +851,7 @@ class TodayDashboard {
             ${this._section('Overdue',  overdue,  'overdue')}
             ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
             ${recurringNotice}
-            ${this._section('Inbox',    visInbox, 'inbox', toggleBtn)}
+            ${this._section('Inbox',    visInbox, 'inbox', upcomingBtn + undatedBtn, inboxEmptyMsg)}
         </div>`;
     }
 
@@ -891,6 +907,7 @@ class TodayDashboard {
                         <span class="db-section-title">Focus</span>
                     </div>
                     ${row('Hide completed tasks', 'hideDoneInFocus')}
+                    ${row('Hide empty time blocks', 'hideEmptyBlocks')}
                 </div>
                 <div class="db-section">
                     <div class="db-section-header">
@@ -959,7 +976,7 @@ class TodayDashboard {
     }
 
     _recurringTaskRow(task) {
-        const text = this._escape(this._getText(task));
+        const text = this._getTaskTextHTML(task);
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
             ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
@@ -1057,11 +1074,11 @@ class TodayDashboard {
         </div>`;
     }
 
-    _section(title, tasks, type, headerExtra = '') {
-        const empty = {
+    _section(title, tasks, type, headerExtra = '', emptyMsg = null) {
+        const empty = emptyMsg ?? {
             overdue: 'No overdue tasks',
             today:   'Nothing pinned — tap a task in the inbox to add it',
-            inbox:   'No undated tasks',
+            inbox:   'Nothing here!',
         }[type];
 
         return `<div class="db-section db-section--${type}">
@@ -1092,7 +1109,10 @@ class TodayDashboard {
     }
 
     _taskRow(task, section) {
-        const text       = this._escape(this._getText(task));
+        const text       = this._getTaskTextHTML(task);
+        const dateChip   = this._getDateChipHTML(task);
+        const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-blocked', billable:'state-dollar', discuss:'state-question', alert:'state-alert', starred:'state-starred' };
+        const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
         const source     = this._escape(task.record?.getName() || '');
         const sourceHTML = source
             ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
@@ -1115,7 +1135,7 @@ class TodayDashboard {
             return `<div class="db-task listitem-task db-task--recurring-preview" data-guid="${task.guid}">
                 <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
                 <div class="db-task-body">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
                 ${sourceHTML}
             </div>`;
@@ -1125,7 +1145,9 @@ class TodayDashboard {
         if (section === 'recurring-done') {
             return `<div class="db-task listitem-task state-done db-task--recurring-done" data-guid="${task.guid}">
                 <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
-                <span class="db-task-text--sel">${text}</span>
+                <div class="db-task-body">
+                    <span class="db-task-text--sel">${text}</span>${dateChip}
+                </div>
                 ${sourceHTML}
             </div>`;
         }
@@ -1134,7 +1156,7 @@ class TodayDashboard {
             return `<div class="db-task listitem-task db-task--recurring-missed" data-guid="${task.guid}">
                 <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
                 <div class="db-task-body">
-                    <span class="db-task-text" style="opacity:.4">${text}</span>
+                    <span class="db-task-text" style="opacity:.4">${text}</span>${dateChip}
                 </div>
                 ${sourceHTML}
             </div>`;
@@ -1143,9 +1165,9 @@ class TodayDashboard {
 
         if (isPast) {
             const isDone = section === 'done';
-            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-guid="${task.guid}">
                 <div class="db-task-body">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
                 ${sourceHTML}
             </div>`;
@@ -1156,7 +1178,9 @@ class TodayDashboard {
         if (section === 'done') {
             return `<div class="db-task listitem-task state-done" data-guid="${task.guid}">
                 <div class="db-done line-check-div clickable" data-action="undone" data-guid="${task.guid}"></div>
-                <span class="db-task-text--sel">${text}</span>
+                <div class="db-task-body">
+                    <span class="db-task-text--sel">${text}</span>${dateChip}
+                </div>
                 ${sourceHTML}
             </div>`;
         }
@@ -1167,11 +1191,12 @@ class TodayDashboard {
                 : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
                 ${doneBtn}
-                <span class="db-task-text--sel" data-action="select-task" data-guid="${task.guid}">${text}</span>
-                ${sourceHTML}
-                ${pinBtn}
+                <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
+                    <span class="db-task-text--sel">${text}</span>${dateChip}
+                </div>
+                ${sourceHTML}${pinBtn}
             </div>${inlinePanel}`;
         }
 
@@ -1181,32 +1206,30 @@ class TodayDashboard {
                 : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
-                ${sourceHTML}
-                ${recurToggle}<!-- [RECURRING] -->
+                ${sourceHTML}${recurToggle}<!-- [RECURRING] -->
                 ${pinBtn}
             </div>${inlinePanel}`;
         }
 
         if (section === 'inbox' || section === 'overdue') {
-            return `<div class="db-task listitem-task" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
                 ${doneBtn}
                 <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
-                    <span class="db-task-text">${text}</span>
+                    <span class="db-task-text">${text}</span>${dateChip}
                 </div>
-                ${sourceHTML}
-                ${recurToggle}<!-- [RECURRING] -->
+                ${sourceHTML}${recurToggle}<!-- [RECURRING] -->
             </div>`;
         }
 
-        return `<div class="db-task listitem-task" data-guid="${task.guid}">
+        return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
             ${doneBtn}
             <div class="db-task-body" data-action="open" data-guid="${task.guid}">
-                <span class="db-task-text">${text}</span>
+                <span class="db-task-text">${text}</span>${dateChip}
                 ${source ? `<span class="db-task-source">${source}</span>` : ''}
             </div>
         </div>`;
@@ -1394,10 +1417,6 @@ class TodayDashboard {
                     if (this._panel) this._render(this._panel);
                     break;
                 }
-                case 'select-block': {
-                    const time = target.dataset.time;
-                    break;
-                }
                 case 'open': {
                     if (!task?.record) return;
                     const panel = this.plugin.ui.getActivePanel();
@@ -1407,6 +1426,18 @@ class TodayDashboard {
                         subId: null,
                         itemGuid: task.guid,
                         highlight: true,
+                        workspaceGuid: this.plugin.getWorkspaceGuid(),
+                    });
+                    break;
+                }
+                case 'open-ref': {
+                    const refGuid = target.dataset.guid;
+                    if (!refGuid) return;
+                    const panel = this.plugin.ui.getActivePanel();
+                    if (panel) panel.navigateTo({
+                        type: 'edit_panel',
+                        rootId: refGuid,
+                        subId: null,
                         workspaceGuid: this.plugin.getWorkspaceGuid(),
                     });
                     break;
@@ -1483,13 +1514,12 @@ class TodayDashboard {
                 // [RECURRING-START] enable toggle — remove when Thymer ships native recurring
                 case 'enable-recurring': {
                     if (!task) return;
-                    const recPinDate   = this._viewDateHyphen();
-                    const recStartDate = recPinDate.replace(/-/g, '');
-                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate, 'db-pinned': recPinDate });
+                    const recStartDate = this._viewDateHyphen().replace(/-/g, '');
+                    this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate, 'db-pinned': null });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', 'daily');
                     task.setMetaProperty('db-recurring-start', recStartDate);
-                    task.setMetaProperty('db-pinned', recPinDate);
+                    task.setMetaProperty('db-pinned', null);
                     task.setSegments([
                         ...this._stripDateSegments(task.segments),
                         { type: 'text', text: ' ' }, this._makeDateSegment(recStartDate),
@@ -1502,11 +1532,14 @@ class TodayDashboard {
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
                     delete this._rescheduledRecurring[task.guid]; // [RECURRING]
-                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-start': null });
+                    const pinDate = this._viewDateHyphen();
+                    this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-start': null, 'db-pinned': pinDate });
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq',  null);
                     task.setMetaProperty('db-recurring-day',   null);
                     task.setMetaProperty('db-recurring-start', null);
+                    task.setMetaProperty('db-pinned', pinDate);
+                    task.setSegments(this._stripDateSegments(task.segments));
                     break;
                 }
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
@@ -1549,8 +1582,13 @@ class TodayDashboard {
                     this._reapplyPlanSearch(el);
                     break;
                 }
-                case 'toggle-recurring-filter': {
-                    this._hideRecurring = !this._hideRecurring;
+                case 'toggle-undated-filter': {
+                    this._hideUndated = !this._hideUndated;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'toggle-upcoming-filter': {
+                    this._hideUpcoming = !this._hideUpcoming;
                     if (this._panel) this._render(this._panel);
                     break;
                 }
@@ -1608,18 +1646,7 @@ class TodayDashboard {
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             }
-            section.style.display = visibleCount === 0 ? 'none' : '';
-        }
-    }
-
-    _reapplySelection(el) {
-        el.querySelectorAll('.db-task--selected').forEach(e => e.classList.remove('db-task--selected'));
-        el.querySelectorAll('.db-block--selected').forEach(e => e.classList.remove('db-block--selected'));
-        if (!this._selected) return;
-        if (this._selected.type === 'task') {
-            el.querySelector(`.db-task[data-guid="${this._selected.id}"]`)?.classList.add('db-task--selected');
-        } else {
-            el.querySelector(`.db-block[data-time="${this._selected.id}"]`)?.classList.add('db-block--selected');
+            section.style.display = (term && visibleCount === 0) ? 'none' : '';
         }
     }
 
@@ -1758,11 +1785,53 @@ class TodayDashboard {
     _getText(lineItem) {
         return (lineItem.segments || [])
             .map(s => {
+                if (s.type === 'ref') return s.text?.title || this.plugin.data.getRecord(s.text?.guid)?.getName() || '';
                 if (typeof s.text === 'string') return s.text;
                 if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
                 return '';
             })
             .join('') || '(untitled)';
+    }
+
+    _formatDate(d) {
+        if (!d || d.length < 8) return '';
+        const year = +d.slice(0, 4), month = +d.slice(4, 6) - 1, day = +d.slice(6, 8);
+        const date = new Date(year, month, day);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const diff = Math.round((date - today) / 86400000);
+        if (diff === 0) return 'Today';
+        if (diff === 1) return 'Tomorrow';
+        if (diff === -1) return 'Yesterday';
+        const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const label = `${DAYS[date.getDay()]} ${MONTHS[date.getMonth()]} ${date.getDate()}`;
+        return date.getFullYear() !== today.getFullYear() ? `${label} ${date.getFullYear()}` : label;
+    }
+
+    _getTaskTextHTML(task) {
+        const parts = (task.segments || []).map(s => {
+            if (s.type === 'ref') {
+                const guid = s.text?.guid;
+                if (!guid) return '';
+                const title = s.text?.title || this.plugin.data.getRecord(guid)?.getName() || '?';
+                return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}">${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
+            }
+            if (s.type === 'datetime') return '';
+            if (typeof s.text === 'string') return this._escape(s.text);
+            if (s.text && typeof s.text === 'object') return this._escape(s.text.title || s.text.link || '');
+            return '';
+        }).join('');
+        return parts || '(untitled)';
+    }
+
+    _getDateChipHTML(task) {
+        const todayD = this._todayD().replace(/-/g, '');
+        const seg = (task.segments || []).find(s => s.type === 'datetime');
+        const d = seg?.text?.d;
+        if (!d) return '';
+        const label = this._formatDate(d);
+        const isOverdue = d < todayD;
+        return `<span class="db-date-chip${isOverdue ? ' db-date-chip--overdue' : ''}">${this._escape(label)}</span>`;
     }
 
     _escape(str) {
