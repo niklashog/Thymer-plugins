@@ -298,7 +298,13 @@ class TodayDashboard {
             '.db-block-body{padding:6px 8px 8px}' +
             '.db-block-body .db-task{background:none;border:none;box-shadow:none;border-radius:0;margin-bottom:0;' +
             'border-top:1px solid var(--ed-container-border-color);padding:8px 4px}' +
-            '.db-block-body .db-task:hover{background:none;box-shadow:none}' +
+            '.db-block-body .db-task:not(.db-task--open):hover{background:var(--sidebar-bg-hover);box-shadow:none}' +
+            '.db-block-body .db-task--open{border-left:1px solid var(--ed-container-border-color);' +
+            'border-right:1px solid var(--ed-container-border-color);border-bottom:none;' +
+            'border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;background:var(--cards-hover-bg)}' +
+            '.db-block-body .db-task-inline{border:1px solid var(--ed-container-border-color);border-top:none;' +
+            'border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
+            'background:var(--cards-hover-bg);box-shadow:none;margin:0}' +
             '.db-day-nav{display:flex;align-items:center;gap:8px}' +
             '.db-day-nav-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);font-size:16px;' +
             'padding:2px 6px;transition:color .15s;border-radius:4px}' +
