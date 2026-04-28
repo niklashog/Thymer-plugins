@@ -1,13 +1,13 @@
 const SLOTS = [
     { time: '08:00', label: 'Early morning' },
-    { time: '10:00', label: 'Morning' },
-    { time: '12:00', label: 'Lunchtime' },
-    { time: '14:00', label: 'Early afternoon' },
-    { time: '16:00', label: 'Afternoon' },
-    { time: '18:00', label: 'Sundown' },
-    { time: '20:00', label: 'Early evening' },
-    { time: '22:00', label: 'Evening' },
-    { time: '00:00', label: 'Good night' },
+{ time: '10:00', label: 'Morning' },
+{ time: '12:00', label: 'Lunchtime' },
+{ time: '14:00', label: 'Early afternoon' },
+{ time: '16:00', label: 'Afternoon' },
+{ time: '18:00', label: 'Sundown' },
+{ time: '20:00', label: 'Early evening' },
+{ time: '22:00', label: 'Evening' },
+{ time: '00:00', label: 'Good night' },
 ];
 
 class TodayDashboard {
@@ -23,7 +23,6 @@ class TodayDashboard {
         this._viewDate       = null;
         this._hideUndated    = false;
         this._hideUpcoming   = true;
-        this._themeCache     = null;
         this._listenerAbort  = null;
         this._todayCache     = null;
         this._lastData           = null;
@@ -49,7 +48,7 @@ class TodayDashboard {
         try {
             const [todos, done] = await Promise.all([
                 this.plugin.data.searchByQuery('@task @todo', 1000),
-                this.plugin.data.searchByQuery('@task @done', 1000),
+                                                    this.plugin.data.searchByQuery('@task @done', 1000),
             ]);
             const allTasks = [...(todos?.lines || []), ...(done?.lines || [])];
             for (const task of allTasks) {
@@ -146,8 +145,6 @@ class TodayDashboard {
             '.db-section-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;' +
             'padding-bottom:6px;border-bottom:1px solid var(--sidebar-border-color)}' +
             '.db-section-title{font-size:13px;font-weight:600;opacity:.55}' +
-            '.db-section--overdue .db-section-title{color:var(--ed-error-color);opacity:1}' +
-            '.db-section--overdue .db-section-header{border-color:color-mix(in srgb,var(--ed-error-color) 30%,transparent)}' +
             '.db-count{font-size:11px;font-weight:600;opacity:.4}' +
             '.db-task{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:36px;' +
             'box-sizing:border-box;border-radius:var(--ed-radius-normal);transition:background .1s,border-color .1s;' +
@@ -196,7 +193,7 @@ class TodayDashboard {
             '.db-recurring-notice-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
-            '.db-recur-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:199}' +
+            '.db-recur-overlay{display:none;position:fixed;inset:0;background:var(--ed-overlay-bg,var(--cmdpal-backdrop-bg,var(--cards-hover-bg)));z-index:199}' +
             '.db-recur-row{display:flex;align-items:center;gap:8px;padding:10px 14px;' +
             'border-radius:var(--ed-radius-block);cursor:pointer;transition:background .1s,box-shadow .1s;' +
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
@@ -255,7 +252,7 @@ class TodayDashboard {
             '.db-hamburger:hover{opacity:.7}' +
             '.db-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:var(--input-bg-color);' +
             'border:1px solid var(--input-border-color);border-radius:var(--ed-radius-block);padding:4px;' +
-            'min-width:180px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.35)}' +
+            'min-width:180px;z-index:100;box-shadow:var(--color-shadow-hover)}' +
             '.db-dropdown-item{display:block;width:100%;text-align:left;background:none;border:none;' +
             'cursor:pointer;color:inherit;font-size:14px;padding:10px 14px;border-radius:var(--ed-radius-normal);transition:background .1s,color .1s}' +
             '.db-dropdown-item:hover{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text)}' +
@@ -339,7 +336,21 @@ class TodayDashboard {
             '.db-task-r2{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto;min-width:0}' +
             '.db-task-meta{display:flex;align-items:center;gap:4px;min-width:0}' +
             '.db-task-r2-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}' +
-            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task{margin-bottom:6px}' +
+            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task,.db-section--ignore>.db-task{margin-bottom:0}' +
+            '@media(min-width:601px){' +
+            '.db-section--overdue,.db-section--today,.db-section--inbox,.db-section--ignore{padding-top:2px}' +
+            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task,.db-section--ignore>.db-task{' +
+            'background:transparent;border-color:transparent;border-bottom-color:var(--ed-container-border-color);' +
+            'border-radius:0;box-shadow:none;padding:7px 10px;min-height:38px}' +
+            '.db-section--overdue>.db-section-header+.db-task,.db-section--today>.db-section-header+.db-task,.db-section--inbox>.db-section-header+.db-task,.db-section--ignore>.db-section-header+.db-task{' +
+            'border-top-color:var(--ed-container-border-color)}' +
+            '.db-section--overdue>.db-task:hover,.db-section--today>.db-task:hover,.db-section--inbox>.db-task:hover,.db-section--ignore>.db-task:hover{' +
+            'background:var(--ed-button-bg-hover);border-left-color:transparent;border-right-color:transparent;box-shadow:none}' +
+            '.db-section--overdue>.db-task--open,.db-section--today>.db-task--open,.db-section--inbox>.db-task--open{' +
+            'background:var(--cards-hover-bg);border-color:var(--ed-container-border-color);border-radius:var(--ed-radius-normal) var(--ed-radius-normal) 0 0}' +
+            '.db-section--overdue>.db-task-inline,.db-section--today>.db-task-inline,.db-section--inbox>.db-task-inline{' +
+            'margin:0 0 8px;border-color:var(--ed-container-border-color);box-shadow:none}' +
+            '}' +
             '@media(max-width:600px){' +
             '.db-root{padding:12px 0;max-width:100%}' +
             '.db-header{padding:10px 0 16px}' +
@@ -381,7 +392,7 @@ class TodayDashboard {
             '.db-task-sheet{display:none}' +
             '@media(max-width:600px){' +
             '.db-task-inline{display:none}' +
-            '.db-sheet-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}' +
+            '.db-sheet-overlay{display:block;position:fixed;inset:0;background:var(--ed-overlay-bg,var(--cmdpal-backdrop-bg,var(--cards-hover-bg)));z-index:199}' +
             '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--input-bg-color);' +
             'border-radius:16px 16px 0 0;z-index:200;border-top:1px solid var(--sidebar-border-color);' +
             'box-shadow:var(--color-shadow-hover);max-height:78vh;overflow:auto}' +
@@ -415,7 +426,7 @@ class TodayDashboard {
             'border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-cards)}' +
             '.db-wipe-confirm-msg{font-size:13px;opacity:.7;margin:0 0 14px;line-height:1.5}' +
             '.db-wipe-actions{display:flex;gap:8px;align-items:center}' +
-            '.db-wipe-confirm-btn{background:var(--ed-error-color);color:#fff;border:none;cursor:pointer;' +
+            '.db-wipe-confirm-btn{background:var(--ed-error-color);color:var(--ed-button-primary-text);border:none;cursor:pointer;' +
             'font-size:13px;font-weight:600;padding:6px 14px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
             '.db-wipe-confirm-btn:hover{opacity:.85}' +
             '.db-wipe-cancel-btn{background:none;border:none;cursor:pointer;font-size:13px;color:inherit;' +
@@ -487,10 +498,10 @@ class TodayDashboard {
         try {
             const [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
                 this.plugin.data.searchByQuery('@task @todo',    150),
-                this.plugin.data.searchByQuery('@task @today',  100),
-                this.plugin.data.searchByQuery('@task @overdue',  50),
-                this.plugin.data.searchByQuery('@task @due',    100),
-                this.plugin.data.searchByQuery('@task @done',   100),
+                                                                                                          this.plugin.data.searchByQuery('@task @today',  100),
+                                                                                                          this.plugin.data.searchByQuery('@task @overdue',  50),
+                                                                                                          this.plugin.data.searchByQuery('@task @due',    100),
+                                                                                                          this.plugin.data.searchByQuery('@task @done',   100),
             ]);
             this._lastData = { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
         } catch (e) {
@@ -555,10 +566,10 @@ class TodayDashboard {
             try {
                 [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
                     this.plugin.data.searchByQuery('@task @todo',     150),
-                    this.plugin.data.searchByQuery('@task @today',   100),
-                    this.plugin.data.searchByQuery('@task @overdue',  50),
-                    this.plugin.data.searchByQuery('@task @due',     100),
-                    this.plugin.data.searchByQuery('@task @done',    100),
+                                                                                                        this.plugin.data.searchByQuery('@task @today',   100),
+                                                                                                        this.plugin.data.searchByQuery('@task @overdue',  50),
+                                                                                                        this.plugin.data.searchByQuery('@task @due',     100),
+                                                                                                        this.plugin.data.searchByQuery('@task @done',    100),
                 ]);
             } catch (e) {
                 console.warn('[Dashboard] fetch failed:', e);
@@ -585,8 +596,8 @@ class TodayDashboard {
 
         const todaySet       = new Set(allTodos.filter(l => l.props?.['db-pinned'] === today).map(l => l.guid));
         const doneTasks      = isViewingToday
-            ? [...this._doneTasksMap.values()]
-            : doneLinesAll.filter(l => l.props?.['db-done-date'] === viewDateHyphen);
+        ? [...this._doneTasksMap.values()]
+        : doneLinesAll.filter(l => l.props?.['db-done-date'] === viewDateHyphen);
         const viewPinned     = allTodos.filter(l => {
             if (l.props?.['db-pinned'] === viewDateHyphen) return true;
             const seg = (l.segments || []).find(s => s.type === 'datetime');
@@ -652,60 +663,59 @@ class TodayDashboard {
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
         const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
-            : this._mode === 'recurring-list' ? 'recurring-list'
-            : this._mode === 'settings' ? 'settings'
-            : (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan'
-            : 'focus';
+        : this._mode === 'recurring-list' ? 'recurring-list'
+        : this._mode === 'settings' ? 'settings'
+        : (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan'
+        : 'focus';
 
         // [RECURRING-START] unconfigured count, future preview, past ghost traces
         const unconfiguredRecurring = allTodosRaw.filter(l =>
-            l.props?.['db-recurring-freq'] &&
-            l.props['db-recurring-freq'] !== 'daily' &&
-            !l.props?.['db-recurring-day']
+        l.props?.['db-recurring-freq'] &&
+        l.props['db-recurring-freq'] !== 'daily' &&
+        !l.props?.['db-recurring-day']
         ).length;
         const recurringPreview = viewDate > this._todayD()
-            ? allTodos.filter(t =>
-                t.props?.['db-recurring-freq'] &&
-                !viewPinnedSet.has(t.guid) &&
-                this._wouldRecurOn(t, viewDate)
-              )
-            : [];
+        ? allTodos.filter(t =>
+        t.props?.['db-recurring-freq'] &&
+        !viewPinnedSet.has(t.guid) &&
+        this._wouldRecurOn(t, viewDate)
+        )
+        : [];
         const recurringDoneGhosts = viewDate <= this._todayD()
-            ? allTodos.filter(t => {
-                if (!t.props?.['db-recurring-freq']) return false;
-                if (viewPinnedSet.has(t.guid)) return false;
-                const dates = t.props?.['db-recurring-done-dates'];
-                if (dates?.split(',').includes(viewDate)) return true;
-                // Fallback: in-memory record bridges the gap before _lastData refreshes
-                return this._completedRecurringDates[t.guid]?.split(',').includes(viewDate) ?? false;
-              })
-            : [];
+        ? allTodos.filter(t => {
+            if (!t.props?.['db-recurring-freq']) return false;
+            if (viewPinnedSet.has(t.guid)) return false;
+            const dates = t.props?.['db-recurring-done-dates'];
+            if (dates?.split(',').includes(viewDate)) return true;
+            // Fallback: in-memory record bridges the gap before _lastData refreshes
+            return this._completedRecurringDates[t.guid]?.split(',').includes(viewDate) ?? false;
+        })
+        : [];
         const recurringMissedGhosts = viewDate < this._todayD()
-            ? allTodos.filter(t => {
-                if (!t.props?.['db-recurring-freq']) return false;
-                const start = t.props?.['db-recurring-start'];
-                if (!start || viewDate < start) return false; // no history before schedule was set
-                if (viewPinnedSet.has(t.guid)) return false;
-                if (!this._wouldRecurOn(t, viewDate)) return false;
-                const dates = t.props?.['db-recurring-done-dates'];
-                return !dates?.split(',').includes(viewDate);
-              })
-            : [];
+        ? allTodos.filter(t => {
+            if (!t.props?.['db-recurring-freq']) return false;
+            const start = t.props?.['db-recurring-start'];
+            if (!start || viewDate < start) return false; // no history before schedule was set
+            if (viewPinnedSet.has(t.guid)) return false;
+            if (!this._wouldRecurOn(t, viewDate)) return false;
+            const dates = t.props?.['db-recurring-done-dates'];
+            return !dates?.split(',').includes(viewDate);
+        })
+        : [];
         // [RECURRING-END]
 
         const allTasks = [...allTodos, ...doneTasks];
 
         el.innerHTML = effectiveMode === 'ignore-list'
-            ? this._buildIgnoreListHTML(allTodos, ignoredTasks)
-            : effectiveMode === 'recurring-list'
-                ? this._buildRecurringHTML(allTodosRaw.filter(l => l.props?.['db-recurring-freq']))
-                : effectiveMode === 'settings'
-                    ? this._buildSettingsHTML()
-                    : effectiveMode === 'focus'
-                        ? this._buildFocusHTML(todayPinned, scheduled, this._settings.hideDoneInFocus ? [] : doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
-                        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, false, recurringPreview, timeBlocks, upcomingTasks);
+        ? this._buildIgnoreListHTML(allTodos, ignoredTasks)
+        : effectiveMode === 'recurring-list'
+        ? this._buildRecurringHTML(allTodosRaw.filter(l => l.props?.['db-recurring-freq']))
+        : effectiveMode === 'settings'
+        ? this._buildSettingsHTML()
+        : effectiveMode === 'focus'
+        ? this._buildFocusHTML(todayPinned, scheduled, this._settings.hideDoneInFocus ? [] : doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
+        : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, false, recurringPreview, timeBlocks, upcomingTasks);
 
-        this._applyTheme(el);
         if (this._listenerAbort) this._listenerAbort.abort();
         this._listenerAbort = new AbortController();
         this._attachListeners(el, allTasks, ignoredTasks, this._listenerAbort.signal);
@@ -714,18 +724,18 @@ class TodayDashboard {
 
     _menuHTML(crumb) {
         return `<div class="db-menu-wrap">
-            <div class="db-menu-trigger">
-                <button class="db-hamburger" data-nav-item="menu" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
-                <span class="db-header-crumb">${crumb}</span>
-                <span class="db-header-sep">/</span>
-            </div>
-            <div class="db-dropdown" hidden>
-                <button class="db-dropdown-item" data-action="set-mode" data-mode="focus">Focus</button>
-                <button class="db-dropdown-item" data-action="set-mode" data-mode="plan">Plan</button>
-                <button class="db-dropdown-item" data-action="set-mode" data-mode="recurring-list">Recurring tasks</button>
-                <button class="db-dropdown-item" data-action="set-mode" data-mode="ignore-list">Ignore list</button>
-                <button class="db-dropdown-item" data-action="set-mode" data-mode="settings">Settings</button>
-            </div>
+        <div class="db-menu-trigger">
+        <button class="db-hamburger" data-nav-item="menu" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+        <span class="db-header-crumb">${crumb}</span>
+        <span class="db-header-sep">/</span>
+        </div>
+        <div class="db-dropdown" hidden>
+        <button class="db-dropdown-item" data-action="set-mode" data-mode="focus">Focus</button>
+        <button class="db-dropdown-item" data-action="set-mode" data-mode="plan">Plan</button>
+        <button class="db-dropdown-item" data-action="set-mode" data-mode="recurring-list">Recurring tasks</button>
+        <button class="db-dropdown-item" data-action="set-mode" data-mode="ignore-list">Ignore list</button>
+        <button class="db-dropdown-item" data-action="set-mode" data-mode="settings">Settings</button>
+        </div>
         </div>`;
     }
 
@@ -762,8 +772,8 @@ class TodayDashboard {
         }
 
         const unassigned     = isToday
-            ? allFocusToday.filter(t => !timeBlocks[t.guid])
-            : [...viewPinned.filter(t => !timeBlocks[t.guid]), ...recurringPreview];
+        ? allFocusToday.filter(t => !timeBlocks[t.guid])
+        : [...viewPinned.filter(t => !timeBlocks[t.guid]), ...recurringPreview];
         const unassignedDone = isToday ? doneTasks.filter(t => !timeBlocks[t.guid]) : [];
 
         let sheetHTML = '';
@@ -775,54 +785,54 @@ class TodayDashboard {
         }
 
         return sheetHTML + `<div class="db-header" data-nav-region="navbar" role="navigation" aria-label="Daily Focus navigation">
-                <div class="db-header-left">
-                    ${this._menuHTML('Focus')}
-                </div>
-                <div class="db-day-nav">
-                    <button class="db-day-nav-btn" data-nav-item="prev-day" data-action="prev-day" aria-label="Previous day">←</button>
-                    <button class="db-day-nav-label" data-nav-item="today"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${this._viewDateLabel()}</button>
-                    <button class="db-day-nav-btn" data-nav-item="next-day" data-action="next-day" aria-label="Next day">→</button>
-                </div>
-                <div class="db-header-right">
-                    <button class="db-mode-toggle" data-nav-item="mode" data-action="set-mode" data-mode="plan">Plan →</button>
-                </div>
-            </div>
-            <div class="db-root" data-nav-region="tasks">
-            ${(unassigned.length || unassignedDone.length || recurringDoneGhosts.length || recurringMissedGhosts.length) ? `
+        <div class="db-header-left">
+        ${this._menuHTML('Focus')}
+        </div>
+        <div class="db-day-nav">
+        <button class="db-day-nav-btn" data-nav-item="prev-day" data-action="prev-day" aria-label="Previous day">←</button>
+        <button class="db-day-nav-label" data-nav-item="today"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${this._viewDateLabel()}</button>
+        <button class="db-day-nav-btn" data-nav-item="next-day" data-action="next-day" aria-label="Next day">→</button>
+        </div>
+        <div class="db-header-right">
+        <button class="db-mode-toggle" data-nav-item="mode" data-action="set-mode" data-mode="plan">Plan →</button>
+        </div>
+        </div>
+        <div class="db-root" data-nav-region="tasks">
+        ${(unassigned.length || unassignedDone.length || recurringDoneGhosts.length || recurringMissedGhosts.length) ? `
             <div class="db-section db-section--today">
-                <div class="db-section-header">
-                    <span class="db-section-title">Anytime Today</span>
-                    ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
-                </div>
-                <div class="db-block">
-                    <div class="db-block-time"><span class="db-block-label">Open</span></div>
-                    <div class="db-block-body">
-                        ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
-                        ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
-                        ${recurringDoneGhosts.map(t => this._taskRow(t, 'recurring-done')).join('')}
-                        ${recurringMissedGhosts.map(t => this._taskRow(t, 'recurring-missed')).join('')}
-                    </div>
-                </div>
+            <div class="db-section-header">
+            <span class="db-section-title">Anytime Today</span>
+            ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
+            </div>
+            <div class="db-block">
+            <div class="db-block-time"><span class="db-block-label">Open</span></div>
+            <div class="db-block-body">
+            ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
+            ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
+            ${recurringDoneGhosts.map(t => this._taskRow(t, 'recurring-done')).join('')}
+            ${recurringMissedGhosts.map(t => this._taskRow(t, 'recurring-missed')).join('')}
+            </div>
+            </div>
             </div>` : ''}
             <div class="db-section">
-                <div class="db-section-header">
-                    <span class="db-section-title">Day Rhythm</span>
-                </div>
-                ${SLOTS.filter(s => !this._settings.hideEmptyBlocks || (assignedByTime[s.time] || []).length > 0).map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
+            <div class="db-section-header">
+            <span class="db-section-title">Day Rhythm</span>
             </div>
-        </div>`; // closes db-root — db-topbar is a sibling, no wrapper needed
+            ${SLOTS.filter(s => !this._settings.hideEmptyBlocks || (assignedByTime[s.time] || []).length > 0).map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
+            </div>
+            </div>`; // closes db-root — db-topbar is a sibling, no wrapper needed
     }
 
     _buildTaskInlinePanel(guid, currentSlot) {
         const slotsHTML = SLOTS.map(s => {
             const active = currentSlot === s.time;
             return `<button class="db-inline-slot${active ? ' db-inline-slot--active' : ''}" data-nav-timeblock="true" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
-                <span class="db-inline-slot-label">${s.label}</span>
-                <span class="db-inline-slot-time">→ ${s.time}</span>
+            <span class="db-inline-slot-label">${s.label}</span>
+            <span class="db-inline-slot-time">→ ${s.time}</span>
             </button>`;
         }).join('');
         return `<div class="db-task-inline">
-            <div class="db-inline-slots">${slotsHTML}</div>
+        <div class="db-inline-slots">${slotsHTML}</div>
         </div>`;
     }
 
@@ -831,29 +841,29 @@ class TodayDashboard {
         const slotsHTML = SLOTS.map(s => {
             const active = currentSlot === s.time;
             return `<button class="db-sheet-slot${active ? ' db-sheet-slot--active' : ''}" data-nav-timeblock="true" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
-                <span class="db-sheet-slot-label">${s.label}</span>
-                <span class="db-sheet-slot-time">→ ${s.time}</span>
+            <span class="db-sheet-slot-label">${s.label}</span>
+            <span class="db-sheet-slot-time">→ ${s.time}</span>
             </button>`;
         }).join('');
         const removeBtn = isPinned
-            ? `<button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}"><i class="ti ti-pin"></i><span>Unpin</span></button>`
-            : '';
+        ? `<button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}"><i class="ti ti-pin"></i><span>Unpin</span></button>`
+        : '';
         return `<div class="db-sheet-overlay" data-action="close-task-sheet"></div>
-            <div class="db-task-sheet">
-                <div class="db-sheet-handle"></div>
-                <div class="db-sheet-header">
-                    <div class="db-sheet-kicker">Schedule</div>
-                    <div class="db-sheet-name">${text}</div>
-                </div>
-                <div class="db-sheet-slots">${slotsHTML}</div>
-                ${removeBtn ? `<div class="db-sheet-footer">${removeBtn}</div>` : ''}
-            </div>`;
+        <div class="db-task-sheet">
+        <div class="db-sheet-handle"></div>
+        <div class="db-sheet-header">
+        <div class="db-sheet-kicker">Schedule</div>
+        <div class="db-sheet-name">${text}</div>
+        </div>
+        <div class="db-sheet-slots">${slotsHTML}</div>
+        ${removeBtn ? `<div class="db-sheet-footer">${removeBtn}</div>` : ''}
+        </div>`;
     }
 
     _blockHTML(time, label, tasks, doneGuids = new Set()) {
         return `<div class="db-block" data-time="${time}">
-            <div class="db-block-time"><span class="db-block-label">${label}</span><span class="db-block-clock">→ ${time}</span></div>
-            ${tasks.length ? `<div class="db-block-body">${tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')}</div>` : ''}
+        <div class="db-block-time"><span class="db-block-label">${label}</span><span class="db-block-clock">→ ${time}</span></div>
+        ${tasks.length ? `<div class="db-block-body">${tasks.map(t => this._taskRow(t, doneGuids.has(t.guid) ? 'done' : 'block')).join('')}</div>` : ''}
         </div>`;
     }
 
@@ -867,8 +877,8 @@ class TodayDashboard {
         const inboxEmptyMsg = filtersHidingAll ? "There's stuff here — you're just not looking at it." : null;
         // [RECURRING-START]
         const recurringNotice = unconfiguredRecurring > 0
-            ? `<div class="db-recurring-notice"><i class="ti ti-info-circle"></i>${unconfiguredRecurring} recurring task${unconfiguredRecurring > 1 ? 's' : ''} need${unconfiguredRecurring === 1 ? 's' : ''} a schedule — <button class="db-recurring-notice-btn" data-action="set-mode" data-mode="recurring-list">configure →</button></div>`
-            : '';
+        ? `<div class="db-recurring-notice"><i class="ti ti-info-circle"></i>${unconfiguredRecurring} recurring task${unconfiguredRecurring > 1 ? 's' : ''} need${unconfiguredRecurring === 1 ? 's' : ''} a schedule — <button class="db-recurring-notice-btn" data-action="set-mode" data-mode="recurring-list">configure →</button></div>`
+        : '';
         // [RECURRING-END]
         const dateLabel  = this._viewDateLabel();
         const focusTitle = dateLabel === 'Today' ? "Today's Focus" : `${dateLabel}'s Focus`;
@@ -879,57 +889,58 @@ class TodayDashboard {
             sheetHTML = this._buildTaskSheetHTML(this._taskSheet, sheetTask, currentSlot, true);
         }
         return sheetHTML + `<div class="db-header" data-nav-region="navbar" role="navigation" aria-label="Daily Focus navigation">
-                <div class="db-header-left">
-                    ${this._menuHTML('Plan')}
-                </div>
-                <div class="db-day-nav">
-                    <button class="db-day-nav-btn" data-nav-item="prev-day" data-action="prev-day" aria-label="Previous day" ${this._viewDateStr() <= this._todayD() ? 'disabled' : ''}>←</button>
-                    <button class="db-day-nav-label" data-nav-item="today"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${dateLabel}</button>
-                    <button class="db-day-nav-btn" data-nav-item="next-day" data-action="next-day" aria-label="Next day">→</button>
-                </div>
-                <div class="db-header-right">
-                    <button class="db-mode-toggle" data-nav-item="mode" data-action="set-mode" data-mode="focus">← Focus</button>
-                </div>
-            </div>
-            <div class="db-root" data-nav-region="tasks">
-            <div class="db-search-wrap">
-                <input class="db-plan-search" type="text" placeholder="Search tasks…" value="${this._escape(this._planSearch)}">
-                <button class="db-search-clear" data-action="clear-search" aria-label="Clear search"${this._planSearch ? '' : ' hidden'}>×</button>
-            </div>
-            ${this._section('Overdue',  overdue,  'overdue')}
-            ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
-            ${recurringNotice}
-            ${this._section('Inbox',    visInbox, 'inbox', upcomingBtn + undatedBtn, inboxEmptyMsg)}
+        <div class="db-header-left">
+        ${this._menuHTML('Plan')}
+        </div>
+        <div class="db-day-nav">
+        <button class="db-day-nav-btn" data-nav-item="prev-day" data-action="prev-day" aria-label="Previous day" ${this._viewDateStr() <= this._todayD() ? 'disabled' : ''}>←</button>
+        <button class="db-day-nav-label" data-nav-item="today"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${dateLabel}</button>
+        <button class="db-day-nav-btn" data-nav-item="next-day" data-action="next-day" aria-label="Next day">→</button>
+        </div>
+        <div class="db-header-right">
+        <button class="db-mode-toggle" data-nav-item="mode" data-action="set-mode" data-mode="focus">← Focus</button>
+        </div>
+        </div>
+        <div class="db-root" data-nav-region="tasks">
+        <div class="db-search-wrap">
+        <input class="db-plan-search" type="text" placeholder="Search tasks…" value="${this._escape(this._planSearch)}">
+        <button class="db-search-clear" data-action="clear-search" aria-label="Clear search"${this._planSearch ? '' : ' hidden'}>×</button>
+        </div>
+        ${this._section('Overdue',  overdue,  'overdue')}
+        ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
+        ${recurringNotice}
+        ${this._section('Inbox',    visInbox, 'inbox', upcomingBtn + undatedBtn, inboxEmptyMsg)}
         </div>`;
     }
 
     _buildIgnoreListHTML(activeTasks, ignoredTasks) {
         return `<div class="db-header">
-                <div class="db-header-left">
-                    ${this._menuHTML('Ignore list')}
-                </div>
-                <div class="db-header-right">
-                    <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
-                </div>
-            </div>
-            <div class="db-root">
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">Tasks</span>
-                        ${activeTasks.length ? `<span class="db-count">${activeTasks.length}</span>` : ''}
-                    </div>
-                    ${activeTasks.length
-                        ? activeTasks.map(t => this._ignoreListTaskRow(t, false)).join('')
-                        : `<div class="db-empty">No active tasks</div>`
-                    }
-                </div>
-                ${ignoredTasks.length ? `
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">${ignoredTasks.length} already ignored</span>
-                    </div>
-                    ${ignoredTasks.map(t => this._ignoreListTaskRow(t, true)).join('')}
-                </div>` : ''}
+        <div class="db-header-left">
+        ${this._menuHTML('Ignore list')}
+        </div>
+        <div class="db-header-right">
+        <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+        </div>
+        </div>
+        <div class="db-root">
+        <div class="db-section db-section--ignore">
+        <div class="db-section-header">
+        <span class="db-section-title">Visible in planner</span>
+        ${activeTasks.length ? `<span class="db-count">${activeTasks.length}</span>` : ''}
+        </div>
+        ${activeTasks.length
+            ? activeTasks.map(t => this._ignoreListTaskRow(t, false)).join('')
+            : `<div class="db-empty">No active tasks</div>`
+        }
+        </div>
+        ${ignoredTasks.length ? `
+        <div class="db-section db-section--ignore">
+        <div class="db-section-header">
+        <span class="db-section-title">Hidden from planner</span>
+        <span class="db-count">${ignoredTasks.length}</span>
+        </div>
+            ${ignoredTasks.map(t => this._ignoreListTaskRow(t, true)).join('')}
+            </div>` : ''}
             </div>`;
     }
 
@@ -937,79 +948,79 @@ class TodayDashboard {
         const row = (label, key, defaultOn = false) => {
             const on = this._settings[key] === undefined ? defaultOn : !!this._settings[key];
             return `<div class="db-setting-row" data-action="toggle-setting" data-setting="${key}">
-                <span class="db-setting-label">${label}</span>
-                <button class="db-setting-toggle${on ? ' db-setting-toggle--on' : ''}" tabindex="-1">${on ? 'On' : 'Off'}</button>
+            <span class="db-setting-label">${label}</span>
+            <button class="db-setting-toggle${on ? ' db-setting-toggle--on' : ''}" tabindex="-1">${on ? 'On' : 'Off'}</button>
             </div>`;
         };
         return `<div class="db-header">
-                <div class="db-header-left">
-                    ${this._menuHTML('Settings')}
-                </div>
-                <div class="db-header-right">
-                    <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
-                </div>
+        <div class="db-header-left">
+        ${this._menuHTML('Settings')}
+        </div>
+        <div class="db-header-right">
+        <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+        </div>
+        </div>
+        <div class="db-root">
+        <div class="db-section">
+        <div class="db-section-header">
+        <span class="db-section-title">Focus</span>
+        </div>
+        ${row('Hide completed tasks', 'hideDoneInFocus')}
+        ${row('Hide empty time blocks', 'hideEmptyBlocks')}
+        </div>
+        <div class="db-section">
+        <div class="db-section-header">
+        <span class="db-section-title">Journal</span>
+        </div>
+        ${row('Add transclusion to journal when completing a task', 'journalTransclusions')}
+        </div>
+        <div class="db-section">
+        <div class="db-section-header">
+        <span class="db-section-title">Keyboard navigation</span>
+        </div>
+        <div class="db-settings-note">
+        <div class="db-settings-note-title">
+        <span>Planned</span>
+        <span class="db-settings-badge">Not available yet</span>
+        </div>
+        <p class="db-settings-note-copy">Daily Focus is being structured for keyboard-first navigation. These bindings describe the planned interaction model.</p>
+        <dl class="db-keybind-list">
+        <dt><span class="db-kbd">Up</span> / <span class="db-kbd">Down</span></dt><dd>Move between tasks</dd>
+        <dt><span class="db-kbd">Enter</span></dt><dd>Complete or reopen the focused task</dd>
+        <dt><span class="db-kbd">Space</span></dt><dd>Open or close time block choices</dd>
+        <dt><span class="db-kbd">Arrows</span></dt><dd>Move through time block choices</dd>
+        <dt><span class="db-kbd">1</span>-<span class="db-kbd">9</span></dt><dd>Choose a time block directly</dd>
+        <dt><span class="db-kbd">Tab</span> / <span class="db-kbd">Shift</span>+<span class="db-kbd">Tab</span></dt><dd>Move through task actions</dd>
+        <dt><span class="db-kbd">Esc</span></dt><dd>Close choices or return to the task</dd>
+        <dt class="db-keybind-break"><span class="db-kbd">Ctrl</span>+<span class="db-kbd">Up</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Up</span></dt><dd>Jump from tasks to the navbar, if available</dd>
+        <dt><span class="db-kbd">Ctrl</span>+<span class="db-kbd">Down</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Down</span></dt><dd>Return to the active task or section, if available</dd>
+        <dt>Navbar</dt><dd>Menu/view, previous day, current day/today, next day, Plan or Focus</dd>
+        <dt><span class="db-kbd">Left</span> / <span class="db-kbd">Right</span></dt><dd>Move between navbar items</dd>
+        <dt><span class="db-kbd">Enter</span></dt><dd>Activate the focused navbar item</dd>
+        <dt><span class="db-kbd">Esc</span></dt><dd>Leave navbar focus and return to the task</dd>
+        <dt><span class="db-kbd">[</span></dt><dd>Previous day</dd>
+        <dt><span class="db-kbd">]</span></dt><dd>Next day</dd>
+        <dt><span class="db-kbd">Alt</span>+<span class="db-kbd">Left</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Right</span></dt><dd>Previous or next day, if available</dd>
+        <dt><span class="db-kbd">F</span> / <span class="db-kbd">P</span> / <span class="db-kbd">T</span></dt><dd>Focus, Plan, Today</dd>
+        </dl>
+        </div>
+        </div>
+        <div class="db-section">
+        <div class="db-section-header">
+        <span class="db-section-title">Data</span>
+        </div>
+        ${this._wipeState === 'confirm' ? `
+            <div class="db-wipe-confirm">
+            <p class="db-wipe-confirm-msg">Removes all plugin data from tasks — pins, time blocks, recurring settings, ignored status — and clears plugin configuration. Cannot be undone.</p>
+            <div class="db-wipe-actions">
+            <button class="db-wipe-confirm-btn" data-action="wipe-metadata-confirm">Confirm wipe</button>
+            <button class="db-wipe-cancel-btn" data-action="wipe-metadata-cancel">Cancel</button>
             </div>
-            <div class="db-root">
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">Focus</span>
-                    </div>
-                    ${row('Hide completed tasks', 'hideDoneInFocus')}
-                    ${row('Hide empty time blocks', 'hideEmptyBlocks')}
-                </div>
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">Journal</span>
-                    </div>
-                    ${row('Add transclusion to journal when completing a task', 'journalTransclusions')}
-                </div>
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">Keyboard navigation</span>
-                    </div>
-                    <div class="db-settings-note">
-                        <div class="db-settings-note-title">
-                            <span>Planned</span>
-                            <span class="db-settings-badge">Not available yet</span>
-                        </div>
-                        <p class="db-settings-note-copy">Daily Focus is being structured for keyboard-first navigation. These bindings describe the planned interaction model.</p>
-                        <dl class="db-keybind-list">
-                            <dt><span class="db-kbd">Up</span> / <span class="db-kbd">Down</span></dt><dd>Move between tasks</dd>
-                            <dt><span class="db-kbd">Enter</span></dt><dd>Complete or reopen the focused task</dd>
-                            <dt><span class="db-kbd">Space</span></dt><dd>Open or close time block choices</dd>
-                            <dt><span class="db-kbd">Arrows</span></dt><dd>Move through time block choices</dd>
-                            <dt><span class="db-kbd">1</span>-<span class="db-kbd">9</span></dt><dd>Choose a time block directly</dd>
-                            <dt><span class="db-kbd">Tab</span> / <span class="db-kbd">Shift</span>+<span class="db-kbd">Tab</span></dt><dd>Move through task actions</dd>
-                            <dt><span class="db-kbd">Esc</span></dt><dd>Close choices or return to the task</dd>
-                            <dt class="db-keybind-break"><span class="db-kbd">Ctrl</span>+<span class="db-kbd">Up</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Up</span></dt><dd>Jump from tasks to the navbar, if available</dd>
-                            <dt><span class="db-kbd">Ctrl</span>+<span class="db-kbd">Down</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Down</span></dt><dd>Return to the active task or section, if available</dd>
-                            <dt>Navbar</dt><dd>Menu/view, previous day, current day/today, next day, Plan or Focus</dd>
-                            <dt><span class="db-kbd">Left</span> / <span class="db-kbd">Right</span></dt><dd>Move between navbar items</dd>
-                            <dt><span class="db-kbd">Enter</span></dt><dd>Activate the focused navbar item</dd>
-                            <dt><span class="db-kbd">Esc</span></dt><dd>Leave navbar focus and return to the task</dd>
-                            <dt><span class="db-kbd">[</span></dt><dd>Previous day</dd>
-                            <dt><span class="db-kbd">]</span></dt><dd>Next day</dd>
-                            <dt><span class="db-kbd">Alt</span>+<span class="db-kbd">Left</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Right</span></dt><dd>Previous or next day, if available</dd>
-                            <dt><span class="db-kbd">F</span> / <span class="db-kbd">P</span> / <span class="db-kbd">T</span></dt><dd>Focus, Plan, Today</dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">Data</span>
-                    </div>
-                    ${this._wipeState === 'confirm' ? `
-                    <div class="db-wipe-confirm">
-                        <p class="db-wipe-confirm-msg">Removes all plugin data from tasks — pins, time blocks, recurring settings, ignored status — and clears plugin configuration. Cannot be undone.</p>
-                        <div class="db-wipe-actions">
-                            <button class="db-wipe-confirm-btn" data-action="wipe-metadata-confirm">Confirm wipe</button>
-                            <button class="db-wipe-cancel-btn" data-action="wipe-metadata-cancel">Cancel</button>
-                        </div>
-                    </div>` : this._wipeState === 'wiping' ? `
-                    <div class="db-wipe-status">Wiping…</div>` : this._wipeState === 'done' ? `
-                    <div class="db-wipe-status">Done. Reload the page to complete the reset.</div>` : `
-                    <button class="db-wipe-btn" data-action="wipe-metadata">Wipe Plugin Metadata</button>`}
-                </div>
+            </div>` : this._wipeState === 'wiping' ? `
+            <div class="db-wipe-status">Wiping…</div>` : this._wipeState === 'done' ? `
+            <div class="db-wipe-status">Done. Reload the page to complete the reset.</div>` : `
+            <button class="db-wipe-btn" data-action="wipe-metadata">Wipe Plugin Metadata</button>`}
+            </div>
             </div>`;
     }
 
@@ -1030,47 +1041,47 @@ class TodayDashboard {
         })).filter(g => g.tasks.length > 0);
 
         const sections = grouped.length
-            ? grouped.map(g => `
-                <div class="db-section">
-                    <div class="db-section-header">
-                        <span class="db-section-title">${LABELS[g.freq]}</span>
-                        <span class="db-count">${g.tasks.length}</span>
-                    </div>
-                    ${g.tasks.map(t => this._recurringTaskRow(t)).join('')}
-                </div>`).join('')
-            : `<div class="db-empty">No recurring tasks — use the repeat button on any task to set a frequency</div>`;
+        ? grouped.map(g => `
+        <div class="db-section">
+        <div class="db-section-header">
+        <span class="db-section-title">${LABELS[g.freq]}</span>
+        <span class="db-count">${g.tasks.length}</span>
+        </div>
+        ${g.tasks.map(t => this._recurringTaskRow(t)).join('')}
+        </div>`).join('')
+        : `<div class="db-empty">No recurring tasks — use the repeat button on any task to set a frequency</div>`;
 
         return `<div class="db-recur-overlay"${this._expandedRecurring ? '' : ' hidden'} data-action="cancel-recurring"></div>
-            <div class="db-header">
-                <div class="db-header-left">
-                    ${this._menuHTML('Recurring tasks')}
-                </div>
-                <div class="db-header-right">
-                    <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
-                </div>
-            </div>
-            <div class="db-root">
-                ${sections}
-            </div>`;
+        <div class="db-header">
+        <div class="db-header-left">
+        ${this._menuHTML('Recurring tasks')}
+        </div>
+        <div class="db-header-right">
+        <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+        </div>
+        </div>
+        <div class="db-root">
+        ${sections}
+        </div>`;
     }
 
     _recurringTaskRow(task) {
         const text = this._getTaskTextHTML(task);
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
-            ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
-            : '';
+        ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        : '';
         const freq = task.props?.['db-recurring-freq'];
         const day  = task.props?.['db-recurring-day'] || null;
         const summary = this._recurSummary(freq, day);
         const summaryHTML = summary
-            ? `<span class="db-recur-summary">${this._escape(summary)}</span>`
-            : `<span class="db-recur-summary db-recur-summary--unconfigured">Configure</span>`;
+        ? `<span class="db-recur-summary">${this._escape(summary)}</span>`
+        : `<span class="db-recur-summary db-recur-summary--unconfigured">Configure</span>`;
         const isExpanded = this._expandedRecurring === task.guid;
         const row = `<div class="db-recur-row${isExpanded ? ' db-recur-row--expanded' : ''}" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
-            <span class="db-recur-name">${text}</span>
-            ${summaryHTML}
-            ${sourceHTML}
+        <span class="db-recur-name">${text}</span>
+        ${summaryHTML}
+        ${sourceHTML}
         </div>`;
         if (isExpanded) {
             const draft = this._recurringDraft || { freq, day };
@@ -1101,7 +1112,7 @@ class TodayDashboard {
         const FREQS = ['daily', 'weekly', 'monthly', 'yearly'];
         const FREQ_LABEL = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' };
         const pills = FREQS.map(f =>
-            `<button class="db-recur-pill${draftFreq === f ? ' db-recur-pill--active' : ''}" data-action="draft-freq" data-guid="${guid}" data-freq="${f}">${FREQ_LABEL[f]}</button>`
+        `<button class="db-recur-pill${draftFreq === f ? ' db-recur-pill--active' : ''}" data-action="draft-freq" data-guid="${guid}" data-freq="${f}">${FREQ_LABEL[f]}</button>`
         ).join('');
         let dateArea = '';
         if (draftFreq === 'weekly') {
@@ -1114,24 +1125,24 @@ class TodayDashboard {
         } else if (draftFreq === 'monthly') {
             const activeDay = draftDay ? parseInt(draftDay) : 0;
             const options = Array.from({length: 31}, (_, i) => i + 1)
-                .map(d => `<option value="${d}"${activeDay === d ? ' selected' : ''}>${d}</option>`).join('');
+            .map(d => `<option value="${d}"${activeDay === d ? ' selected' : ''}>${d}</option>`).join('');
             dateArea = `<select class="db-recur-select db-recur-month-day" data-guid="${guid}">${!activeDay ? '<option value="" disabled selected>Day of month</option>' : ''}${options}</select>`;
         } else if (draftFreq === 'yearly') {
             const [mm, dd] = draftDay ? draftDay.split('-').map(Number) : [0, 0];
             const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
             const mOpts = MONTHS.map((m, i) => `<option value="${i+1}"${mm === i+1 ? ' selected' : ''}>${m}</option>`).join('');
             const dOpts = Array.from({length: 31}, (_, i) => i + 1)
-                .map(d => `<option value="${d}"${dd === d ? ' selected' : ''}>${d}</option>`).join('');
+            .map(d => `<option value="${d}"${dd === d ? ' selected' : ''}>${d}</option>`).join('');
             dateArea = `<select class="db-recur-select db-recur-year-month" data-guid="${guid}">${!mm ? '<option value="" disabled selected>Month</option>' : ''}${mOpts}</select><select class="db-recur-select db-recur-year-day" data-guid="${guid}">${!dd ? '<option value="" disabled selected>Day</option>' : ''}${dOpts}</select>`;
         }
         return `<div class="db-recur-edit">
-            <div class="db-recur-pills">${pills}</div>
-            ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
-            <div class="db-recur-actions">
-                <button class="db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
-                <button class="db-recur-cancel" data-action="cancel-recurring">Cancel</button>
-                <button class="db-recur-delete" data-action="remove-recurring" data-guid="${guid}" title="Remove recurring"><i class="ti ti-trash"></i></button>
-            </div>
+        <div class="db-recur-pills">${pills}</div>
+        ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
+        <div class="db-recur-actions">
+        <button class="db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
+        <button class="db-recur-cancel" data-action="cancel-recurring">Cancel</button>
+        <button class="db-recur-delete" data-action="remove-recurring" data-guid="${guid}" title="Remove recurring"><i class="ti ti-trash"></i></button>
+        </div>
         </div>`;
     }
     // [RECURRING-END]
@@ -1147,14 +1158,21 @@ class TodayDashboard {
     }
 
     _ignoreListTaskRow(task, isIgnored) {
-        const text   = this._escape(this._getText(task));
+        const text   = this._getTaskTextHTML(task);
+        const dateChip = this._getDateChipHTML(task);
         const source = this._escape(task.record?.getName() || '');
-        return `<div class="db-task listitem-task${isIgnored ? ' db-task--ignored' : ''}" data-guid="${task.guid}">
-            <div class="db-task-body">
-                <span class="db-task-text">${text}</span>
-            </div>
-            ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
-            <button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-task-action="ignore" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>
+        const sourceHTML = source
+        ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        : '';
+        const actionHTML = `<button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-task-action="ignore" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}" aria-label="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>`;
+        return `<div class="db-task listitem-task${isIgnored ? ' db-task--ignored' : ''}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+        <div class="db-task-r1">
+        <div class="db-done line-check-div" aria-disabled="true" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+        <div class="db-task-body">
+        <span class="db-task-text">${text}</span>${dateChip}${sourceHTML}
+        </div>
+        </div>
+        ${this._r2HTML('', actionHTML)}
         </div>`;
     }
 
@@ -1166,15 +1184,15 @@ class TodayDashboard {
         }[type];
 
         return `<div class="db-section db-section--${type}">
-            <div class="db-section-header">
-                <span class="db-section-title">${title}</span>
-                ${tasks.length ? `<span class="db-count">${tasks.length}</span>` : ''}
-                ${headerExtra}
-            </div>
-            ${tasks.length
-                ? tasks.map(t => this._taskRow(t, type)).join('')
-                : `<div class="db-empty">${empty}</div>`
-            }
+        <div class="db-section-header">
+        <span class="db-section-title">${title}</span>
+        ${tasks.length ? `<span class="db-count">${tasks.length}</span>` : ''}
+        ${headerExtra}
+        </div>
+        ${tasks.length
+            ? tasks.map(t => this._taskRow(t, type)).join('')
+            : `<div class="db-empty">${empty}</div>`
+        }
         </div>`;
     }
 
@@ -1182,13 +1200,13 @@ class TodayDashboard {
         const empty = 'Nothing pinned — tap a task in the inbox to add it';
         const totalCount = primary.length + secondary.length;
         return `<div class="db-section db-section--${primaryType}">
-            <div class="db-section-header">
-                <span class="db-section-title">${title}</span>
-                ${totalCount ? `<span class="db-count">${totalCount}</span>` : ''}
-            </div>
-            ${primary.map(t => this._taskRow(t, primaryType)).join('')}
-            ${secondary.map(t => this._taskRow(t, secondaryType)).join('')}
-            ${!totalCount ? `<div class="db-empty">${empty}</div>` : ''}
+        <div class="db-section-header">
+        <span class="db-section-title">${title}</span>
+        ${totalCount ? `<span class="db-count">${totalCount}</span>` : ''}
+        </div>
+        ${primary.map(t => this._taskRow(t, primaryType)).join('')}
+        ${secondary.map(t => this._taskRow(t, secondaryType)).join('')}
+        ${!totalCount ? `<div class="db-empty">${empty}</div>` : ''}
         </div>`;
     }
 
@@ -1200,49 +1218,49 @@ class TodayDashboard {
         const source     = this._escape(task.record?.getName() || '');
         // WIP: open-in-panel button goes here — blocked on Thymer SDK (createPanel + navigateTo doesn't open native record view)
         const sourceBody = source
-            ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
-            : '';
+        ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        : '';
         const bodyMeta = dateChip + sourceBody;
         const isPast   = this._viewDateStr() < this._todayD();
         const isFuture = this._viewDateStr() > this._todayD();
         const doneBtn  = isFuture
-            ? `<div class="db-done line-check-div" aria-disabled="true" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>`
-            : `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
+        ? `<div class="db-done line-check-div" aria-disabled="true" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>`
+        : `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
         // [RECURRING-START] freq button — remove when Thymer ships native recurring
         const freq       = task.props?.['db-recurring-freq'];
         const recurToggle = freq
-            ? `<button class="db-recurring-btn db-recurring-btn--active" data-task-action="recurring" data-action="remove-recurring" data-guid="${task.guid}" title="Remove recurring"><i class="ti ti-repeat"></i></button>`
-            : `<button class="db-recurring-btn" data-task-action="recurring" data-action="enable-recurring" data-guid="${task.guid}" title="Set as recurring"><i class="ti ti-repeat"></i></button>`;
+        ? `<button class="db-recurring-btn db-recurring-btn--active" data-task-action="recurring" data-action="remove-recurring" data-guid="${task.guid}" title="Remove recurring"><i class="ti ti-repeat"></i></button>`
+        : `<button class="db-recurring-btn" data-task-action="recurring" data-action="enable-recurring" data-guid="${task.guid}" title="Set as recurring"><i class="ti ti-repeat"></i></button>`;
         // [RECURRING-END]
 
         if (section === 'recurring-preview') {
             return `<div class="db-task listitem-task db-task--recurring-preview" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
-                    <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
-                </div>
-                ${this._r2HTML('', '')}
+            <div class="db-task-r1">
+            <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+            <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
+            </div>
+            ${this._r2HTML('', '')}
             </div>`;
         }
 
         // [RECURRING-START] ghost traces for past/today views
         if (section === 'recurring-done') {
-            return `<div class="db-task listitem-task state-done db-task--recurring-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
-                    <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
-                </div>
-                ${this._r2HTML('', '')}
+            return `<div class="db-task listitem listitem-task state-done db-task--recurring-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
+            <div class="db-task-r1">
+            <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
+            </div>
+            ${this._r2HTML('', '')}
             </div>`;
         }
 
         if (section === 'recurring-missed') {
             return `<div class="db-task listitem-task db-task--recurring-missed" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
-                    <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
-                </div>
-                ${this._r2HTML('', '')}
+            <div class="db-task-r1">
+            <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
+            <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
+            </div>
+            ${this._r2HTML('', '')}
             </div>`;
         }
         // [RECURRING-END]
@@ -1250,80 +1268,80 @@ class TodayDashboard {
         if (isPast) {
             const isDone = section === 'done';
             return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
-                </div>
-                ${this._r2HTML('', '')}
+            <div class="db-task-r1">
+            <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
+            </div>
+            ${this._r2HTML('', '')}
             </div>`;
         }
 
         const isFocus = section === 'focus-pinned' || section === 'focus-scheduled' || section === 'block';
 
         if (section === 'done') {
-            return `<div class="db-task listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    <div class="db-done line-check-div clickable" role="button" aria-label="Reopen task" data-task-action="done" data-action="undone" data-guid="${task.guid}"></div>
-                    <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
-                </div>
-                ${this._r2HTML('', '')}
+            return `<div class="db-task listitem listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            <div class="db-done line-check-div clickable" role="button" aria-label="Reopen task" data-task-action="done" data-action="undone" data-guid="${task.guid}"></div>
+            <div class="db-task-r1">
+            <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
+            </div>
+            ${this._r2HTML('', '')}
             </div>`;
         }
 
         if (isFocus) {
             const pinBtn = task.props?.['db-pinned']
-                ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
-                : '';
+            ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
+            : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    ${doneBtn}
-                    <div class="db-task-body">
-                        <span class="db-task-text--sel">${text}</span>${bodyMeta}
-                    </div>
-                </div>
-                ${this._r2HTML('', pinBtn)}
+            <div class="db-task-r1">
+            ${doneBtn}
+            <div class="db-task-body">
+            <span class="db-task-text--sel">${text}</span>${bodyMeta}
+            </div>
+            </div>
+            ${this._r2HTML('', pinBtn)}
             </div>${inlinePanel}`;
         }
 
         if (section === 'today') {
             const pinBtn = task.props?.['db-pinned']
-                ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
-                : '';
+            ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
+            : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    ${doneBtn}
-                    <div class="db-task-body">
-                        <span class="db-task-text">${text}</span>${bodyMeta}
-                    </div>
-                </div>
-                ${this._r2HTML('', recurToggle + '<!-- [RECURRING] -->' + pinBtn)}
+            <div class="db-task-r1">
+            ${doneBtn}
+            <div class="db-task-body">
+            <span class="db-task-text">${text}</span>${bodyMeta}
+            </div>
+            </div>
+            ${this._r2HTML('', recurToggle + '<!-- [RECURRING] -->' + pinBtn)}
             </div>${inlinePanel}`;
         }
 
         if (section === 'inbox' || section === 'overdue') {
             return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-action="pin" data-guid="${task.guid}">
-                <div class="db-task-r1">
-                    ${doneBtn}
-                    <div class="db-task-body">
-                        <span class="db-task-text">${text}</span>${bodyMeta}
-                    </div>
-                </div>
-                ${this._r2HTML('', recurToggle + '<!-- [RECURRING] -->')}
+            <div class="db-task-r1">
+            ${doneBtn}
+            <div class="db-task-body">
+            <span class="db-task-text">${text}</span>${bodyMeta}
+            </div>
+            </div>
+            ${this._r2HTML('', recurToggle + '<!-- [RECURRING] -->')}
             </div>`;
         }
 
         return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-            <div class="db-task-r1">
-                ${doneBtn}
-                <div class="db-task-body" data-action="open" data-guid="${task.guid}">
-                    <span class="db-task-text">${text}</span>${bodyMeta}
-                    ${source ? `<span class="db-task-source">${source}</span>` : ''}
-                </div>
-            </div>
-            ${this._r2HTML('', '')}
+        <div class="db-task-r1">
+        ${doneBtn}
+        <div class="db-task-body" data-action="open" data-guid="${task.guid}">
+        <span class="db-task-text">${text}</span>${bodyMeta}
+        ${source ? `<span class="db-task-source">${source}</span>` : ''}
+        </div>
+        </div>
+        ${this._r2HTML('', '')}
         </div>`;
     }
 
@@ -1331,8 +1349,8 @@ class TodayDashboard {
         const content = (dateChip || '') + (actionsHTML || '');
         if (!content) return '';
         return `<div class="db-task-r2">
-            ${dateChip ? `<div class="db-task-meta">${dateChip}</div>` : ''}
-            ${actionsHTML ? `<div class="db-task-r2-actions">${actionsHTML}</div>` : ''}
+        ${dateChip ? `<div class="db-task-meta">${dateChip}</div>` : ''}
+        ${actionsHTML ? `<div class="db-task-r2-actions">${actionsHTML}</div>` : ''}
         </div>`;
     }
 
@@ -1397,7 +1415,7 @@ class TodayDashboard {
                             const nextYMD = nextDate.replace(/-/g, '');
                             const newSegs = [
                                 ...this._stripDateSegments(task.segments),
-                                { type: 'text', text: ' ' }, this._makeDateSegment(nextYMD),
+                            { type: 'text', text: ' ' }, this._makeDateSegment(nextYMD),
                             ];
                             await task.setMetaProperty('db-pinned', null);
                             await task.setMetaProperty('db-recurring-done-dates', newDoneDates);
@@ -1601,7 +1619,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-recurring-start', startDate);
                     task.setSegments([
                         ...this._stripDateSegments(task.segments),
-                        { type: 'text', text: ' ' }, this._makeDateSegment(startDate),
+                                     { type: 'text', text: ' ' }, this._makeDateSegment(startDate),
                     ]);
                     break;
                 }
@@ -1623,7 +1641,7 @@ class TodayDashboard {
                     task.setMetaProperty('db-pinned', null);
                     task.setSegments([
                         ...this._stripDateSegments(task.segments),
-                        { type: 'text', text: ' ' }, this._makeDateSegment(recStartDate),
+                                     { type: 'text', text: ' ' }, this._makeDateSegment(recStartDate),
                     ]);
                     break;
                 }
@@ -1751,30 +1769,6 @@ class TodayDashboard {
         }
     }
 
-    _applyTheme(el) {
-        if (!this._themeCache) {
-            const startNode = document.querySelector('.panel') || document.body;
-            let node = startNode;
-            while (node) {
-                const c = getComputedStyle(node).backgroundColor;
-                if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') break;
-                node = node.parentElement;
-            }
-            const bg  = getComputedStyle(node || startNode).backgroundColor;
-            const fg  = getComputedStyle(node || startNode).color;
-            const rgb = (fg.match(/\d+/g) || ['150', '150', '150']).slice(0, 3).join(',');
-            this._themeCache = { bg, rgb };
-        }
-        const { bg, rgb } = this._themeCache;
-        el.style.setProperty('--db-bg', bg);
-        const root = el.querySelector('.db-root');
-        if (root) {
-            root.style.setProperty('--db-hover',   `rgba(${rgb},.07)`);
-            root.style.setProperty('--db-divider', `rgba(${rgb},.12)`);
-            root.style.setProperty('--db-sel',     `rgba(${rgb},.1)`);
-        }
-    }
-
     // [RECURRING-START] scheduling + occurrence logic — remove when Thymer ships native recurring
     _nextRecurringDate(freq, day) {
         const d = new Date();
@@ -1885,13 +1879,13 @@ class TodayDashboard {
 
     _getText(lineItem) {
         return (lineItem.segments || [])
-            .map(s => {
-                if (s.type === 'ref') return s.text?.title || this.plugin.data.getRecord(s.text?.guid)?.getName() || '';
-                if (typeof s.text === 'string') return s.text;
-                if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
-                return '';
-            })
-            .join('') || '(untitled)';
+        .map(s => {
+            if (s.type === 'ref') return s.text?.title || this.plugin.data.getRecord(s.text?.guid)?.getName() || '';
+            if (typeof s.text === 'string') return s.text;
+            if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
+            return '';
+        })
+        .join('') || '(untitled)';
     }
 
     _formatDate(d) {
@@ -1937,10 +1931,10 @@ class TodayDashboard {
 
     _escape(str) {
         return (str || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 }
 
