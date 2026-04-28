@@ -153,7 +153,7 @@ class TodayDashboard {
             '.db-task:hover{background:var(--cards-hover-bg);box-shadow:none}' +
             '.db-task:focus-visible,.db-inline-slot:focus-visible,.db-sheet-slot:focus-visible,' +
             '.db-day-nav-btn:focus-visible,.db-day-nav-label:focus-visible,.db-mode-toggle:focus-visible,' +
-            '.db-hamburger:focus-visible,.db-pin-icon:focus-visible,.db-recurring-btn:focus-visible,' +
+            '.db-hamburger:focus-visible,.db-pin-icon:focus-visible,.db-recurring-btn:focus-visible,.db-recur-remove:focus-visible,' +
             '.db-src-icon:focus-visible,.db-ignore:focus-visible,.db-unignore:focus-visible{' +
             'outline:1px solid var(--ed-link-color);outline-offset:2px}' +
             '.db-task--selected{border-color:var(--ed-link-color)}' +
@@ -193,7 +193,7 @@ class TodayDashboard {
             '.db-recurring-notice-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
-            '.db-recur-overlay{display:none;position:fixed;inset:0;background:var(--ed-overlay-bg,var(--cmdpal-backdrop-bg,var(--cards-hover-bg)));z-index:199}' +
+            '.db-recur-overlay{display:none;position:fixed;inset:0;background:transparent;z-index:199}' +
             '.db-recur-row{display:flex;align-items:center;gap:8px;padding:10px 14px;' +
             'border-radius:var(--ed-radius-block);cursor:pointer;transition:background .1s,box-shadow .1s;' +
             'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
@@ -209,6 +209,7 @@ class TodayDashboard {
             '.db-recur-edit{background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
             'border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
             'padding:16px;margin:0 0 6px 0;box-shadow:var(--color-shadow-cards)}' +
+            '.db-recur-edit--sheet{display:none}' +
             '.db-recur-pills{display:flex;gap:6px;margin-bottom:16px}' +
             '.db-recur-pill{background:none;border:1px solid var(--sidebar-border-color);' +
             'border-radius:var(--ed-radius-pill);cursor:pointer;font-size:12px;font-weight:500;' +
@@ -233,14 +234,26 @@ class TodayDashboard {
             '.db-recur-cancel{background:none;border:none;cursor:pointer;font-size:12px;color:inherit;' +
             'opacity:.45;padding:6px 8px;transition:opacity .1s;border-radius:var(--ed-radius-normal)}' +
             '.db-recur-cancel:hover{opacity:.8}' +
-            '.db-recur-delete{background:none;border:none;cursor:pointer;font-size:14px;' +
-            'color:var(--ed-error-color);opacity:.35;padding:4px 6px;margin-left:auto;' +
-            'border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
-            '.db-recur-delete:hover{opacity:.8}' +
-            '@media(max-width:600px){.db-recur-overlay:not([hidden]){display:block}' +
-            '.db-recur-edit{position:fixed;bottom:0;left:0;right:0;border-radius:16px 16px 0 0;border:none;' +
-            'border-top:1px solid var(--sidebar-border-color);padding:20px 20px 32px;z-index:200;' +
-            'box-shadow:var(--color-shadow-hover);margin:0}}' +
+            '.db-recur-remove{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;' +
+            'font-size:12px;color:inherit;opacity:.45;padding:6px 8px;margin-left:auto;' +
+            'border-radius:var(--ed-radius-normal);transition:opacity .1s,color .1s}' +
+            '.db-recur-remove:hover{opacity:.8;color:var(--ed-link-color)}' +
+            '@media(max-width:700px),(pointer:coarse){.db-recur-overlay:not([hidden]){display:block}' +
+            '.db-recur-row{flex-wrap:wrap;align-items:flex-start;padding:9px 10px;gap:4px 8px}' +
+            '.db-recur-row--expanded{border-radius:var(--ed-radius-block);border-bottom:1px solid var(--cards-border-color);margin-bottom:6px}' +
+            '.db-recur-name{flex:1 1 calc(100% - 80px);white-space:normal;display:-webkit-box;' +
+            '-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
+            '.db-recur-summary{margin-left:auto;line-height:1.35;padding-top:1px}' +
+            '.db-recur-row .db-task-source-wrap{flex:0 0 100%;min-width:0;max-width:none;justify-content:flex-start;' +
+            'border-left:none;padding-left:0;margin-left:0}' +
+            '.db-recur-edit--inline{display:none}' +
+            '.db-recur-edit--sheet{display:block;position:fixed;bottom:0;left:0;right:0;' +
+            'border-radius:16px 16px 0 0;border:none;border-top:1px solid var(--sidebar-border-color);' +
+            'background:var(--cards-bg);padding:20px;z-index:200;box-shadow:var(--color-shadow-hover);margin:0;' +
+            'max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
+            '.db-recur-pills,.db-recur-actions{flex-wrap:wrap}' +
+            '.db-recur-select{max-width:100%;margin-bottom:8px}' +
+            '.db-recur-remove{margin-left:0}}' +
             // [RECURRING-END]
             '.db-task--ignored{opacity:.35}' +
             '.db-icon-hover{display:none}' +
@@ -392,12 +405,12 @@ class TodayDashboard {
             '.db-task-sheet{display:none}' +
             '@media(max-width:600px){' +
             '.db-task-inline{display:none}' +
-            '.db-sheet-overlay{display:block;position:fixed;inset:0;background:var(--ed-overlay-bg,var(--cmdpal-backdrop-bg,var(--cards-hover-bg)));z-index:199}' +
-            '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--input-bg-color);' +
+            '.db-sheet-overlay{display:block;position:fixed;inset:0;background:transparent;z-index:199}' +
+            '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--cards-bg);' +
             'border-radius:16px 16px 0 0;z-index:200;border-top:1px solid var(--sidebar-border-color);' +
-            'box-shadow:var(--color-shadow-hover);max-height:78vh;overflow:auto}' +
+            'box-shadow:var(--color-shadow-hover);max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
             '.db-sheet-handle{width:36px;height:4px;background:var(--sidebar-border-color);' +
-            'border-radius:2px;margin:12px auto 8px}' +
+            'border-radius:2px;margin:10px auto 12px}' +
             '.db-sheet-header{padding:0 20px 14px;border-bottom:1px solid var(--sidebar-border-color)}' +
             '.db-sheet-kicker{font-size:11px;font-weight:600;letter-spacing:0;text-transform:uppercase;opacity:.35;margin-bottom:4px}' +
             '.db-sheet-name{font-size:15px;font-weight:600;line-height:1.35;' +
@@ -411,7 +424,7 @@ class TodayDashboard {
             '.db-sheet-slot--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent}' +
             '.db-sheet-slot-label{font-size:12px;font-weight:500;text-align:center;line-height:1.3}' +
             '.db-sheet-slot-time{font-size:11px;opacity:.5;margin-top:3px}' +
-            '.db-sheet-footer{display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 12px 28px;' +
+            '.db-sheet-footer{display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 12px 24px;' +
             'border-top:1px solid var(--sidebar-border-color)}' +
             '.db-sheet-remove{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;font-size:13px;' +
             'color:var(--ed-gray-text);padding:10px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s,color .1s}' +
@@ -434,6 +447,8 @@ class TodayDashboard {
             '.db-wipe-cancel-btn:hover{opacity:.8}' +
             '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}' +
             '.empty-msg-panel{padding: 20px 0px 20px 0px !important}'
+            + '@keyframes db-sheet-rise{from{transform:translateY(14px);opacity:.92}to{transform:translateY(0);opacity:1}}'
+            + '@media(prefers-reduced-motion:reduce){.db-task-sheet,.db-recur-edit--sheet{animation:none}}'
         );
 
         this.plugin.ui.addCommandPaletteCommand({
@@ -1039,6 +1054,15 @@ class TodayDashboard {
             freq,
             tasks: sortByDay(recurringTasks.filter(t => t.props?.['db-recurring-freq'] === freq)),
         })).filter(g => g.tasks.length > 0);
+        const expandedTask = this._expandedRecurring
+        ? recurringTasks.find(t => t.guid === this._expandedRecurring)
+        : null;
+        const expandedDraft = expandedTask
+        ? (this._recurringDraft || {
+            freq: expandedTask.props?.['db-recurring-freq'] || 'daily',
+            day:  expandedTask.props?.['db-recurring-day'] || null,
+        })
+        : null;
 
         const sections = grouped.length
         ? grouped.map(g => `
@@ -1052,6 +1076,7 @@ class TodayDashboard {
         : `<div class="db-empty">No recurring tasks — use the repeat button on any task to set a frequency</div>`;
 
         return `<div class="db-recur-overlay"${this._expandedRecurring ? '' : ' hidden'} data-action="cancel-recurring"></div>
+        ${expandedTask ? this._recurringEditPanel(expandedTask.guid, expandedDraft.freq, expandedDraft.day, 'sheet') : ''}
         <div class="db-header">
         <div class="db-header-left">
         ${this._menuHTML('Recurring tasks')}
@@ -1069,7 +1094,7 @@ class TodayDashboard {
         const text = this._getTaskTextHTML(task);
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
-        ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
         const freq = task.props?.['db-recurring-freq'];
         const day  = task.props?.['db-recurring-day'] || null;
@@ -1085,7 +1110,7 @@ class TodayDashboard {
         </div>`;
         if (isExpanded) {
             const draft = this._recurringDraft || { freq, day };
-            return row + this._recurringEditPanel(task.guid, draft.freq, draft.day);
+            return row + this._recurringEditPanel(task.guid, draft.freq, draft.day, 'inline');
         }
         return row;
     }
@@ -1108,7 +1133,7 @@ class TodayDashboard {
         return null;
     }
 
-    _recurringEditPanel(guid, draftFreq, draftDay) {
+    _recurringEditPanel(guid, draftFreq, draftDay, variant = 'inline') {
         const FREQS = ['daily', 'weekly', 'monthly', 'yearly'];
         const FREQ_LABEL = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' };
         const pills = FREQS.map(f =>
@@ -1135,13 +1160,13 @@ class TodayDashboard {
             .map(d => `<option value="${d}"${dd === d ? ' selected' : ''}>${d}</option>`).join('');
             dateArea = `<select class="db-recur-select db-recur-year-month" data-guid="${guid}">${!mm ? '<option value="" disabled selected>Month</option>' : ''}${mOpts}</select><select class="db-recur-select db-recur-year-day" data-guid="${guid}">${!dd ? '<option value="" disabled selected>Day</option>' : ''}${dOpts}</select>`;
         }
-        return `<div class="db-recur-edit">
+        return `<div class="db-recur-edit db-recur-edit--${variant}">
         <div class="db-recur-pills">${pills}</div>
         ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
         <div class="db-recur-actions">
         <button class="db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
         <button class="db-recur-cancel" data-action="cancel-recurring">Cancel</button>
-        <button class="db-recur-delete" data-action="remove-recurring" data-guid="${guid}" title="Remove recurring"><i class="ti ti-trash"></i></button>
+        <button class="db-recur-remove" data-action="remove-recurring" data-guid="${guid}" title="Stop recurring"><i class="ti ti-repeat-off"></i><span>Stop</span></button>
         </div>
         </div>`;
     }
