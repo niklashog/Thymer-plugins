@@ -1,10 +1,10 @@
 const SLOTS = [
     { time: '08:00', label: 'Early morning' },
 { time: '10:00', label: 'Morning' },
-{ time: '12:00', label: 'Lunchtime' },
+{ time: '12:00', label: 'Refuel' },
 { time: '14:00', label: 'Early afternoon' },
 { time: '16:00', label: 'Afternoon' },
-{ time: '18:00', label: 'Sundown' },
+{ time: '18:00', label: 'Unwind' },
 { time: '20:00', label: 'Early evening' },
 { time: '22:00', label: 'Evening' },
 { time: '00:00', label: 'Good night' },
@@ -173,7 +173,7 @@ class TodayDashboard {
             'border-radius:3px;padding:1px 4px;font-size:12px;line-height:1.35;white-space:nowrap}' +
             '.db-date-chip--overdue{color:var(--ed-datetime-color);background:var(--ed-datetime-bg)}' +
             '.db-task-source{font-size:12px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
-            '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;gap:2px;padding-right:0px;max-width:180px}' +
+            '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;gap:2px;padding-right:0px;max-width:180px}' +
             '.db-task-source--link{font-size:12px;color:var(--ed-link-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-task-source-wrap:hover .db-task-source--link{color:var(--ed-link-hover-color)}' +
@@ -370,14 +370,19 @@ class TodayDashboard {
             '.db-block{margin-bottom:8px}' +
             '.db-block-body{padding:0 0 8px}' +
             '.db-task{flex-wrap:wrap;align-items:flex-start;row-gap:2px;padding:8px 10px}' +
-            '.db-task-r1{flex:0 0 100%;padding-left:0}' +
+            '.db-block-body .db-task{padding:12px 10px;min-height:58px}' +
+            '.db-block-body .db-done{align-self:flex-start;margin-top:2px!important}' +
+            '.db-block-body .db-task.state-done>.db-task-r1{flex:1 1 0;min-width:0}' +
+            '.db-task-r1{flex:0 0 100%;align-items:flex-start;padding-left:0}' +
+            '.db-task-r1>.db-done{align-self:flex-start;margin-top:2px!important}' +
             '.db-task-r2{flex:0 0 100%;margin-left:0;padding-left:32px;justify-content:space-between;min-height:18px}' +
             '.db-task-body{align-items:baseline;flex-wrap:wrap;row-gap:1px;column-gap:6px}' +
             '.db-task-text,.db-task-text--sel{flex:1;min-width:0;white-space:normal;display:-webkit-box;' +
             '-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
+            '.db-date-chip{margin-left:auto}' +
             '.db-task-r2-actions{margin-left:auto;flex-shrink:0;min-width:0}' +
             '.db-task-meta{flex:1;min-width:0}' +
-            '.db-task-source-wrap{flex:0 0 100%;min-width:0;max-width:none;margin-top:-1px}' +
+            '.db-task-source-wrap{flex:0 0 100%;min-width:0;max-width:none;margin-top:4px}' +
             '.db-task-source--link{overflow:hidden;text-overflow:ellipsis;max-width:24ch;font-size:12px;opacity:.75}' +
             '.db-src-icon{padding:1px 2px}' +
             '.db-block .db-unpin{display:none}' +
@@ -641,7 +646,8 @@ class TodayDashboard {
             const isPinned    = todaySet.has(l.guid);
             const isScheduled = scheduledGuids.has(l.guid);
             const isDated     = datedGuids.has(l.guid);
-            const hasPinProp  = !!l.props?.['db-pinned'];
+            const pinDate     = l.props?.['db-pinned'] || '';
+            const hasActivePin = pinDate >= today;
             // [RECURRING-START] don't show recurring tasks already completed or rescheduled away from today
             const recurDone   = l.props?.['db-recurring-done-dates'];
             const isRecurringCompleted = !!(
@@ -656,7 +662,7 @@ class TodayDashboard {
             if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                                                         todayPinned.push(l);
             if ((isScheduled || isRecurringToday) && !isPinned && !isOverdue && !isRecurringCompleted && !isRescheduledAway)        scheduled.push(l);
             if (!isDated && !isPinned && !isScheduled && !isOverdue)    inbox.push(l);
-            if (!isDated && !hasPinProp && !isScheduled && !isOverdue)  planInbox.push(l);
+            if (!isDated && !hasActivePin && !isScheduled && !isOverdue)  planInbox.push(l);
         }
         planOverdue.sort((a, b) => {
             const da = this._taskDueDateKey(a);
@@ -670,7 +676,8 @@ class TodayDashboard {
         const todayD = this._todayD().replace(/-/g, '');
         const upcomingCutoff = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10).replace(/-/g,''); })();
         const upcomingTasks = allTodos.filter(l => {
-            if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || l.props?.['db-pinned']) return false;
+            const pinDate = l.props?.['db-pinned'] || '';
+            if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || pinDate >= today) return false;
             const seg = (l.segments || []).find(s => s.type === 'datetime');
             const d = seg?.text?.d;
             return d && d > todayD && d <= upcomingCutoff;
@@ -831,7 +838,7 @@ class TodayDashboard {
             </div>` : ''}
             <div class="db-section">
             <div class="db-section-header">
-            <span class="db-section-title">Day Rhythm</span>
+            <span class="db-section-title">Daily Rhythm</span>
             </div>
             ${SLOTS.filter(s => !this._settings.hideEmptyBlocks || (assignedByTime[s.time] || []).length > 0).map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
             </div>
@@ -1243,7 +1250,7 @@ class TodayDashboard {
         const source     = this._escape(task.record?.getName() || '');
         // WIP: open-in-panel button goes here — blocked on Thymer SDK (createPanel + navigateTo doesn't open native record view)
         const sourceBody = source
-        ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
         const bodyMeta = dateChip + sourceBody;
         const isPast   = this._viewDateStr() < this._todayD();
