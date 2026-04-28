@@ -6,9 +6,9 @@ A workspace-wide task manager that aggregates tasks from across your entire Thym
 
 ## Screenshots
 
-| Plan | Focus | History | Future |
+| Plan desktop | Focus desktop | Plan mobile | Focus mobile |
 |---|---|---|---|
-| ![Plan mode](images/newplanview.png) | ![Focus mode](images/newfocusview.png) | ![History](images/newwithhistory.png) | ![Future](images/newplanyourtomorrow.png) |
+| ![Plan desktop](images/newplan.png) | ![Focus desktop](images/newfocus.png) | ![Plan mobile](images/newplanmobile.png) | ![Focus mobile](images/newfocusmobile.png) |
 
 ## Modes
 
