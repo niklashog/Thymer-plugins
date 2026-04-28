@@ -142,36 +142,42 @@ class TodayDashboard {
     load() {
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 0 32px;}' +
-            '.db-section{margin-bottom:32px}' +
-            '.db-section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;' +
-            'padding-bottom:8px;border-bottom:1px solid var(--sidebar-border-color)}' +
+            '.db-section{margin-bottom:28px}' +
+            '.db-section-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;' +
+            'padding-bottom:6px;border-bottom:1px solid var(--sidebar-border-color)}' +
             '.db-section-title{font-size:13px;font-weight:600;opacity:.55}' +
             '.db-section--overdue .db-section-title{color:var(--ed-error-color);opacity:1}' +
             '.db-section--overdue .db-section-header{border-color:color-mix(in srgb,var(--ed-error-color) 30%,transparent)}' +
             '.db-count{font-size:11px;font-weight:600;opacity:.4}' +
-            '.db-task{display:flex;align-items:center;gap:8px;padding:7px 10px;' +
-            'border-radius:var(--ed-radius-block);transition:background .1s,box-shadow .1s;' +
-            'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'box-shadow:var(--color-shadow-cards);margin-bottom:4px}' +
-            '.db-task:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
-            '.db-task--selected{box-shadow:0 0 0 2px var(--ed-link-color),var(--color-shadow-cards)}' +
+            '.db-task{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:36px;' +
+            'box-sizing:border-box;border-radius:var(--ed-radius-normal);transition:background .1s,border-color .1s;' +
+            'background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
+            'box-shadow:none;margin-bottom:3px}' +
+            '.db-task:hover{background:var(--cards-hover-bg);box-shadow:none}' +
+            '.db-task:focus-visible,.db-inline-slot:focus-visible,.db-sheet-slot:focus-visible,' +
+            '.db-day-nav-btn:focus-visible,.db-day-nav-label:focus-visible,.db-mode-toggle:focus-visible,' +
+            '.db-hamburger:focus-visible,.db-pin-icon:focus-visible,.db-recurring-btn:focus-visible,' +
+            '.db-src-icon:focus-visible,.db-ignore:focus-visible,.db-unignore:focus-visible{' +
+            'outline:1px solid var(--ed-link-color);outline-offset:2px}' +
+            '.db-task--selected{border-color:var(--ed-link-color)}' +
             '.db-done{flex-shrink:0;cursor:pointer;align-self:center;margin-top:0!important;margin-right:0!important}' +
             '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
             '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
-            '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;cursor:pointer}' +
-            '.db-task-text{min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-            '.db-task-text--sel{min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;' +
+            '.db-task.state-done .db-date-chip{opacity:.35}' +
+            '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;cursor:pointer;line-height:1.35}' +
+            '.db-task-text{min-width:0;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-task-text--sel{min-width:0;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;' +
             'text-overflow:ellipsis;cursor:pointer}' +
             '.db-ref-chip{display:inline-flex;align-items:center;gap:2px;color:var(--ed-link-color);cursor:pointer;' +
             'border-radius:3px;padding:0 2px;transition:opacity .15s;white-space:nowrap}' +
             '.db-ref-chip:hover{opacity:.7}' +
             '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
             '.db-date-chip{flex-shrink:0;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
-            'border-radius:3px;padding:1px 4px;font-size:13px;white-space:nowrap}' +
-            '.db-date-chip--overdue{color:var(--ed-error-color);background:transparent}' +
-            '.db-task-source{font-size:11px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
-            '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;gap:2px;padding-right:4px}' +
-            '.db-task-source--link{font-size:11px;color:var(--ed-link-color);white-space:nowrap;' +
+            'border-radius:3px;padding:1px 4px;font-size:12px;line-height:1.35;white-space:nowrap}' +
+            '.db-date-chip--overdue{color:var(--ed-datetime-color);background:var(--ed-datetime-bg)}' +
+            '.db-task-source{font-size:12px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
+            '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;gap:2px;padding-right:0px;max-width:180px}' +
+            '.db-task-source--link{font-size:12px;color:var(--ed-link-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-task-source-wrap:hover .db-task-source--link{color:var(--ed-link-hover-color)}' +
             '.db-pin,.db-unpin,.db-nav,.db-ignore,.db-unignore,.db-recurring-btn{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
@@ -277,6 +283,19 @@ class TodayDashboard {
             'opacity:.5;transition:all .1s;white-space:nowrap}' +
             '.db-setting-toggle:hover{opacity:.9}' +
             '.db-setting-toggle--on{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text);border-color:transparent;opacity:1}' +
+            '.db-settings-note{background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
+            'border-radius:var(--ed-radius-block);padding:12px 14px;margin-bottom:4px}' +
+            '.db-settings-note-title{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;margin-bottom:4px}' +
+            '.db-settings-badge{font-size:11px;font-weight:600;color:var(--ed-link-color);opacity:.75}' +
+            '.db-settings-note-copy{font-size:12px;line-height:1.45;opacity:.55;margin:0 0 12px}' +
+            '.db-keybind-list{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:6px 12px;font-size:12px}' +
+            '.db-keybind-list dt{opacity:.9}' +
+            '.db-keybind-list dd{margin:0;opacity:.55}' +
+            '.db-keybind-break{padding-top:10px;margin-top:4px;border-top:1px solid var(--ed-container-border-color)}' +
+            '.db-keybind-break + dd{padding-top:10px;margin-top:4px;border-top:1px solid var(--ed-container-border-color)}' +
+            '.db-kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;padding:1px 5px;' +
+            'border:1px solid var(--ed-container-border-color);border-radius:4px;background:var(--input-bg-color);' +
+            'font-size:11px;font-weight:600;color:var(--ed-text-color);opacity:.8}' +
             '.db-src-icon{display:inline-flex;align-items:center;justify-content:center}' +
             '.db-empty{font-size:13px;opacity:.3;padding:12px 6px}' +
             '.db-loading{padding:28px;opacity:.35;font-size:14px}' +
@@ -290,87 +309,104 @@ class TodayDashboard {
             'font-size:14px;padding:2px 0;transition:color .15s}' +
             '.db-mode-toggle:hover{color:var(--ed-link-hover-color)}' +
             '' +
-            '.db-block{border-radius:var(--ed-radius-block);margin-bottom:14px;' +
-            'background:var(--cards-bg);border:1px solid var(--cards-border-color);box-shadow:var(--color-shadow-cards)}' +
-            '.db-block-time{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 4px}' +
-            '.db-block-label{font-size:13px;font-weight:500;opacity:.5}' +
-            '.db-block-clock{font-size:12px;opacity:.35;font-variant-numeric:tabular-nums}' +
-            '.db-block-body{padding:6px 8px 8px}' +
+            '.db-block{border-radius:var(--ed-radius-block);margin-bottom:12px;' +
+            'background:var(--cards-bg);border:1px solid var(--ed-container-border-color);box-shadow:none}' +
+            '.db-block-time{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px}' +
+            '.db-block-label{font-size:13px;font-weight:500;opacity:.48}' +
+            '.db-block-clock{font-size:12px;opacity:.32;font-variant-numeric:tabular-nums}' +
+            '.db-block-body{padding:2px 8px 8px}' +
             '.db-block-body .db-task{background:none;border:none;box-shadow:none;border-radius:0;margin-bottom:0;' +
-            'border-top:1px solid var(--ed-container-border-color);padding:8px 4px}' +
-            '.db-block-body .db-task:hover{background:var(--cards-hover-bg);box-shadow:none}' +
+            'border-top:1px solid var(--ed-container-border-color);padding:7px 8px}' +
+            '.db-block-body .db-task:hover{background:var(--ed-button-bg-hover);box-shadow:none}' +
             '.db-block-body .db-task--open{border-left:1px solid var(--ed-container-border-color);' +
             'border-right:1px solid var(--ed-container-border-color);border-bottom:none;' +
             'border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0}' +
-            '.db-block-body .db-task-inline{border:1px solid var(--ed-container-border-color);border-top:none;' +
-            'border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
-            'background:var(--cards-bg);box-shadow:none;margin:0}' +
+            '.db-block-body .db-task-inline{background:var(--input-bg-color);border:1px solid var(--ed-container-border-color);' +
+            'border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
+            'box-shadow:none;margin:-1px 0 8px;box-sizing:border-box}' +
             '.db-day-nav{display:flex;align-items:center;gap:8px}' +
             '.db-day-nav-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);font-size:16px;' +
             'padding:2px 6px;transition:color .15s;border-radius:4px}' +
             '.db-day-nav-btn:hover:not(:disabled){color:var(--ed-link-hover-color)}' +
             '.db-day-nav-btn:disabled{opacity:.2;cursor:default}' +
-            '.db-day-nav-label{font-size:15px;font-weight:500;opacity:.6;min-width:88px;text-align:center}' +
+            '.db-day-nav-label{background:none;border:none;color:inherit;cursor:pointer;font-size:15px;font-weight:500;' +
+            'opacity:.6;min-width:88px;text-align:center;padding:2px 0;border-radius:4px}' +
+            '.db-day-nav-label:not([data-action]){cursor:default}' +
             '.db-day-nav-label[data-action="go-today"]{cursor:pointer;opacity:1;color:var(--ed-link-color);transition:color .15s}' +
             '.db-day-nav-label[data-action="go-today"]:hover{color:var(--ed-link-hover-color)}' +
+            '.db-task[data-action="select-task"],.db-task[data-action="pin"]{cursor:pointer}' +
+            '.db-task-r1{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding-left:2px}' +
+            '.db-task-r2{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto;min-width:0}' +
+            '.db-task-meta{display:flex;align-items:center;gap:4px;min-width:0}' +
+            '.db-task-r2-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}' +
+            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task{margin-bottom:6px}' +
             '@media(max-width:600px){' +
             '.db-root{padding:12px 0;max-width:100%}' +
             '.db-header{padding:10px 0 16px}' +
             '.db-block{margin-bottom:8px}' +
-            '.db-block-body{padding:0 6px 8px}' +
-            '.db-task-text,.db-task-text--sel{white-space:normal;overflow:visible;text-overflow:unset}' +
-            '.db-task-source{display:none}' +
-            '.db-task-source--link{max-width:10ch;overflow:hidden;text-overflow:ellipsis}' +
-            '.db-task-source-wrap{padding-right:0;gap:0}' +
-            '.db-src-icon{display:inline-flex;align-items:center;justify-content:center;opacity:.3;padding:1px 2px}' +
-            '.db-src-icon:hover{opacity:.7}' +
+            '.db-block-body{padding:0 0 8px}' +
+            '.db-task{flex-wrap:wrap;align-items:flex-start;row-gap:2px;padding:8px 10px}' +
+            '.db-task-r1{flex:0 0 100%;padding-left:0}' +
+            '.db-task-r2{flex:0 0 100%;margin-left:0;padding-left:32px;justify-content:space-between;min-height:18px}' +
+            '.db-task-body{align-items:baseline;flex-wrap:wrap;row-gap:1px;column-gap:6px}' +
+            '.db-task-text,.db-task-text--sel{flex:1;min-width:0;white-space:normal;display:-webkit-box;' +
+            '-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
+            '.db-task-r2-actions{margin-left:auto;flex-shrink:0;min-width:0}' +
+            '.db-task-meta{flex:1;min-width:0}' +
+            '.db-task-source-wrap{flex:0 0 100%;min-width:0;max-width:none;margin-top:-1px}' +
+            '.db-task-source--link{overflow:hidden;text-overflow:ellipsis;max-width:24ch;font-size:12px;opacity:.75}' +
+            '.db-src-icon{padding:1px 2px}' +
             '.db-block .db-unpin{display:none}' +
             '}' +
-            '.db-task--open{border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;margin-bottom:0!important}' +
-            '.db-task-inline{background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
+            '.db-task--open{background:var(--cards-hover-bg);border-color:var(--ed-container-border-color);' +
+            'border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;margin-bottom:0!important}' +
+            '.db-task-inline{background:var(--input-bg-color);border:1px solid var(--ed-container-border-color);' +
             'border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
-            'padding:12px 14px 14px;margin:0 0 4px;box-shadow:var(--color-shadow-cards)}' +
-            '.db-inline-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}' +
-            '.db-inline-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-            'padding:8px 4px;background:var(--cards-bg);border:1px solid var(--sidebar-border-color);' +
-            'border-radius:var(--ed-radius-normal);cursor:pointer;color:inherit;min-height:44px;' +
-            'transition:background .1s,box-shadow .1s;box-sizing:border-box}' +
-            '.db-inline-slot:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
+            'padding:6px;margin:-1px 0 8px;box-shadow:none;box-sizing:border-box}' +
+            '.db-inline-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}' +
+            '.db-inline-slot{display:flex;align-items:center;justify-content:space-between;gap:6px;' +
+            'padding:7px 9px;background:transparent;border:1px solid transparent;' +
+            'border-radius:var(--ed-radius-normal);cursor:pointer;color:inherit;min-height:34px;' +
+            'transition:background .1s,border-color .1s;box-sizing:border-box}' +
+            '.db-inline-slot:hover{background:var(--ed-button-bg-hover);border-color:var(--ed-button-border)}' +
             '.db-inline-slot--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent}' +
-            '.db-inline-slot-label{font-size:13px;font-weight:500;text-align:center;line-height:1.3}' +
-            '.db-inline-slot-time{font-size:11px;opacity:.5;margin-top:2px}' +
+            '.db-inline-slot-label{font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-inline-slot-time{font-size:11px;opacity:.5;white-space:nowrap;font-variant-numeric:tabular-nums}' +
             '.db-pin-icon{display:inline-flex;align-items:center;justify-content:center;' +
             'background:none;border:none;cursor:pointer;color:var(--ed-gray-text);' +
             'opacity:.7;font-size:14px;padding:0 4px;border-radius:var(--ed-radius-normal);' +
             'transition:opacity .15s;flex-shrink:0;line-height:1}' +
-            '.db-pin-icon:hover{opacity:.25}' +
+            '.db-pin-icon:hover{opacity:1;color:var(--ed-link-color)}' +
             '.db-sheet-overlay{display:none}' +
             '.db-task-sheet{display:none}' +
             '@media(max-width:600px){' +
             '.db-task-inline{display:none}' +
             '.db-sheet-overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}' +
-            '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--cards-bg);' +
+            '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--input-bg-color);' +
             'border-radius:16px 16px 0 0;z-index:200;border-top:1px solid var(--sidebar-border-color);' +
-            'box-shadow:0 -4px 24px rgba(0,0,0,.18)}' +
+            'box-shadow:var(--color-shadow-hover);max-height:78vh;overflow:auto}' +
             '.db-sheet-handle{width:36px;height:4px;background:var(--sidebar-border-color);' +
-            'border-radius:2px;margin:12px auto 4px}' +
-            '.db-sheet-name{font-size:14px;font-weight:600;padding:10px 20px 12px;' +
-            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ed-link-color);' +
-            'border-bottom:1px solid var(--sidebar-border-color)}' +
+            'border-radius:2px;margin:12px auto 8px}' +
+            '.db-sheet-header{padding:0 20px 14px;border-bottom:1px solid var(--sidebar-border-color)}' +
+            '.db-sheet-kicker{font-size:11px;font-weight:600;letter-spacing:0;text-transform:uppercase;opacity:.35;margin-bottom:4px}' +
+            '.db-sheet-name{font-size:15px;font-weight:600;line-height:1.35;' +
+            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ed-text-color)}' +
             '.db-sheet-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 20px}' +
             '.db-sheet-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-            'padding:10px 6px;background:var(--cards-bg);border:1px solid var(--sidebar-border-color);' +
-            'border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-cards);' +
-            'cursor:pointer;color:inherit;min-height:52px;transition:background .1s,box-shadow .1s;box-sizing:border-box}' +
-            '.db-sheet-slot:active{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
+            'padding:10px 6px;background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
+            'border-radius:var(--ed-radius-block);box-shadow:none;' +
+            'cursor:pointer;color:inherit;min-height:52px;transition:background .1s,border-color .1s;box-sizing:border-box}' +
+            '.db-sheet-slot:active{background:var(--cards-hover-bg);border-color:var(--input-border-color)}' +
             '.db-sheet-slot--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent}' +
             '.db-sheet-slot-label{font-size:12px;font-weight:500;text-align:center;line-height:1.3}' +
             '.db-sheet-slot-time{font-size:11px;opacity:.5;margin-top:3px}' +
             '.db-sheet-footer{display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 12px 28px;' +
             'border-top:1px solid var(--sidebar-border-color)}' +
-            '.db-sheet-remove{background:none;border:none;cursor:pointer;font-size:13px;' +
-            'color:var(--ed-error-color);padding:10px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
+            '.db-sheet-remove{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;font-size:13px;' +
+            'color:var(--ed-gray-text);padding:10px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s,color .1s}' +
+            '.db-sheet-remove:hover{color:var(--ed-link-color)}' +
             '.db-sheet-remove:active{opacity:.6}' +
+            '.db-pin-icon{display:none}' +
             '}' +
             '.db-wipe-btn{width:100%;text-align:left;padding:10px 14px;background:none;border:none;cursor:pointer;' +
             'font-size:14px;color:var(--ed-error-color);opacity:.7;border-radius:var(--ed-radius-block);transition:opacity .1s,background .1s}' +
@@ -385,7 +421,8 @@ class TodayDashboard {
             '.db-wipe-cancel-btn{background:none;border:none;cursor:pointer;font-size:13px;color:inherit;' +
             'opacity:.45;padding:6px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
             '.db-wipe-cancel-btn:hover{opacity:.8}' +
-            '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}'
+            '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}' +
+            '.empty-msg-panel{padding: 20px 0px 20px 0px !important}'
         );
 
         this.plugin.ui.addCommandPaletteCommand({
@@ -595,6 +632,14 @@ class TodayDashboard {
             if (!isDated && !isPinned && !isScheduled && !isOverdue)    inbox.push(l);
             if (!isDated && !hasPinProp && !isScheduled && !isOverdue)  planInbox.push(l);
         }
+        planOverdue.sort((a, b) => {
+            const da = this._taskDueDateKey(a);
+            const db = this._taskDueDateKey(b);
+            if (da && db && da !== db) return da.localeCompare(db);
+            if (da && !db) return -1;
+            if (!da && db) return 1;
+            return 0;
+        });
 
         const todayD = this._todayD().replace(/-/g, '');
         const upcomingCutoff = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10).replace(/-/g,''); })();
@@ -670,7 +715,7 @@ class TodayDashboard {
     _menuHTML(crumb) {
         return `<div class="db-menu-wrap">
             <div class="db-menu-trigger">
-                <button class="db-hamburger"><i class="ti ti-menu-2"></i></button>
+                <button class="db-hamburger" data-nav-item="menu" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
                 <span class="db-header-crumb">${crumb}</span>
                 <span class="db-header-sep">/</span>
             </div>
@@ -729,28 +774,28 @@ class TodayDashboard {
             sheetHTML = this._buildTaskSheetHTML(this._taskSheet, sheetTask, currentSlot, isPinned);
         }
 
-        return sheetHTML + `<div class="db-header">
+        return sheetHTML + `<div class="db-header" data-nav-region="navbar" role="navigation" aria-label="Daily Focus navigation">
                 <div class="db-header-left">
                     ${this._menuHTML('Focus')}
                 </div>
                 <div class="db-day-nav">
-                    <button class="db-day-nav-btn" data-action="prev-day">←</button>
-                    <span class="db-day-nav-label"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${this._viewDateLabel()}</span>
-                    <button class="db-day-nav-btn" data-action="next-day">→</button>
+                    <button class="db-day-nav-btn" data-nav-item="prev-day" data-action="prev-day" aria-label="Previous day">←</button>
+                    <button class="db-day-nav-label" data-nav-item="today"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${this._viewDateLabel()}</button>
+                    <button class="db-day-nav-btn" data-nav-item="next-day" data-action="next-day" aria-label="Next day">→</button>
                 </div>
                 <div class="db-header-right">
-                    <button class="db-mode-toggle" data-action="set-mode" data-mode="plan">Plan →</button>
+                    <button class="db-mode-toggle" data-nav-item="mode" data-action="set-mode" data-mode="plan">Plan →</button>
                 </div>
             </div>
-            <div class="db-root">
+            <div class="db-root" data-nav-region="tasks">
             ${(unassigned.length || unassignedDone.length || recurringDoneGhosts.length || recurringMissedGhosts.length) ? `
             <div class="db-section db-section--today">
                 <div class="db-section-header">
-                    <span class="db-section-title">Unscheduled</span>
+                    <span class="db-section-title">Anytime Today</span>
                     ${unassigned.length ? `<span class="db-count">${unassigned.length}</span>` : ''}
                 </div>
                 <div class="db-block">
-                    <div class="db-block-time"><span class="db-block-label">When time is right</span></div>
+                    <div class="db-block-time"><span class="db-block-label">Open</span></div>
                     <div class="db-block-body">
                         ${unassigned.map(t => this._taskRow(t, sectionFor(t.guid))).join('')}
                         ${unassignedDone.map(t => this._taskRow(t, 'done')).join('')}
@@ -761,7 +806,7 @@ class TodayDashboard {
             </div>` : ''}
             <div class="db-section">
                 <div class="db-section-header">
-                    <span class="db-section-title">Day Plan</span>
+                    <span class="db-section-title">Day Rhythm</span>
                 </div>
                 ${SLOTS.filter(s => !this._settings.hideEmptyBlocks || (assignedByTime[s.time] || []).length > 0).map(s => this._blockHTML(s.time, s.label, assignedByTime[s.time] || [], doneGuids)).join('')}
             </div>
@@ -771,7 +816,7 @@ class TodayDashboard {
     _buildTaskInlinePanel(guid, currentSlot) {
         const slotsHTML = SLOTS.map(s => {
             const active = currentSlot === s.time;
-            return `<button class="db-inline-slot${active ? ' db-inline-slot--active' : ''}" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
+            return `<button class="db-inline-slot${active ? ' db-inline-slot--active' : ''}" data-nav-timeblock="true" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
                 <span class="db-inline-slot-label">${s.label}</span>
                 <span class="db-inline-slot-time">→ ${s.time}</span>
             </button>`;
@@ -785,18 +830,21 @@ class TodayDashboard {
         const text = task ? this._escape(this._getText(task)) : '';
         const slotsHTML = SLOTS.map(s => {
             const active = currentSlot === s.time;
-            return `<button class="db-sheet-slot${active ? ' db-sheet-slot--active' : ''}" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
+            return `<button class="db-sheet-slot${active ? ' db-sheet-slot--active' : ''}" data-nav-timeblock="true" data-action="sheet-assign-slot" data-guid="${guid}" data-time="${s.time}">
                 <span class="db-sheet-slot-label">${s.label}</span>
                 <span class="db-sheet-slot-time">→ ${s.time}</span>
             </button>`;
         }).join('');
         const removeBtn = isPinned
-            ? `<button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}">Remove from today</button>`
+            ? `<button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}"><i class="ti ti-pin"></i><span>Unpin</span></button>`
             : '';
         return `<div class="db-sheet-overlay" data-action="close-task-sheet"></div>
             <div class="db-task-sheet">
                 <div class="db-sheet-handle"></div>
-                <div class="db-sheet-name">Schedule ${text}</div>
+                <div class="db-sheet-header">
+                    <div class="db-sheet-kicker">Schedule</div>
+                    <div class="db-sheet-name">${text}</div>
+                </div>
                 <div class="db-sheet-slots">${slotsHTML}</div>
                 ${removeBtn ? `<div class="db-sheet-footer">${removeBtn}</div>` : ''}
             </div>`;
@@ -830,20 +878,20 @@ class TodayDashboard {
             const currentSlot = timeBlocks[this._taskSheet] || null;
             sheetHTML = this._buildTaskSheetHTML(this._taskSheet, sheetTask, currentSlot, true);
         }
-        return sheetHTML + `<div class="db-header">
+        return sheetHTML + `<div class="db-header" data-nav-region="navbar" role="navigation" aria-label="Daily Focus navigation">
                 <div class="db-header-left">
                     ${this._menuHTML('Plan')}
                 </div>
                 <div class="db-day-nav">
-                    <button class="db-day-nav-btn" data-action="prev-day" ${this._viewDateStr() <= this._todayD() ? 'disabled' : ''}>←</button>
-                    <span class="db-day-nav-label"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${dateLabel}</span>
-                    <button class="db-day-nav-btn" data-action="next-day">→</button>
+                    <button class="db-day-nav-btn" data-nav-item="prev-day" data-action="prev-day" aria-label="Previous day" ${this._viewDateStr() <= this._todayD() ? 'disabled' : ''}>←</button>
+                    <button class="db-day-nav-label" data-nav-item="today"${this._viewDateStr() !== this._todayD() ? ' data-action="go-today" title="Go to today"' : ''}>${dateLabel}</button>
+                    <button class="db-day-nav-btn" data-nav-item="next-day" data-action="next-day" aria-label="Next day">→</button>
                 </div>
                 <div class="db-header-right">
-                    <button class="db-mode-toggle" data-action="set-mode" data-mode="focus">← Focus</button>
+                    <button class="db-mode-toggle" data-nav-item="mode" data-action="set-mode" data-mode="focus">← Focus</button>
                 </div>
             </div>
-            <div class="db-root">
+            <div class="db-root" data-nav-region="tasks">
             <div class="db-search-wrap">
                 <input class="db-plan-search" type="text" placeholder="Search tasks…" value="${this._escape(this._planSearch)}">
                 <button class="db-search-clear" data-action="clear-search" aria-label="Clear search"${this._planSearch ? '' : ' hidden'}>×</button>
@@ -917,6 +965,37 @@ class TodayDashboard {
                 </div>
                 <div class="db-section">
                     <div class="db-section-header">
+                        <span class="db-section-title">Keyboard navigation</span>
+                    </div>
+                    <div class="db-settings-note">
+                        <div class="db-settings-note-title">
+                            <span>Planned</span>
+                            <span class="db-settings-badge">Not available yet</span>
+                        </div>
+                        <p class="db-settings-note-copy">Daily Focus is being structured for keyboard-first navigation. These bindings describe the planned interaction model.</p>
+                        <dl class="db-keybind-list">
+                            <dt><span class="db-kbd">Up</span> / <span class="db-kbd">Down</span></dt><dd>Move between tasks</dd>
+                            <dt><span class="db-kbd">Enter</span></dt><dd>Complete or reopen the focused task</dd>
+                            <dt><span class="db-kbd">Space</span></dt><dd>Open or close time block choices</dd>
+                            <dt><span class="db-kbd">Arrows</span></dt><dd>Move through time block choices</dd>
+                            <dt><span class="db-kbd">1</span>-<span class="db-kbd">9</span></dt><dd>Choose a time block directly</dd>
+                            <dt><span class="db-kbd">Tab</span> / <span class="db-kbd">Shift</span>+<span class="db-kbd">Tab</span></dt><dd>Move through task actions</dd>
+                            <dt><span class="db-kbd">Esc</span></dt><dd>Close choices or return to the task</dd>
+                            <dt class="db-keybind-break"><span class="db-kbd">Ctrl</span>+<span class="db-kbd">Up</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Up</span></dt><dd>Jump from tasks to the navbar, if available</dd>
+                            <dt><span class="db-kbd">Ctrl</span>+<span class="db-kbd">Down</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Down</span></dt><dd>Return to the active task or section, if available</dd>
+                            <dt>Navbar</dt><dd>Menu/view, previous day, current day/today, next day, Plan or Focus</dd>
+                            <dt><span class="db-kbd">Left</span> / <span class="db-kbd">Right</span></dt><dd>Move between navbar items</dd>
+                            <dt><span class="db-kbd">Enter</span></dt><dd>Activate the focused navbar item</dd>
+                            <dt><span class="db-kbd">Esc</span></dt><dd>Leave navbar focus and return to the task</dd>
+                            <dt><span class="db-kbd">[</span></dt><dd>Previous day</dd>
+                            <dt><span class="db-kbd">]</span></dt><dd>Next day</dd>
+                            <dt><span class="db-kbd">Alt</span>+<span class="db-kbd">Left</span> / <span class="db-kbd">Alt</span>+<span class="db-kbd">Right</span></dt><dd>Previous or next day, if available</dd>
+                            <dt><span class="db-kbd">F</span> / <span class="db-kbd">P</span> / <span class="db-kbd">T</span></dt><dd>Focus, Plan, Today</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="db-section">
+                    <div class="db-section-header">
                         <span class="db-section-title">Data</span>
                     </div>
                     ${this._wipeState === 'confirm' ? `
@@ -979,7 +1058,7 @@ class TodayDashboard {
         const text = this._getTaskTextHTML(task);
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
-            ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+            ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
             : '';
         const freq = task.props?.['db-recurring-freq'];
         const day  = task.props?.['db-recurring-day'] || null;
@@ -1062,6 +1141,11 @@ class TodayDashboard {
         return seg?.text || null;
     }
 
+    _taskDueDateKey(task) {
+        const d = this._getTaskDate(task)?.d;
+        return typeof d === 'string' ? d : '';
+    }
+
     _ignoreListTaskRow(task, isIgnored) {
         const text   = this._escape(this._getText(task));
         const source = this._escape(task.record?.getName() || '');
@@ -1069,8 +1153,8 @@ class TodayDashboard {
             <div class="db-task-body">
                 <span class="db-task-text">${text}</span>
             </div>
-            ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
-            <button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>
+            ${source ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>` : ''}
+            <button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-task-action="ignore" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>
         </div>`;
     }
 
@@ -1114,124 +1198,141 @@ class TodayDashboard {
         const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-blocked', billable:'state-dollar', discuss:'state-question', alert:'state-alert', starred:'state-starred' };
         const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
         const source     = this._escape(task.record?.getName() || '');
-        const sourceHTML = source
-            ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" title="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
-              // WIP: open-in-panel button goes here — blocked on Thymer SDK (createPanel + navigateTo doesn't open native record view)
+        // WIP: open-in-panel button goes here — blocked on Thymer SDK (createPanel + navigateTo doesn't open native record view)
+        const sourceBody = source
+            ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
             : '';
+        const bodyMeta = dateChip + sourceBody;
         const isPast   = this._viewDateStr() < this._todayD();
         const isFuture = this._viewDateStr() > this._todayD();
         const doneBtn  = isFuture
-            ? `<div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>`
-            : `<div class="db-done line-check-div clickable" data-action="done" data-guid="${task.guid}"></div>`;
-        const disabledDoneBtn = `<div class="db-done line-check-div" style="cursor:default" data-guid="${task.guid}"></div>`;
+            ? `<div class="db-done line-check-div" aria-disabled="true" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>`
+            : `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
         // [RECURRING-START] freq button — remove when Thymer ships native recurring
         const freq       = task.props?.['db-recurring-freq'];
         const recurToggle = freq
-            ? `<button class="db-recurring-btn db-recurring-btn--active" data-action="remove-recurring" data-guid="${task.guid}" title="Remove recurring"><i class="ti ti-repeat"></i></button>`
-            : `<button class="db-recurring-btn" data-action="enable-recurring" data-guid="${task.guid}" title="Set as recurring"><i class="ti ti-repeat"></i></button>`;
+            ? `<button class="db-recurring-btn db-recurring-btn--active" data-task-action="recurring" data-action="remove-recurring" data-guid="${task.guid}" title="Remove recurring"><i class="ti ti-repeat"></i></button>`
+            : `<button class="db-recurring-btn" data-task-action="recurring" data-action="enable-recurring" data-guid="${task.guid}" title="Set as recurring"><i class="ti ti-repeat"></i></button>`;
         // [RECURRING-END]
 
         if (section === 'recurring-preview') {
-            return `<div class="db-task listitem-task db-task--recurring-preview" data-guid="${task.guid}">
-                <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
-                <div class="db-task-body">
-                    <span class="db-task-text">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task db-task--recurring-preview" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+                    <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
                 </div>
-                ${sourceHTML}
+                ${this._r2HTML('', '')}
             </div>`;
         }
 
         // [RECURRING-START] ghost traces for past/today views
         if (section === 'recurring-done') {
-            return `<div class="db-task listitem-task state-done db-task--recurring-done" data-guid="${task.guid}">
-                <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
-                <div class="db-task-body">
-                    <span class="db-task-text--sel">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task state-done db-task--recurring-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
+                    <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
                 </div>
-                ${sourceHTML}
+                ${this._r2HTML('', '')}
             </div>`;
         }
 
         if (section === 'recurring-missed') {
-            return `<div class="db-task listitem-task db-task--recurring-missed" data-guid="${task.guid}">
-                <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
-                <div class="db-task-body">
-                    <span class="db-task-text" style="opacity:.4">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task db-task--recurring-missed" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
+                    <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
                 </div>
-                ${sourceHTML}
+                ${this._r2HTML('', '')}
             </div>`;
         }
         // [RECURRING-END]
 
         if (isPast) {
             const isDone = section === 'done';
-            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-guid="${task.guid}">
-                <div class="db-task-body">
-                    <span class="db-task-text">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
                 </div>
-                ${sourceHTML}
+                ${this._r2HTML('', '')}
             </div>`;
         }
 
         const isFocus = section === 'focus-pinned' || section === 'focus-scheduled' || section === 'block';
 
         if (section === 'done') {
-            return `<div class="db-task listitem-task state-done" data-guid="${task.guid}">
-                <div class="db-done line-check-div clickable" data-action="undone" data-guid="${task.guid}"></div>
-                <div class="db-task-body">
-                    <span class="db-task-text--sel">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    <div class="db-done line-check-div clickable" role="button" aria-label="Reopen task" data-task-action="done" data-action="undone" data-guid="${task.guid}"></div>
+                    <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
                 </div>
-                ${sourceHTML}
+                ${this._r2HTML('', '')}
             </div>`;
         }
 
         if (isFocus) {
             const pinBtn = task.props?.['db-pinned']
-                ? `<button class="db-pin-icon" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
+                ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
                 : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
-                ${doneBtn}
-                <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
-                    <span class="db-task-text--sel">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    ${doneBtn}
+                    <div class="db-task-body">
+                        <span class="db-task-text--sel">${text}</span>${bodyMeta}
+                    </div>
                 </div>
-                ${sourceHTML}${pinBtn}
+                ${this._r2HTML('', pinBtn)}
             </div>${inlinePanel}`;
         }
 
         if (section === 'today') {
             const pinBtn = task.props?.['db-pinned']
-                ? `<button class="db-pin-icon" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
+                ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
                 : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-guid="${task.guid}">
-                ${doneBtn}
-                <div class="db-task-body" data-action="select-task" data-guid="${task.guid}">
-                    <span class="db-task-text">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    ${doneBtn}
+                    <div class="db-task-body">
+                        <span class="db-task-text">${text}</span>${bodyMeta}
+                    </div>
                 </div>
-                ${sourceHTML}${recurToggle}<!-- [RECURRING] -->
-                ${pinBtn}
+                ${this._r2HTML('', recurToggle + '<!-- [RECURRING] -->' + pinBtn)}
             </div>${inlinePanel}`;
         }
 
         if (section === 'inbox' || section === 'overdue') {
-            return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
-                ${doneBtn}
-                <div class="db-task-body" data-action="pin" data-guid="${task.guid}">
-                    <span class="db-task-text">${text}</span>${dateChip}
+            return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-action="pin" data-guid="${task.guid}">
+                <div class="db-task-r1">
+                    ${doneBtn}
+                    <div class="db-task-body">
+                        <span class="db-task-text">${text}</span>${bodyMeta}
+                    </div>
                 </div>
-                ${sourceHTML}${recurToggle}<!-- [RECURRING] -->
+                ${this._r2HTML('', recurToggle + '<!-- [RECURRING] -->')}
             </div>`;
         }
 
-        return `<div class="db-task listitem-task${sc}" data-guid="${task.guid}">
-            ${doneBtn}
-            <div class="db-task-body" data-action="open" data-guid="${task.guid}">
-                <span class="db-task-text">${text}</span>${dateChip}
-                ${source ? `<span class="db-task-source">${source}</span>` : ''}
+        return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            <div class="db-task-r1">
+                ${doneBtn}
+                <div class="db-task-body" data-action="open" data-guid="${task.guid}">
+                    <span class="db-task-text">${text}</span>${bodyMeta}
+                    ${source ? `<span class="db-task-source">${source}</span>` : ''}
+                </div>
             </div>
+            ${this._r2HTML('', '')}
+        </div>`;
+    }
+
+    _r2HTML(dateChip, actionsHTML) {
+        const content = (dateChip || '') + (actionsHTML || '');
+        if (!content) return '';
+        return `<div class="db-task-r2">
+            ${dateChip ? `<div class="db-task-meta">${dateChip}</div>` : ''}
+            ${actionsHTML ? `<div class="db-task-r2-actions">${actionsHTML}</div>` : ''}
         </div>`;
     }
 
