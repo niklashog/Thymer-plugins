@@ -1,10 +1,10 @@
 const SLOTS = [
     { time: '08:00', label: 'Early morning' },
 { time: '10:00', label: 'Morning' },
-{ time: '12:00', label: 'Refuel' },
+{ time: '12:00', label: 'Midday' },
 { time: '14:00', label: 'Early afternoon' },
 { time: '16:00', label: 'Afternoon' },
-{ time: '18:00', label: 'Unwind' },
+{ time: '18:00', label: 'The close' },
 { time: '20:00', label: 'Early evening' },
 { time: '22:00', label: 'Evening' },
 { time: '00:00', label: 'Good night' },
