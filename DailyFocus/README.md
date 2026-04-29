@@ -6,9 +6,9 @@ A workspace-wide task manager that aggregates tasks from across your entire Thym
 
 ## Screenshots
 
-| Plan | Focus | History | Future |
+| Plan desktop | Focus desktop | Plan mobile | Focus mobile |
 |---|---|---|---|
-| ![Plan mode](images/newplanview.png) | ![Focus mode](images/newfocusview.png) | ![History](images/newwithhistory.png) | ![Future](images/newplanyourtomorrow.png) |
+| ![Plan desktop](images/newplan.png) | ![Focus desktop](images/newfocus.png) | ![Plan mobile](images/newplanmobile.png) | ![Focus mobile](images/newfocusmobile.png) |
 
 ## Modes
 
@@ -79,9 +79,11 @@ If you clear your browser cache and browser data while the plugin is installed i
 - **Plan and Ignore list polish** — refreshed task lists to feel calmer and more consistent with Focus
 - **Bottom sheets** — mobile sheets now behave more naturally and no longer fight with Thymer's bottom navigation
 - **Recurring tasks** — improved the mobile scheduling experience and replaced the destructive-looking remove action with a calmer control
+- **Recurring tasks** — recurring task rows now show the full task context and daily tasks can start on a chosen date
 - **Fix** — completed tasks could show an unchecked box or place the checkbox awkwardly on mobile
 - **Fix** — opening a source link on mobile could trigger from too much of the task row instead of just the source text or icon
 - **Fix** — tasks pinned to Focus but left unfinished could stay stuck in history instead of returning to the planner the next day
+- **Fix** — tasks from trashed or restored pages and collections now disappear or return after the dashboard refreshes
 
 ### 2026-04-27
 - **Focus redesign** — time blocks feel lighter and more list-like; cleaner separation between blocks and tasks
