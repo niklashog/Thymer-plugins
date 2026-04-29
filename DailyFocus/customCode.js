@@ -23,6 +23,7 @@ class TodayDashboard {
         this._viewDate       = null;
         this._hideUndated    = false;
         this._hideUpcoming   = true;
+        this._overdueCollapsed = false;
         this._listenerAbort  = null;
         this._todayCache     = null;
         this._lastData           = null;
@@ -163,6 +164,9 @@ class TodayDashboard {
             'padding-bottom:6px;border-bottom:1px solid var(--sidebar-border-color)}' +
             '.db-section-title{font-size:13px;font-weight:600;opacity:.55}' +
             '.db-count{font-size:11px;font-weight:600;opacity:.4}' +
+            '.db-section-toggle{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;' +
+            'font-size:15px;line-height:1;padding:1px 4px;border-radius:4px;opacity:.35;transition:opacity .15s}' +
+            '.db-section-toggle:hover{opacity:.65}' +
             '.db-task{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:36px;' +
             'box-sizing:border-box;border-radius:var(--ed-radius-normal);transition:background .1s,border-color .1s;' +
             'background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
@@ -924,7 +928,10 @@ class TodayDashboard {
         <input class="db-plan-search" type="text" placeholder="Filter tasks…" value="${this._escape(this._planSearch)}">
         <button class="db-search-clear" data-action="clear-search" aria-label="Clear search"${this._planSearch ? '' : ' hidden'}>×</button>
         </div>
-        ${this._section('Overdue',  overdue,  'overdue')}
+        ${this._section('Overdue',  overdue,  'overdue', '', null, {
+            collapsed: this._overdueCollapsed,
+            toggleAction: 'toggle-overdue',
+        })}
         ${this._sectionMixed(focusTitle, today, 'today', recurringPreview, 'recurring-preview')}
         ${recurringNotice}
         ${this._section('Inbox',    visInbox, 'inbox', upcomingBtn + undatedBtn, inboxEmptyMsg)}
@@ -1227,20 +1234,25 @@ class TodayDashboard {
         </div>`;
     }
 
-    _section(title, tasks, type, headerExtra = '', emptyMsg = null) {
+    _section(title, tasks, type, headerExtra = '', emptyMsg = null, opts = {}) {
         const empty = emptyMsg ?? {
             overdue: 'No overdue tasks',
             today:   'Nothing pinned — tap a task in the inbox to add it',
             inbox:   'Nothing here!',
         }[type];
+        const collapsed = !!opts.collapsed;
+        const toggleHTML = opts.toggleAction
+        ? `<button class="db-section-toggle" data-action="${opts.toggleAction}" aria-label="${collapsed ? `Expand ${title}` : `Collapse ${title}`}" title="${collapsed ? 'Expand' : 'Collapse'}"><i class="ti ti-chevron-${collapsed ? 'right' : 'down'}"></i></button>`
+        : '';
 
         return `<div class="db-section db-section--${type}">
         <div class="db-section-header">
         <span class="db-section-title">${title}</span>
         ${tasks.length ? `<span class="db-count">${tasks.length}</span>` : ''}
         ${headerExtra}
+        ${toggleHTML}
         </div>
-        ${tasks.length
+        ${collapsed ? '' : tasks.length
             ? tasks.map(t => this._taskRow(t, type)).join('')
             : `<div class="db-empty">${empty}</div>`
         }
@@ -1763,6 +1775,11 @@ class TodayDashboard {
                 }
                 case 'toggle-upcoming-filter': {
                     this._hideUpcoming = !this._hideUpcoming;
+                    if (this._panel) this._render(this._panel);
+                    break;
+                }
+                case 'toggle-overdue': {
+                    this._overdueCollapsed = !this._overdueCollapsed;
                     if (this._panel) this._render(this._panel);
                     break;
                 }
