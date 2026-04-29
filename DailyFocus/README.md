@@ -79,6 +79,7 @@ If you clear your browser cache and browser data while the plugin is installed i
 - **Plan and Ignore list polish** — refreshed task lists to feel calmer and more consistent with Focus
 - **Bottom sheets** — mobile sheets now behave more naturally and no longer fight with Thymer's bottom navigation
 - **Recurring tasks** — improved the mobile scheduling experience and replaced the destructive-looking remove action with a calmer control
+- **Recurring tasks** — recurring task rows now show the full task context and daily tasks can start on a chosen date
 - **Fix** — completed tasks could show an unchecked box or place the checkbox awkwardly on mobile
 - **Fix** — opening a source link on mobile could trigger from too much of the task row instead of just the source text or icon
 - **Fix** — tasks pinned to Focus but left unfinished could stay stuck in history instead of returning to the planner the next day

@@ -211,21 +211,13 @@ class TodayDashboard {
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
             '.db-recur-overlay{display:none;position:fixed;inset:0;background:transparent;z-index:199}' +
-            '.db-recur-row{display:flex;align-items:center;gap:8px;padding:10px 14px;' +
-            'border-radius:var(--ed-radius-block);cursor:pointer;transition:background .1s,box-shadow .1s;' +
-            'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'box-shadow:var(--color-shadow-cards);margin-bottom:6px}' +
-            '.db-recur-row:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
-            '.db-recur-row--expanded{border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;' +
-            'margin-bottom:0;border-bottom:1px solid var(--sidebar-border-color);box-shadow:none}' +
-            '.db-recur-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-recur-row{cursor:pointer}' +
             '.db-recur-summary{font-size:12px;opacity:.4;white-space:nowrap;flex-shrink:0}' +
             '.db-recur-summary--unconfigured{color:var(--ed-error-color);opacity:.7}' +
-            '.db-recur-row .db-task-source-wrap{min-width:120px;justify-content:flex-end;' +
-            'border-left:1px solid var(--sidebar-border-color);padding-left:10px;margin-left:4px}' +
-            '.db-recur-edit{background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
+            '.db-recur-row .db-task-source-wrap{min-width:0}' +
+            '.db-recur-edit{background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
             'border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
-            'padding:16px;margin:0 0 6px 0;box-shadow:var(--color-shadow-cards)}' +
+            'padding:16px;margin:-1px 0 8px;box-shadow:none;box-sizing:border-box}' +
             '.db-recur-edit--sheet{display:none}' +
             '.db-recur-pills{display:flex;gap:6px;margin-bottom:16px}' +
             '.db-recur-pill{background:none;border:1px solid var(--sidebar-border-color);' +
@@ -234,6 +226,8 @@ class TodayDashboard {
             '.db-recur-pill:hover{opacity:1}' +
             '.db-recur-pill--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent;opacity:1}' +
             '.db-recur-date-area{margin-bottom:16px}' +
+            '.db-recur-start{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px}' +
+            '.db-recur-start-label{flex:0 0 100%;font-size:12px;font-weight:600;opacity:.45;line-height:1.2}' +
             '.db-recur-days{display:flex;flex-wrap:wrap;gap:6px}' +
             '.db-recur-day-btn{background:none;border:1px solid var(--sidebar-border-color);' +
             'border-radius:var(--ed-radius-normal);cursor:pointer;font-size:12px;font-weight:500;' +
@@ -252,21 +246,16 @@ class TodayDashboard {
             'opacity:.45;padding:6px 8px;transition:opacity .1s;border-radius:var(--ed-radius-normal)}' +
             '.db-recur-cancel:hover{opacity:.8}' +
             '.db-recur-remove{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;' +
-            'font-size:12px;color:inherit;opacity:.45;padding:6px 8px;margin-left:auto;' +
+            'font-size:12px;color:var(--ed-link-color);opacity:1;padding:6px 8px;margin-left:auto;' +
             'border-radius:var(--ed-radius-normal);transition:opacity .1s,color .1s}' +
-            '.db-recur-remove:hover{opacity:.8;color:var(--ed-link-color)}' +
+            '.db-recur-remove:hover{opacity:.45;color:inherit}' +
             '@media(max-width:700px),(pointer:coarse){.db-recur-overlay:not([hidden]){display:block}' +
-            '.db-recur-row{flex-wrap:wrap;align-items:flex-start;padding:9px 10px;gap:4px 8px}' +
-            '.db-recur-row--expanded{border-radius:var(--ed-radius-block);border-bottom:1px solid var(--cards-border-color);margin-bottom:6px}' +
-            '.db-recur-name{flex:1 1 calc(100% - 80px);white-space:normal;display:-webkit-box;' +
-            '-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
             '.db-recur-summary{margin-left:auto;line-height:1.35;padding-top:1px}' +
-            '.db-recur-row .db-task-source-wrap{flex:0 0 100%;min-width:0;max-width:none;justify-content:flex-start;' +
-            'border-left:none;padding-left:0;margin-left:0}' +
+            '.db-recur-row .db-task-source-wrap{min-width:0;max-width:none}' +
             '.db-recur-edit--inline{display:none}' +
             '.db-recur-edit--sheet{display:block;position:fixed;bottom:0;left:0;right:0;' +
             'border-radius:16px 16px 0 0;border:none;border-top:1px solid var(--sidebar-border-color);' +
-            'background:var(--cards-bg);padding:20px;z-index:200;box-shadow:var(--color-shadow-hover);margin:0;' +
+            'background:var(--cards-bg);padding:20px;z-index:200;box-shadow:none;margin:0;' +
             'max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
             '.db-recur-pills,.db-recur-actions{flex-wrap:wrap}' +
             '.db-recur-select{max-width:100%;margin-bottom:8px}' +
@@ -366,19 +355,19 @@ class TodayDashboard {
             '.db-task-r2{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:auto;min-width:0}' +
             '.db-task-meta{display:flex;align-items:center;gap:4px;min-width:0}' +
             '.db-task-r2-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}' +
-            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task,.db-section--ignore>.db-task{margin-bottom:0}' +
+            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task,.db-section--ignore>.db-task,.db-section--recurring>.db-task{margin-bottom:0}' +
             '@media(min-width:601px){' +
-            '.db-section--overdue,.db-section--today,.db-section--inbox,.db-section--ignore{padding-top:2px}' +
-            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task,.db-section--ignore>.db-task{' +
+            '.db-section--overdue,.db-section--today,.db-section--inbox,.db-section--ignore,.db-section--recurring{padding-top:2px}' +
+            '.db-section--overdue>.db-task,.db-section--today>.db-task,.db-section--inbox>.db-task,.db-section--ignore>.db-task,.db-section--recurring>.db-task{' +
             'background:transparent;border-color:transparent;border-bottom-color:var(--ed-container-border-color);' +
             'border-radius:0;box-shadow:none;padding:7px 10px;min-height:38px}' +
-            '.db-section--overdue>.db-section-header+.db-task,.db-section--today>.db-section-header+.db-task,.db-section--inbox>.db-section-header+.db-task,.db-section--ignore>.db-section-header+.db-task{' +
+            '.db-section--overdue>.db-section-header+.db-task,.db-section--today>.db-section-header+.db-task,.db-section--inbox>.db-section-header+.db-task,.db-section--ignore>.db-section-header+.db-task,.db-section--recurring>.db-section-header+.db-task{' +
             'border-top-color:var(--ed-container-border-color)}' +
-            '.db-section--overdue>.db-task:hover,.db-section--today>.db-task:hover,.db-section--inbox>.db-task:hover,.db-section--ignore>.db-task:hover{' +
+            '.db-section--overdue>.db-task:hover,.db-section--today>.db-task:hover,.db-section--inbox>.db-task:hover,.db-section--ignore>.db-task:hover,.db-section--recurring>.db-task:hover{' +
             'background:var(--ed-button-bg-hover);border-left-color:transparent;border-right-color:transparent;box-shadow:none}' +
-            '.db-section--overdue>.db-task--open,.db-section--today>.db-task--open,.db-section--inbox>.db-task--open{' +
+            '.db-section--overdue>.db-task--open,.db-section--today>.db-task--open,.db-section--inbox>.db-task--open,.db-section--recurring>.db-task--open{' +
             'background:var(--cards-hover-bg);border-color:var(--ed-container-border-color);border-radius:var(--ed-radius-normal) var(--ed-radius-normal) 0 0}' +
-            '.db-section--overdue>.db-task-inline,.db-section--today>.db-task-inline,.db-section--inbox>.db-task-inline{' +
+            '.db-section--overdue>.db-task-inline,.db-section--today>.db-task-inline,.db-section--inbox>.db-task-inline,.db-section--recurring>.db-recur-edit--inline{' +
             'margin:0 0 8px;border-color:var(--ed-container-border-color);box-shadow:none}' +
             '}' +
             '@media(max-width:600px){' +
@@ -1075,12 +1064,13 @@ class TodayDashboard {
         ? (this._recurringDraft || {
             freq: expandedTask.props?.['db-recurring-freq'] || 'daily',
             day:  expandedTask.props?.['db-recurring-day'] || null,
+            start: expandedTask.props?.['db-recurring-start'] || this._todayD(),
         })
         : null;
 
         const sections = grouped.length
         ? grouped.map(g => `
-        <div class="db-section">
+        <div class="db-section db-section--recurring">
         <div class="db-section-header">
         <span class="db-section-title">${LABELS[g.freq]}</span>
         <span class="db-count">${g.tasks.length}</span>
@@ -1090,7 +1080,7 @@ class TodayDashboard {
         : `<div class="db-empty">No recurring tasks — use the repeat button on any task to set a frequency</div>`;
 
         return `<div class="db-recur-overlay"${this._expandedRecurring ? '' : ' hidden'} data-action="cancel-recurring"></div>
-        ${expandedTask ? this._recurringEditPanel(expandedTask.guid, expandedDraft.freq, expandedDraft.day, 'sheet') : ''}
+        ${expandedTask ? this._recurringEditPanel(expandedTask.guid, expandedDraft.freq, expandedDraft.day, expandedDraft.start, 'sheet') : ''}
         <div class="db-header">
         <div class="db-header-left">
         ${this._menuHTML('Recurring tasks')}
@@ -1105,11 +1095,15 @@ class TodayDashboard {
     }
 
     _recurringTaskRow(task) {
-        const text = this._getTaskTextHTML(task);
+        const text       = this._getTaskTextHTML(task);
+        const dateChip   = this._getDateChipHTML(task);
+        const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-blocked', billable:'state-dollar', discuss:'state-question', alert:'state-alert', starred:'state-starred' };
+        const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
         ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
+        const bodyMeta = dateChip + sourceHTML;
         const freq = task.props?.['db-recurring-freq'];
         const day  = task.props?.['db-recurring-day'] || null;
         const summary = this._recurSummary(freq, day);
@@ -1117,14 +1111,19 @@ class TodayDashboard {
         ? `<span class="db-recur-summary">${this._escape(summary)}</span>`
         : `<span class="db-recur-summary db-recur-summary--unconfigured">Configure</span>`;
         const isExpanded = this._expandedRecurring === task.guid;
-        const row = `<div class="db-recur-row${isExpanded ? ' db-recur-row--expanded' : ''}" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
-        <span class="db-recur-name">${text}</span>
-        ${summaryHTML}
-        ${sourceHTML}
+        const doneBtn  = `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
+        const row = `<div class="db-task db-recur-row${isExpanded ? ' db-task--open db-recur-row--expanded' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
+        <div class="db-task-r1">
+        ${doneBtn}
+        <div class="db-task-body">
+        <span class="db-task-text">${text}</span>${bodyMeta}
+        </div>
+        </div>
+        ${this._r2HTML('', summaryHTML)}
         </div>`;
         if (isExpanded) {
-            const draft = this._recurringDraft || { freq, day };
-            return row + this._recurringEditPanel(task.guid, draft.freq, draft.day, 'inline');
+            const draft = this._recurringDraft || { freq, day, start: task.props?.['db-recurring-start'] || this._todayD() };
+            return row + this._recurringEditPanel(task.guid, draft.freq, draft.day, draft.start, 'inline');
         }
         return row;
     }
@@ -1147,7 +1146,7 @@ class TodayDashboard {
         return null;
     }
 
-    _recurringEditPanel(guid, draftFreq, draftDay, variant = 'inline') {
+    _recurringEditPanel(guid, draftFreq, draftDay, draftStart = null, variant = 'inline') {
         const FREQS = ['daily', 'weekly', 'monthly', 'yearly'];
         const FREQ_LABEL = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' };
         const pills = FREQS.map(f =>
@@ -1174,13 +1173,26 @@ class TodayDashboard {
             .map(d => `<option value="${d}"${dd === d ? ' selected' : ''}>${d}</option>`).join('');
             dateArea = `<select class="db-recur-select db-recur-year-month" data-guid="${guid}">${!mm ? '<option value="" disabled selected>Month</option>' : ''}${mOpts}</select><select class="db-recur-select db-recur-year-day" data-guid="${guid}">${!dd ? '<option value="" disabled selected>Day</option>' : ''}${dOpts}</select>`;
         }
+        const start = draftStart || this._todayD();
+        const sm = parseInt(start.slice(4, 6)) || (new Date().getMonth() + 1);
+        const sd = parseInt(start.slice(6, 8)) || new Date().getDate();
+        const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const startMonthOptions = MONTHS.map((m, i) => `<option value="${i + 1}"${sm === i + 1 ? ' selected' : ''}>${m}</option>`).join('');
+        const startDayOptions = Array.from({length: 31}, (_, i) => i + 1)
+        .map(d => `<option value="${d}"${sd === d ? ' selected' : ''}>${d}</option>`).join('');
+        const startArea = draftFreq === 'daily' ? `<div class="db-recur-start">
+        <span class="db-recur-start-label">Starts on</span>
+        <select class="db-recur-select db-recur-start-month" data-guid="${guid}">${startMonthOptions}</select>
+        <select class="db-recur-select db-recur-start-day" data-guid="${guid}">${startDayOptions}</select>
+        </div>` : '';
         return `<div class="db-recur-edit db-recur-edit--${variant}">
         <div class="db-recur-pills">${pills}</div>
         ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
+        ${startArea}
         <div class="db-recur-actions">
         <button class="db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
         <button class="db-recur-cancel" data-action="cancel-recurring">Cancel</button>
-        <button class="db-recur-remove" data-action="remove-recurring" data-guid="${guid}" title="Stop recurring"><i class="ti ti-repeat-off"></i><span>Stop</span></button>
+        <button class="db-recur-remove" data-action="remove-recurring" data-guid="${guid}" title="Remove recurring"><i class="ti ti-repeat"></i><span>Remove recurring</span></button>
         </div>
         </div>`;
     }
@@ -1621,6 +1633,7 @@ class TodayDashboard {
                     this._recurringDraft = {
                         freq: task.props?.['db-recurring-freq'] || 'daily',
                         day:  task.props?.['db-recurring-day']  || null,
+                        start: task.props?.['db-recurring-start'] || this._todayD(),
                     };
                     if (this._panel) this._render(this._panel);
                     break;
@@ -1640,26 +1653,29 @@ class TodayDashboard {
                 }
                 case 'save-recurring': {
                     if (!task || !this._recurringDraft) return;
-                    const { freq, day } = this._recurringDraft;
-                    const nextDate  = this._nextUpcomingDate(freq, day || null);
-                    const startDate = nextDate.replace(/-/g, '');
+                    const { freq, day, start } = this._recurringDraft;
+                    const startDate = freq === 'daily'
+                    ? (start || this._todayD())
+                    : this._nextUpcomingDate(freq, day || null).replace(/-/g, '');
                     this._patchTask(task.guid, { 'db-recurring-freq': freq, 'db-recurring-day': day || null, 'db-recurring-start': startDate });
                     if (startDate > this._todayD()) this._rescheduledRecurring[task.guid] = startDate;
+                    else delete this._rescheduledRecurring[task.guid];
                     // Remove from scheduledResult if new date is not today
                     if (startDate !== this._todayD() && this._lastData?.scheduledResult?.lines) {
                         const idx = this._lastData.scheduledResult.lines.findIndex(l => l.guid === task.guid);
                         if (idx !== -1) this._lastData.scheduledResult.lines.splice(idx, 1);
                     }
+                    task.segments = [
+                        ...this._stripDateSegments(task.segments),
+                                     { type: 'text', text: ' ' }, this._makeDateSegment(startDate),
+                    ];
                     this._expandedRecurring = null;
                     this._recurringDraft = null;
                     if (this._panel) this._render(this._panel);
                     task.setMetaProperty('db-recurring-freq', freq);
                     task.setMetaProperty('db-recurring-day', day || null);
                     task.setMetaProperty('db-recurring-start', startDate);
-                    task.setSegments([
-                        ...this._stripDateSegments(task.segments),
-                                     { type: 'text', text: ' ' }, this._makeDateSegment(startDate),
-                    ]);
+                    task.setSegments(task.segments);
                     break;
                 }
                 case 'cancel-recurring': {
@@ -1791,6 +1807,17 @@ class TodayDashboard {
                 if (mm && dd) this._recurringDraft.day = `${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
                 return;
             }
+            if (t.matches('.db-recur-start-month, .db-recur-start-day')) {
+                if (!this._recurringDraft) return;
+                const edit = t.closest('.db-recur-edit');
+                const mm = edit?.querySelector('.db-recur-start-month')?.value;
+                const dd = edit?.querySelector('.db-recur-start-day')?.value;
+                if (mm && dd) {
+                    this._recurringDraft.start = this._startDateFromMonthDay(mm, dd);
+                    if (this._panel) this._render(this._panel);
+                }
+                return;
+            }
             // [RECURRING-END]
         }, { signal });
     }
@@ -1809,6 +1836,21 @@ class TodayDashboard {
     }
 
     // [RECURRING-START] scheduling + occurrence logic — remove when Thymer ships native recurring
+    _startDateFromMonthDay(month, day) {
+        const today = this._todayD();
+        let year = +today.slice(0, 4);
+        const mm = +month;
+        const maxDay = new Date(year, mm, 0).getDate();
+        const dd = Math.min(+day, maxDay);
+        let date = `${year}${String(mm).padStart(2, '0')}${String(dd).padStart(2, '0')}`;
+        if (date < today) {
+            year += 1;
+            const nextMaxDay = new Date(year, mm, 0).getDate();
+            date = `${year}${String(mm).padStart(2, '0')}${String(Math.min(+day, nextMaxDay)).padStart(2, '0')}`;
+        }
+        return date;
+    }
+
     _nextRecurringDate(freq, day) {
         const d = new Date();
         if (freq === 'daily') {
@@ -1880,6 +1922,8 @@ class TodayDashboard {
     _wouldRecurOn(task, viewDateStr) {
         const freq = task.props?.['db-recurring-freq'];
         if (!freq) return false;
+        const start = task.props?.['db-recurring-start'];
+        if (start && viewDateStr < start) return false;
         const day = task.props?.['db-recurring-day'];
         const d = new Date(+viewDateStr.slice(0,4), +viewDateStr.slice(4,6)-1, +viewDateStr.slice(6,8));
         if (freq === 'daily') return true;
