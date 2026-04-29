@@ -82,6 +82,7 @@ If you clear your browser cache and browser data while the plugin is installed i
 - **Fix** — completed tasks could show an unchecked box or place the checkbox awkwardly on mobile
 - **Fix** — opening a source link on mobile could trigger from too much of the task row instead of just the source text or icon
 - **Fix** — tasks pinned to Focus but left unfinished could stay stuck in history instead of returning to the planner the next day
+- **Fix** — tasks from trashed or restored pages and collections now disappear or return after the dashboard refreshes
 
 ### 2026-04-27
 - **Focus redesign** — time blocks feel lighter and more list-like; cleaner separation between blocks and tasks
