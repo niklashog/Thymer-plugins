@@ -211,20 +211,13 @@ class TodayDashboard {
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
             '.db-recur-overlay{display:none;position:fixed;inset:0;background:transparent;z-index:199}' +
-            '.db-recur-row{display:flex;align-items:center;gap:8px;padding:10px 14px;' +
-            'border-radius:var(--ed-radius-block);cursor:pointer;transition:background .1s,box-shadow .1s;' +
-            'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'box-shadow:var(--color-shadow-cards);margin-bottom:6px}' +
-            '.db-recur-row:hover{background:var(--cards-hover-bg);box-shadow:var(--color-shadow-hover)}' +
-            '.db-recur-row--expanded{border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;' +
-            'margin-bottom:0;border-bottom:1px solid var(--sidebar-border-color);box-shadow:none}' +
-            '.db-recur-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+            '.db-recur-row{cursor:pointer}' +
             '.db-recur-summary{font-size:12px;opacity:.4;white-space:nowrap;flex-shrink:0}' +
             '.db-recur-summary--unconfigured{color:var(--ed-error-color);opacity:.7}' +
             '.db-recur-row .db-task-source-wrap{min-width:0}' +
-            '.db-recur-edit{background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
+            '.db-recur-edit{background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
             'border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
-            'padding:16px;margin:0 0 6px 0;box-shadow:var(--color-shadow-cards)}' +
+            'padding:16px;margin:-1px 0 8px;box-shadow:none;box-sizing:border-box}' +
             '.db-recur-edit--sheet{display:none}' +
             '.db-recur-pills{display:flex;gap:6px;margin-bottom:16px}' +
             '.db-recur-pill{background:none;border:1px solid var(--sidebar-border-color);' +
@@ -257,16 +250,12 @@ class TodayDashboard {
             'border-radius:var(--ed-radius-normal);transition:opacity .1s,color .1s}' +
             '.db-recur-remove:hover{opacity:.45;color:inherit}' +
             '@media(max-width:700px),(pointer:coarse){.db-recur-overlay:not([hidden]){display:block}' +
-            '.db-recur-row{flex-wrap:wrap;align-items:flex-start;padding:9px 10px;gap:4px 8px}' +
-            '.db-recur-row--expanded{border-radius:var(--ed-radius-block);border-bottom:1px solid var(--cards-border-color);margin-bottom:6px}' +
-            '.db-recur-name{flex:1 1 calc(100% - 80px);white-space:normal;display:-webkit-box;' +
-            '-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
             '.db-recur-summary{margin-left:auto;line-height:1.35;padding-top:1px}' +
             '.db-recur-row .db-task-source-wrap{min-width:0;max-width:none}' +
             '.db-recur-edit--inline{display:none}' +
             '.db-recur-edit--sheet{display:block;position:fixed;bottom:0;left:0;right:0;' +
             'border-radius:16px 16px 0 0;border:none;border-top:1px solid var(--sidebar-border-color);' +
-            'background:var(--cards-bg);padding:20px;z-index:200;box-shadow:var(--color-shadow-hover);margin:0;' +
+            'background:var(--cards-bg);padding:20px;z-index:200;box-shadow:none;margin:0;' +
             'max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
             '.db-recur-pills,.db-recur-actions{flex-wrap:wrap}' +
             '.db-recur-select{max-width:100%;margin-bottom:8px}' +
