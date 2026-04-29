@@ -1242,7 +1242,7 @@ class TodayDashboard {
         }[type];
         const collapsed = !!opts.collapsed;
         const toggleHTML = opts.toggleAction
-        ? `<button class="db-section-toggle" data-action="${opts.toggleAction}" aria-label="${collapsed ? `Expand ${title}` : `Collapse ${title}`}" title="${collapsed ? 'Expand' : 'Collapse'}"><i class="ti ti-chevron-${collapsed ? 'right' : 'down'}"></i></button>`
+        ? `<button class="db-section-toggle" data-action="${opts.toggleAction}" aria-label="${collapsed ? `Expand ${title}` : `Collapse ${title}`}" title="${collapsed ? 'Expand' : 'Collapse'}"><i class="ti ti-chevron-${collapsed ? 'left' : 'down'}"></i></button>`
         : '';
 
         return `<div class="db-section db-section--${type}">
