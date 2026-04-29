@@ -39,6 +39,23 @@ class TodayDashboard {
         this._wipeState  = null;
     }
 
+    async _fetchTaskData() {
+        const [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
+            this.plugin.data.searchByQuery('@task @todo',    150),
+            this.plugin.data.searchByQuery('@task @today',   100),
+            this.plugin.data.searchByQuery('@task @overdue',  50),
+            this.plugin.data.searchByQuery('@task @due',     100),
+            this.plugin.data.searchByQuery('@task @done',    100),
+        ]);
+        return { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
+    }
+
+    _scheduleTrashRefresh(ev) {
+        if (ev?.trashed === null || ev?.trashed === undefined) return;
+        this._lastData = null;
+        this._scheduleRefresh();
+    }
+
     async _wipePluginMetadata() {
         const DB_KEYS = [
             'db-pinned', 'db-timeblock', 'db-recurring-freq', 'db-recurring-day',
@@ -478,6 +495,9 @@ class TodayDashboard {
         this.plugin.events.on('lineitem.updated', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.created', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.deleted', () => this._scheduleRefresh());
+        this.plugin.events.on('lineitem.undeleted', () => this._scheduleRefresh());
+        this.plugin.events.on('record.updated', ev => this._scheduleTrashRefresh(ev));
+        this.plugin.events.on('collection.updated', ev => this._scheduleTrashRefresh(ev));
     }
 
     _patchTask(guid, propsUpdate) {
@@ -516,14 +536,7 @@ class TodayDashboard {
         if (this._prefetchInFlight) return;
         this._prefetchInFlight = true;
         try {
-            const [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
-                this.plugin.data.searchByQuery('@task @todo',    150),
-                                                                                                          this.plugin.data.searchByQuery('@task @today',  100),
-                                                                                                          this.plugin.data.searchByQuery('@task @overdue',  50),
-                                                                                                          this.plugin.data.searchByQuery('@task @due',    100),
-                                                                                                          this.plugin.data.searchByQuery('@task @done',   100),
-            ]);
-            this._lastData = { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
+            this._lastData = await this._fetchTaskData();
         } catch (e) {
             console.warn('[Dashboard] prefetch failed:', e);
         } finally {
@@ -584,13 +597,7 @@ class TodayDashboard {
         } else {
             let doneResult = { lines: [] };
             try {
-                [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
-                    this.plugin.data.searchByQuery('@task @todo',     150),
-                                                                                                        this.plugin.data.searchByQuery('@task @today',   100),
-                                                                                                        this.plugin.data.searchByQuery('@task @overdue',  50),
-                                                                                                        this.plugin.data.searchByQuery('@task @due',     100),
-                                                                                                        this.plugin.data.searchByQuery('@task @done',    100),
-                ]);
+                ({ todoResult, scheduledResult, overdueResult, dueResult, doneResult } = await this._fetchTaskData());
             } catch (e) {
                 console.warn('[Dashboard] fetch failed:', e);
                 todoResult = scheduledResult = overdueResult = dueResult = { lines: [] };
@@ -925,7 +932,7 @@ class TodayDashboard {
         </div>
         <div class="db-root" data-nav-region="tasks">
         <div class="db-search-wrap">
-        <input class="db-plan-search" type="text" placeholder="Search tasks…" value="${this._escape(this._planSearch)}">
+        <input class="db-plan-search" type="text" placeholder="Filter tasks…" value="${this._escape(this._planSearch)}">
         <button class="db-search-clear" data-action="clear-search" aria-label="Clear search"${this._planSearch ? '' : ' hidden'}>×</button>
         </div>
         ${this._section('Overdue',  overdue,  'overdue')}
