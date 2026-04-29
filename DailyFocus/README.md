@@ -77,6 +77,7 @@ If you clear your browser cache and browser data while the plugin is installed i
 ### 2026-04-29
 - **Mobile task layout** — task rows are easier to tap, with cleaner spacing between task text, due dates, and source links
 - **Plan and Ignore list polish** — refreshed task lists to feel calmer and more consistent with Focus
+- **Plan** — Overdue tasks can now be collapsed when you want a quieter planning view
 - **Bottom sheets** — mobile sheets now behave more naturally and no longer fight with Thymer's bottom navigation
 - **Recurring tasks** — improved the mobile scheduling experience and replaced the destructive-looking remove action with a calmer control
 - **Recurring tasks** — recurring task rows now show the full task context and daily tasks can start on a chosen date
