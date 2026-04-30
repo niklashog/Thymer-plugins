@@ -22,15 +22,20 @@ class TodayDashboard {
         this._doneTasksMap   = new Map();
         this._viewDate       = null;
         this._hideUndated    = false;
-        this._hideUpcoming   = true;
+        this._upcomingRange  = 'default';
+        this._upcomingMenuOpen = false;
         this._overdueCollapsed = false;
         this._listenerAbort  = null;
         this._todayCache     = null;
         this._lastData           = null;
         this._prefetchInFlight   = false;
+        this._peekOverlay        = null;
+        this._peekPanel          = null;
+        this._peekMode           = 'focus';
         // [RECURRING-START] draft state for recurring task UI — remove when Thymer ships native recurring
         this._expandedRecurring       = null;
         this._recurringDraft          = null;
+        this._recurringSheetAnimate   = false;
         this._completedRecurringDates = {}; // guid → comma-separated YYYYMMDD, persists across _lastData refreshes
         this._rescheduledRecurring    = {}; // guid → YYYYMMDD start date when rescheduled to future
         // [RECURRING-END]
@@ -216,6 +221,16 @@ class TodayDashboard {
             'opacity:.35;padding:2px 4px;border-radius:4px;transition:opacity .15s;white-space:nowrap}' +
             '.db-recurring-filter:hover{opacity:.6}' +
             '.db-recurring-filter--active{opacity:.6;color:var(--ed-link-color)}' +
+            '.db-upcoming-wrap{position:relative;margin-left:auto}' +
+            '.db-upcoming-popover{position:absolute;right:0;top:calc(100% + 6px);z-index:120;' +
+            'display:grid;gap:2px;min-width:150px;padding:4px;background:var(--input-bg-color);' +
+            'border:1px solid var(--input-border-color);border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-hover)}' +
+            '.db-upcoming-popover[hidden]{display:none}' +
+            '.db-upcoming-option{display:flex;align-items:center;justify-content:space-between;gap:10px;' +
+            'background:none;border:none;color:inherit;cursor:pointer;text-align:left;font-size:12px;' +
+            'padding:7px 10px;border-radius:var(--ed-radius-normal)}' +
+            '.db-upcoming-option:hover{background:var(--cards-hover-bg)}' +
+            '.db-upcoming-option--active{color:var(--ed-link-color);font-weight:600}' +
             '.db-recurring-notice{font-size:12px;opacity:.6;padding:4px 6px 12px;display:flex;align-items:center;gap:5px}' +
             '.db-recurring-notice-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
@@ -261,6 +276,8 @@ class TodayDashboard {
             '.db-recur-row .db-task-source-wrap{min-width:0;max-width:none}' +
             '.db-recur-edit--inline{display:none}' +
             '.db-recur-edit--sheet{padding:20px;margin:0}' +
+            '.db-recur-edit--no-anim{animation:none}' +
+            '.db-recur-edit--sheet .db-recur-fields{min-height:66px}' +
             '.db-recur-pills,.db-recur-actions{flex-wrap:wrap}' +
             '.db-recur-select{max-width:100%;margin-bottom:8px}' +
             '.db-recur-remove{margin-left:0}}' +
@@ -378,8 +395,8 @@ class TodayDashboard {
             '.db-block-body .db-task{padding:12px 10px;min-height:58px}' +
             '.db-block-body .db-done{align-self:flex-start;margin-top:2px!important}' +
             '.db-block-body .db-task.state-done>.db-task-r1{flex:1 1 0;min-width:0}' +
-            '.db-task-r1{flex:0 0 100%;align-items:flex-start;padding-left:0}' +
-            '.db-task-r1>.db-done{align-self:flex-start;margin-top:2px!important}' +
+            '.db-task-r1{flex:1 1 0;align-items:flex-start;padding-left:0}' +
+            '.db-task>.db-done{align-self:flex-start;margin-top:2px!important}' +
             '.db-task-r2{flex:0 0 100%;margin-left:0;padding-left:32px;justify-content:space-between;min-height:18px}' +
             '.db-task-body{align-items:baseline;flex-wrap:wrap;row-gap:1px;column-gap:6px}' +
             '.db-task-text,.db-task-text--sel{flex:1;min-width:0;white-space:normal;display:-webkit-box;' +
@@ -443,6 +460,23 @@ class TodayDashboard {
             '.db-wipe-confirm-msg{font-size:13px;opacity:.7;margin:0 0 14px;line-height:1.5}' +
             '.db-wipe-actions{display:flex;gap:8px;align-items:center}' +
             '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}'
+            + '.db-peek-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);' +
+            'display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}' +
+            '.db-peek-modal{width:min(760px,100%);height:min(760px,calc(100vh - 48px));' +
+            'display:flex;flex-direction:column;background:var(--input-bg-color,var(--cards-bg,#1f1f2a));color:var(--ed-text-color);' +
+            'border:1px solid var(--ed-container-border-color);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden}' +
+            '.db-peek-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--ed-container-border-color);background:var(--input-bg-color,var(--cards-bg,#1f1f2a));flex-shrink:0}' +
+            '.db-peek-title{font-size:13px;font-weight:600;opacity:.65;margin-right:auto}' +
+            '.db-peek-switch{display:flex;align-items:center;gap:2px;padding:2px;background:var(--input-bg-color);border:1px solid var(--input-border-color);border-radius:var(--ed-radius-block)}' +
+            '.db-peek-switch-btn{background:none;border:none;color:inherit;cursor:pointer;border-radius:var(--ed-radius-normal);font-size:12px;padding:5px 10px;opacity:.55}' +
+            '.db-peek-switch-btn:hover{opacity:.85;background:var(--cards-hover-bg)}' +
+            '.db-peek-switch-btn--active{opacity:1;background:var(--cards-bg)}' +
+            '.db-peek-close{background:none;border:none;color:inherit;cursor:pointer;border-radius:var(--ed-radius-normal);font-size:18px;line-height:1;padding:4px 8px;opacity:.45}' +
+            '.db-peek-close:hover{opacity:.8;background:var(--cards-hover-bg)}' +
+            '.db-peek-content{flex:1;min-height:0;overflow:auto;padding:16px 18px 20px;box-sizing:border-box;background:var(--input-bg-color,var(--cards-bg,#1f1f2a))}' +
+            '.db-peek-content>.db-header{display:none}' +
+            '.db-peek-content .db-root{height:auto;padding-bottom:0}' +
+            '@media(max-width:700px){.db-peek-overlay{padding:0;align-items:stretch}.db-peek-modal{height:100vh;width:100%;border-radius:0;border-left:none;border-right:none}}'
             + '@keyframes db-sheet-rise{from{transform:translateY(14px);opacity:.92}to{transform:translateY(0);opacity:1}}'
             + '@media(prefers-reduced-motion:reduce){.db-task-sheet,.db-recur-edit--sheet{animation:none}}'
         );
@@ -451,6 +485,42 @@ class TodayDashboard {
             label: "Open Daily Focus",
             icon:  'gauge',
             onSelected: () => this._openPanel(),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Focus",
+            icon:  'gauge',
+            onSelected: () => this._openMode('focus'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Plan",
+            icon:  'calendar',
+            onSelected: () => this._openMode('plan'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Recurring Tasks",
+            icon:  'repeat',
+            onSelected: () => this._openMode('recurring-list'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Ignore List",
+            icon:  'eye-off',
+            onSelected: () => this._openMode('ignore-list'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Settings",
+            icon:  'settings',
+            onSelected: () => this._openMode('settings'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Peek",
+            icon:  'eye',
+            onSelected: () => this._openPeek(),
         });
 
         this.plugin.ui.addSidebarItem({
@@ -506,7 +576,7 @@ class TodayDashboard {
     }
 
     async _prefetch() {
-        if (!this._panel) return;
+        if (!this._panel && !this._peekPanel) return;
         if (this._prefetchInFlight) return;
         this._prefetchInFlight = true;
         try {
@@ -519,17 +589,19 @@ class TodayDashboard {
     }
 
     _scheduleRefresh() {
-        if (!this._panel) return;
-        if (!this._panel.getElement()?.isConnected) { this._panel = null; return; }
+        if (!this._panel && !this._peekPanel) return;
+        if (this._panel && !this._panel.getElement()?.isConnected) this._panel = null;
         if (this._refreshTimer) clearTimeout(this._refreshTimer);
         this._prefetch();
         this._refreshTimer = setTimeout(() => {
             this._refreshTimer = null;
-            if (!this._panel) return;
-            const el = this._panel.getElement();
-            if (el?.isConnected && el.querySelector('.db-root, .db-loading')) {
-                this._render(this._panel, false);
+            if (this._panel) {
+                const el = this._panel.getElement();
+                if (el?.isConnected && el.querySelector('.db-root, .db-loading')) {
+                    this._render(this._panel, false);
+                }
             }
+            if (this._peekPanel) this._renderPeek();
         }, 800);
     }
 
@@ -537,6 +609,85 @@ class TodayDashboard {
         let panel = this.plugin.ui.getActivePanel();
         if (!panel) panel = await this.plugin.ui.createPanel();
         if (panel) panel.navigateToCustomType('today-dashboard');
+    }
+
+    async _openMode(mode) {
+        this._mode = mode;
+        this._expandedRecurring = null; // [RECURRING]
+        this._recurringDraft    = null; // [RECURRING]
+        if (this._mode === 'plan' && this._viewDate < this._todayD()) this._viewDate = null;
+        await this._openPanel();
+        if (this._panel) this._render(this._panel);
+    }
+
+    async _openPeek() {
+        if (this._peekOverlay) {
+            this._peekOverlay.querySelector('.db-peek-modal')?.focus();
+            return;
+        }
+
+        this._peekMode = 'focus';
+        const overlay = document.createElement('div');
+        overlay.className = 'db-peek-overlay';
+        overlay.innerHTML = `<div class="db-peek-modal" role="dialog" aria-modal="true" aria-label="Daily Focus peek" tabindex="-1">
+        <div class="db-peek-bar">
+        <div class="db-peek-title">Daily Focus</div>
+        <div class="db-peek-switch" role="group" aria-label="Peek view">
+        <button class="db-peek-switch-btn db-peek-switch-btn--active" data-peek-mode="focus">Focus</button>
+        <button class="db-peek-switch-btn" data-peek-mode="plan">Plan</button>
+        </div>
+        <button class="db-peek-close" aria-label="Close Daily Focus peek">×</button>
+        </div>
+        <div class="db-peek-content"></div>
+        </div>`;
+
+        const modal = overlay.querySelector('.db-peek-modal');
+        const content = overlay.querySelector('.db-peek-content');
+        this._peekOverlay = overlay;
+        this._peekPanel = { getElement: () => content };
+
+        const close = () => this._closePeek();
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+        overlay.querySelector('.db-peek-close')?.addEventListener('click', close);
+        overlay.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                close();
+            }
+        });
+        for (const btn of overlay.querySelectorAll('[data-peek-mode]')) {
+            btn.addEventListener('click', () => {
+                this._peekMode = btn.dataset.peekMode;
+                this._renderPeek();
+            });
+        }
+
+        document.body.appendChild(overlay);
+        await this._renderPeek();
+        modal?.focus();
+    }
+
+    _closePeek() {
+        if (!this._peekOverlay) return;
+        this._peekOverlay.remove();
+        this._peekOverlay = null;
+        this._peekPanel = null;
+        if (this._panel) this._render(this._panel);
+    }
+
+    async _renderPeek() {
+        if (!this._peekPanel || !this._peekOverlay) return;
+        const previousMode = this._mode;
+        this._mode = this._peekMode;
+        try {
+            if (this._mode === 'plan' && this._viewDate < this._todayD()) this._viewDate = null;
+            for (const btn of this._peekOverlay.querySelectorAll('[data-peek-mode]')) {
+                btn.classList.toggle('db-peek-switch-btn--active', btn.dataset.peekMode === this._peekMode);
+            }
+            await this._render(this._peekPanel, true);
+        } finally {
+            this._mode = previousMode;
+        }
     }
 
     async _render(panel, fromCallback = false) {
@@ -655,13 +806,21 @@ class TodayDashboard {
         });
 
         const todayD = this._todayD().replace(/-/g, '');
-        const upcomingCutoff = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10).replace(/-/g,''); })();
+        const upcomingCutoff = this._upcomingCutoffKey();
         const upcomingTasks = allTodos.filter(l => {
+            if (!upcomingCutoff) return false;
             const pinDate = l.props?.['db-pinned'] || '';
             if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || pinDate >= today) return false;
             const seg = (l.segments || []).find(s => s.type === 'datetime');
             const d = seg?.text?.d;
             return d && d > todayD && d <= upcomingCutoff;
+        }).sort((a, b) => {
+            const da = this._taskDueDateKey(a);
+            const db = this._taskDueDateKey(b);
+            if (da && db && da !== db) return da.localeCompare(db);
+            if (da && !db) return -1;
+            if (!da && db) return 1;
+            return 0;
         });
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
@@ -872,9 +1031,24 @@ class TodayDashboard {
 
     _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = [], timeBlocks = {}, upcomingTasks = []) {
         const undatedBtn    = `<button class="db-recurring-filter${!this._hideUndated ? ' db-recurring-filter--active' : ''}" data-action="toggle-undated-filter">Unscheduled</button>`;
-        const upcomingBtn   = `<button class="db-recurring-filter${!this._hideUpcoming ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-filter" style="margin-left:auto">Upcoming</button>`;
+        const upcomingOptions = [
+            ['default', 'Default (3 days)'],
+            ['7', '7 days'],
+            ['14', '14 days'],
+            ['21', '21 days'],
+            ['45', '45 days'],
+            ['this-week', 'This week'],
+            ['this-month', 'This month'],
+            ['off', 'Off'],
+        ];
+        const upcomingBtn = `<span class="db-upcoming-wrap">
+        <button class="db-recurring-filter${this._upcomingRange !== 'off' ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-menu">Upcoming: ${this._escape(this._upcomingRangeLabel())}</button>
+        <span class="db-upcoming-popover"${this._upcomingMenuOpen ? '' : ' hidden'}>
+        ${upcomingOptions.map(([value, label]) => `<button class="db-upcoming-option${(this._upcomingRange || 'default') === value ? ' db-upcoming-option--active' : ''}" data-action="set-upcoming-range" data-range="${value}"><span>${label}</span>${(this._upcomingRange || 'default') === value ? '<i class="ti ti-check"></i>' : ''}</button>`).join('')}
+        </span>
+        </span>`;
         let visInbox = inbox;
-        if (!this._hideUpcoming) visInbox = [...upcomingTasks, ...visInbox];
+        if (this._upcomingRange !== 'off') visInbox = [...upcomingTasks, ...visInbox];
         if (this._hideUndated)   visInbox = visInbox.filter(t => (t.segments || []).some(s => s.type === 'datetime'));
         const filtersHidingAll = visInbox.length === 0 && (inbox.length > 0 || upcomingTasks.length > 0);
         const inboxEmptyMsg = filtersHidingAll ? "There's stuff here — you're just not looking at it." : null;
@@ -1101,8 +1275,8 @@ class TodayDashboard {
         const isExpanded = this._expandedRecurring === task.guid;
         const doneBtn  = `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
         const row = `<div class="db-task db-recur-row${isExpanded ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
-        <div class="db-task-r1">
         ${doneBtn}
+        <div class="db-task-r1">
         <div class="db-task-body">
         <span class="db-task-text">${text}</span>${bodyMeta}
         </div>
@@ -1173,10 +1347,14 @@ class TodayDashboard {
         <select class="db-recur-select db-recur-start-month" data-guid="${guid}">${startMonthOptions}</select>
         <select class="db-recur-select db-recur-start-day" data-guid="${guid}">${startDayOptions}</select>
         </div>` : '';
-        return `<div class="db-recur-edit db-recur-edit--${variant}${variant === 'sheet' ? ' db-bottom-sheet' : ''}">
+        const sheetAnimClass = variant === 'sheet' && !this._recurringSheetAnimate ? ' db-recur-edit--no-anim' : '';
+        if (variant === 'sheet') this._recurringSheetAnimate = false;
+        return `<div class="db-recur-edit db-recur-edit--${variant}${variant === 'sheet' ? ' db-bottom-sheet' : ''}${sheetAnimClass}">
         <div class="db-recur-pills">${pills}</div>
+        <div class="db-recur-fields">
         ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
         ${startArea}
+        </div>
         <div class="db-recur-actions">
         <button class="db-btn db-btn--primary db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
         <button class="db-btn db-btn--quiet db-recur-cancel" data-action="cancel-recurring">Cancel</button>
@@ -1196,6 +1374,40 @@ class TodayDashboard {
         return typeof d === 'string' ? d : '';
     }
 
+    _dateKeyFromDate(date) {
+        return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    _upcomingCutoffKey() {
+        const range = this._upcomingRange || 'default';
+        if (range === 'off') return null;
+        const today = new Date();
+        const d = new Date(today);
+        if (range === 'this-week') {
+            const daysUntilSunday = (7 - today.getDay()) % 7;
+            d.setDate(today.getDate() + daysUntilSunday);
+        } else if (range === 'this-month') {
+            d.setMonth(today.getMonth() + 1, 0);
+        } else {
+            const days = { default: 3, '7': 7, '14': 14, '21': 21, '45': 45 }[range] || 3;
+            d.setDate(today.getDate() + days);
+        }
+        return this._dateKeyFromDate(d);
+    }
+
+    _upcomingRangeLabel() {
+        return {
+            default: '3 days',
+            '7': '7 days',
+            '14': '14 days',
+            '21': '21 days',
+            '45': '45 days',
+            'this-week': 'This week',
+            'this-month': 'This month',
+            off: 'Off',
+        }[this._upcomingRange || 'default'] || '3 days';
+    }
+
     _ignoreListTaskRow(task, isIgnored) {
         const text   = this._getTaskTextHTML(task);
         const dateChip = this._getDateChipHTML(task);
@@ -1205,8 +1417,8 @@ class TodayDashboard {
         : '';
         const actionHTML = `<button class="db-icon-btn ${isIgnored ? 'db-unignore' : 'db-ignore'}" data-task-action="ignore" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}" aria-label="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>`;
         return `<div class="db-task listitem-task${isIgnored ? ' db-task--ignored' : ''}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-        <div class="db-task-r1">
         <div class="db-done line-check-div" aria-disabled="true" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+        <div class="db-task-r1">
         <div class="db-task-body">
         <span class="db-task-text">${text}</span>${dateChip}${sourceHTML}
         </div>
@@ -1279,8 +1491,8 @@ class TodayDashboard {
 
         if (section === 'recurring-preview') {
             return `<div class="db-task listitem-task db-task--recurring-preview" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-            <div class="db-task-r1">
             <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+            <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
             </div>
             ${this._r2HTML('', '')}
@@ -1300,8 +1512,8 @@ class TodayDashboard {
 
         if (section === 'recurring-missed') {
             return `<div class="db-task listitem-task" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-            <div class="db-task-r1">
             <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
+            <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
             </div>
             ${this._r2HTML('', '')}
@@ -1338,8 +1550,8 @@ class TodayDashboard {
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
-            <div class="db-task-r1">
             ${doneBtn}
+            <div class="db-task-r1">
             <div class="db-task-body">
             <span class="db-task-text--sel">${text}</span>${bodyMeta}
             </div>
@@ -1355,8 +1567,8 @@ class TodayDashboard {
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
-            <div class="db-task-r1">
             ${doneBtn}
+            <div class="db-task-r1">
             <div class="db-task-body">
             <span class="db-task-text">${text}</span>${bodyMeta}
             </div>
@@ -1367,8 +1579,8 @@ class TodayDashboard {
 
         if (section === 'inbox' || section === 'overdue') {
             return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-action="pin" data-guid="${task.guid}">
-            <div class="db-task-r1">
             ${doneBtn}
+            <div class="db-task-r1">
             <div class="db-task-body">
             <span class="db-task-text">${text}</span>${bodyMeta}
             </div>
@@ -1378,8 +1590,8 @@ class TodayDashboard {
         }
 
         return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-        <div class="db-task-r1">
         ${doneBtn}
+        <div class="db-task-r1">
         <div class="db-task-body" data-action="open" data-guid="${task.guid}">
         <span class="db-task-text">${text}</span>${bodyMeta}
         </div>
@@ -1402,12 +1614,21 @@ class TodayDashboard {
         for (const l of allTasks)     byGuid.set(l.guid, l);
         for (const l of ignoredTasks) byGuid.set(l.guid, l);
         const today  = this._todayStr();
+        const isPeekSurface = () => this._peekPanel?.getElement() === el;
+        const rerenderCurrentSurface = () => {
+            if (isPeekSurface()) {
+                this._renderPeek();
+            } else if (this._panel) {
+                this._render(this._panel);
+            }
+        };
 
         const searchInput = el.querySelector('.db-plan-search');
         const searchClear = el.querySelector('.db-search-clear');
         if (searchInput) {
             searchInput.addEventListener('input', () => {
                 this._planSearch = searchInput.value;
+                this._upcomingMenuOpen = false;
                 if (searchClear) searchClear.hidden = !this._planSearch;
                 this._reapplyPlanSearch(el);
             }, { signal });
@@ -1453,7 +1674,7 @@ class TodayDashboard {
                             cachedTask.props['db-pinned']               = null;
                             cachedTask.props['db-recurring-done-dates'] = newDoneDates;
                         }
-                        if (this._panel) this._render(this._panel);
+                        rerenderCurrentSurface();
                         try {
                             const nextYMD = nextDate.replace(/-/g, '');
                             const newSegs = [
@@ -1470,7 +1691,7 @@ class TodayDashboard {
                         // [RECURRING-END]
                     } else {
                         this._moveToDone(task.guid, today);
-                        if (this._panel) this._render(this._panel);
+                        rerenderCurrentSurface();
                         try {
                             await task.setTaskStatus('done');
                             await task.setMetaProperty('db-done-date', today);
@@ -1481,7 +1702,7 @@ class TodayDashboard {
                         } catch (err) {
                             console.error('[Dashboard] done failed:', err);
                             this._moveToTodo(task.guid);
-                            if (this._panel) this._render(this._panel);
+                            rerenderCurrentSurface();
                         }
                     }
                     break;
@@ -1489,14 +1710,14 @@ class TodayDashboard {
                 case 'undone': {
                     if (!task) return;
                     this._moveToTodo(task.guid);
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     try {
                         await task.setTaskStatus('none');
                         await task.setMetaProperty('db-done-date', null);
                     } catch (err) {
                         console.error('[Dashboard] undone failed:', err);
                         this._moveToDone(task.guid, today);
-                        if (this._panel) this._render(this._panel);
+                        rerenderCurrentSurface();
                     }
                     break;
                 }
@@ -1504,29 +1725,30 @@ class TodayDashboard {
                     if (!task) return;
                     const pinDate = this._viewDateHyphen();
                     this._patchTask(task.guid, { 'db-pinned': pinDate });
-                    this._mode = 'plan';
-                    if (this._panel) this._render(this._panel);
+                    if (isPeekSurface()) this._peekMode = 'plan';
+                    else this._mode = 'plan';
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-pinned', pinDate);
                     break;
                 }
                 case 'unpin': {
                     if (!task) return;
                     this._patchTask(task.guid, { 'db-pinned': null });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-pinned', null);
                     break;
                 }
                 case 'unassign': {
                     if (!task) return;
                     this._patchTask(task.guid, { 'db-timeblock': null });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-timeblock', null);
                     break;
                 }
                 case 'close-task-sheet': {
                     this._taskSheet = null;
                     this._taskSheetSlot = null;
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'sheet-assign-slot': {
@@ -1537,12 +1759,12 @@ class TodayDashboard {
                     this._taskSheetSlot = null;
                     if (slotTime === prevSlot) {
                         this._patchTask(task.guid, { 'db-timeblock': null });
-                        if (this._panel) this._render(this._panel);
+                        rerenderCurrentSurface();
                         task.setMetaProperty('db-timeblock', null);
                     } else {
                         const tb = this._viewDateStr() + ':' + slotTime;
                         this._patchTask(task.guid, { 'db-timeblock': tb });
-                        if (this._panel) this._render(this._panel);
+                        rerenderCurrentSurface();
                         task.setMetaProperty('db-timeblock', tb);
                     }
                     break;
@@ -1552,7 +1774,7 @@ class TodayDashboard {
                     this._taskSheet = null;
                     this._taskSheetSlot = null;
                     this._patchTask(task.guid, { 'db-timeblock': null });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-timeblock', null);
                     break;
                 }
@@ -1561,7 +1783,7 @@ class TodayDashboard {
                     this._taskSheet = null;
                     this._taskSheetSlot = null;
                     this._patchTask(task.guid, { 'db-pinned': null, 'db-timeblock': null });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-pinned', null);
                     task.setMetaProperty('db-timeblock', null);
                     break;
@@ -1570,13 +1792,13 @@ class TodayDashboard {
                     if (this._taskSheet === guid) {
                         this._taskSheet = null;
                         this._taskSheetSlot = null;
-                        if (this._panel) this._render(this._panel);
+                        rerenderCurrentSurface();
                         break;
                     }
                     this._taskSheet = guid;
                     const parsed = this._parseTimeblock(task?.props?.['db-timeblock']);
                     this._taskSheetSlot = (parsed && parsed.date === this._viewDateStr()) ? parsed.time : null;
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'open': {
@@ -1607,14 +1829,14 @@ class TodayDashboard {
                 case 'ignore': {
                     if (!task) return;
                     this._patchTask(task.guid, { 'db-ignored': 'true' });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-ignored', 'true');
                     break;
                 }
                 case 'unignore': {
                     if (!task) return;
                     this._patchTask(task.guid, { 'db-ignored': null });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-ignored', null);
                     break;
                 }
@@ -1622,25 +1844,26 @@ class TodayDashboard {
                 case 'expand-recurring': {
                     if (!task) return;
                     this._expandedRecurring = guid;
+                    this._recurringSheetAnimate = true;
                     this._recurringDraft = {
                         freq: task.props?.['db-recurring-freq'] || 'daily',
                         day:  task.props?.['db-recurring-day']  || null,
                         start: task.props?.['db-recurring-start'] || this._todayD(),
                     };
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'draft-freq': {
                     if (!this._recurringDraft) return;
                     this._recurringDraft.freq = target.dataset.freq;
                     this._recurringDraft.day  = null;
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'draft-day': {
                     if (!this._recurringDraft) return;
                     this._recurringDraft.day = target.dataset.day;
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'save-recurring': {
@@ -1663,7 +1886,7 @@ class TodayDashboard {
                     ];
                     this._expandedRecurring = null;
                     this._recurringDraft = null;
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-recurring-freq', freq);
                     task.setMetaProperty('db-recurring-day', day || null);
                     task.setMetaProperty('db-recurring-start', startDate);
@@ -1673,7 +1896,7 @@ class TodayDashboard {
                 case 'cancel-recurring': {
                     this._expandedRecurring = null;
                     this._recurringDraft = null;
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 // [RECURRING-END]
@@ -1682,7 +1905,7 @@ class TodayDashboard {
                     if (!task) return;
                     const recStartDate = this._viewDateHyphen().replace(/-/g, '');
                     this._patchTask(task.guid, { 'db-recurring-freq': 'daily', 'db-recurring-start': recStartDate, 'db-pinned': null });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-recurring-freq', 'daily');
                     task.setMetaProperty('db-recurring-start', recStartDate);
                     task.setMetaProperty('db-pinned', null);
@@ -1700,7 +1923,7 @@ class TodayDashboard {
                     delete this._rescheduledRecurring[task.guid]; // [RECURRING]
                     const pinDate = this._viewDateHyphen();
                     this._patchTask(task.guid, { 'db-recurring-freq': null, 'db-recurring-day': null, 'db-recurring-start': null, 'db-pinned': pinDate });
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     task.setMetaProperty('db-recurring-freq',  null);
                     task.setMetaProperty('db-recurring-day',   null);
                     task.setMetaProperty('db-recurring-start', null);
@@ -1711,17 +1934,17 @@ class TodayDashboard {
                 // [RECURRING] toggle-recurring-filter — remove when Thymer ships native recurring
                 case 'wipe-metadata': {
                     this._wipeState = 'confirm';
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'wipe-metadata-cancel': {
                     this._wipeState = null;
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'wipe-metadata-confirm': {
                     this._wipeState = 'wiping';
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                     await this._wipePluginMetadata();
                     break;
                 }
@@ -1750,40 +1973,53 @@ class TodayDashboard {
                 }
                 case 'toggle-undated-filter': {
                     this._hideUndated = !this._hideUndated;
-                    if (this._panel) this._render(this._panel);
+                    this._upcomingMenuOpen = false;
+                    rerenderCurrentSurface();
                     break;
                 }
-                case 'toggle-upcoming-filter': {
-                    this._hideUpcoming = !this._hideUpcoming;
-                    if (this._panel) this._render(this._panel);
+                case 'toggle-upcoming-menu': {
+                    this._upcomingMenuOpen = !this._upcomingMenuOpen;
+                    rerenderCurrentSurface();
+                    break;
+                }
+                case 'set-upcoming-range': {
+                    this._upcomingRange = target.dataset.range || 'default';
+                    this._upcomingMenuOpen = false;
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'toggle-overdue': {
                     this._overdueCollapsed = !this._overdueCollapsed;
-                    if (this._panel) this._render(this._panel);
+                    this._upcomingMenuOpen = false;
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'set-mode': {
-                    this._mode = target.dataset.mode;
+                    if (isPeekSurface()) this._peekMode = target.dataset.mode;
+                    else this._mode = target.dataset.mode;
+                    this._upcomingMenuOpen = false;
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
-                    if (this._mode === 'plan' && this._viewDate < this._todayD()) this._viewDate = null;
-                    if (this._panel) this._render(this._panel);
+                    if ((isPeekSurface() ? this._peekMode : this._mode) === 'plan' && this._viewDate < this._todayD()) this._viewDate = null;
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'go-today': {
                     this._viewDate = null;
-                    if (this._panel) this._render(this._panel);
+                    this._upcomingMenuOpen = false;
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'prev-day': {
                     this._viewDate = this._offsetDate(this._viewDateStr(), -1);
-                    if (this._panel) this._render(this._panel);
+                    this._upcomingMenuOpen = false;
+                    rerenderCurrentSurface();
                     break;
                 }
                 case 'next-day': {
                     this._viewDate = this._offsetDate(this._viewDateStr(), 1);
-                    if (this._panel) this._render(this._panel);
+                    this._upcomingMenuOpen = false;
+                    rerenderCurrentSurface();
                     break;
                 }
             }
@@ -1811,7 +2047,7 @@ class TodayDashboard {
                 const dd = edit?.querySelector('.db-recur-start-day')?.value;
                 if (mm && dd) {
                     this._recurringDraft.start = this._startDateFromMonthDay(mm, dd);
-                    if (this._panel) this._render(this._panel);
+                    rerenderCurrentSurface();
                 }
                 return;
             }

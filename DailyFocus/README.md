@@ -12,6 +12,8 @@ A workspace-wide task manager that aggregates tasks from across your entire Thym
 
 ## Modes
 
+**New! Peek** — open Daily Focus in a modal over your current note, without switching context. Press `Ctrl+P` / `Cmd+P`, then type `peek` and choose `Daily Focus: Peek`.
+
 ### Focus
 
 Shows what you're working on today, organized by time.
@@ -60,6 +62,10 @@ A hamburger menu (☰) sits in the top left corner of every view:
 - **Ignore list** — hide tasks from Plan and Focus
 - **Settings** — configure plugin behaviour
 
+These views can also be opened directly from the command palette: `Daily Focus: Open Focus`, `Daily Focus: Open Plan`, `Daily Focus: Open Recurring Tasks`, `Daily Focus: Open Ignore List`, and `Daily Focus: Open Settings`.
+
+Use `Daily Focus: Peek` to open Focus in a modal over your current note. The peek view includes a Focus / Plan switch so you can check or plan your day without navigating away.
+
 ## Task interactions
 
 - **Checkbox** — mark a task done (or undo from the done state). Done tasks appear with strikethrough and reduced opacity. For recurring tasks, checking off advances the date to the next occurrence instead of marking permanently done.
@@ -84,6 +90,11 @@ If you clear your browser cache and browser data while the plugin is installed i
 ## Changelog
 
 ### 2026-04-30
+- **Upcoming filter** — Plan now shows the next 3 days by default, sorted by date, with range choices for 7, 14, 21, 45 days, This week, This month, or Off
+- **Fix** — recurring task sheets on mobile no longer re-animate while switching frequency options
+- **Fix** — task statuses such as in progress, blocked, and billing are visible again on task checkboxes
+- **Peek** — new command palette action opens Daily Focus in a modal over the current note, with a Focus / Plan switch
+- **Command palette** — Focus, Plan, Recurring tasks, Ignore list, and Settings can now be opened directly
 - **Plan search** — search can now combine phrase matching, exclusions, source-only matches, and source-only exclusions
 
 ### 2026-04-29
