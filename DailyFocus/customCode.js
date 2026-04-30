@@ -1820,15 +1820,24 @@ class TodayDashboard {
     }
 
     _reapplyPlanSearch(el) {
-        const term = (this._planSearch || '').toLowerCase().trim();
+        const terms = (this._planSearch || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+        const includeTerm = terms.filter(t => !t.startsWith('!') && !t.startsWith('@')).join(' ');
+        const excludeTerms = terms.map(t => t.startsWith('!') && !t.startsWith('!@') ? t.slice(1) : '').filter(Boolean);
+        const sourceIncludeTerms = terms.map(t => t.startsWith('@') ? t.slice(1) : '').filter(Boolean);
+        const sourceExcludeTerms = terms.map(t => t.startsWith('!@') ? t.slice(2) : '').filter(Boolean);
         for (const section of el.querySelectorAll('.db-section--overdue, .db-section--inbox')) {
             let visibleCount = 0;
             for (const row of section.querySelectorAll('.db-task')) {
-                const match = !term || row.textContent.toLowerCase().includes(term);
+                const rowText = row.textContent.toLowerCase();
+                const sourceText = row.querySelector('.db-task-source--link')?.textContent.toLowerCase() || '';
+                const match = (!includeTerm || rowText.includes(includeTerm))
+                    && excludeTerms.every(t => !rowText.includes(t))
+                    && sourceIncludeTerms.every(t => sourceText.includes(t))
+                    && sourceExcludeTerms.every(t => !sourceText.includes(t));
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             }
-            section.style.display = (term && visibleCount === 0) ? 'none' : '';
+            section.style.display = (terms.length && visibleCount === 0) ? 'none' : '';
         }
     }
 
