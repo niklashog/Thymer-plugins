@@ -177,7 +177,6 @@ class TodayDashboard {
             '.db-hamburger:focus-visible,.db-pin-icon:focus-visible,.db-recurring-btn:focus-visible,.db-recur-remove:focus-visible,' +
             '.db-src-icon:focus-visible,.db-ignore:focus-visible,.db-unignore:focus-visible{' +
             'outline:1px solid var(--ed-link-color);outline-offset:2px}' +
-            '.db-task--selected{border-color:var(--ed-link-color)}' +
             '.db-done{flex-shrink:0;cursor:pointer;align-self:center;margin-top:0!important;margin-right:0!important}' +
             '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
             '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
@@ -198,9 +197,9 @@ class TodayDashboard {
             '.db-task-source--link{font-size:12px;color:var(--ed-link-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-task-source-wrap:hover .db-task-source--link{color:var(--ed-link-hover-color)}' +
-            '.db-pin,.db-unpin,.db-nav,.db-ignore,.db-unignore,.db-recurring-btn{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
+            '.db-nav,.db-ignore,.db-unignore,.db-recurring-btn,.db-pin-icon{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
-            '.db-pin:hover,.db-unpin:hover,.db-nav:hover,.db-ignore:hover,.db-unignore:hover,.db-recurring-btn:hover{opacity:.7}' +
+            '.db-nav:hover,.db-ignore:hover,.db-unignore:hover,.db-recurring-btn:hover,.db-pin-icon:hover{opacity:.7}' +
             // [RECURRING-START] recurring UI — remove when Thymer ships native recurring
             '.db-recurring-btn{display:inline-flex;align-items:center;gap:2px}' +
             '.db-recurring-btn--active{opacity:.6;color:var(--ed-link-color)}' +
@@ -281,8 +280,8 @@ class TodayDashboard {
             '.db-dropdown-item:hover{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text)}' +
             '.db-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;' +
             'padding:10px 14px;border-radius:var(--ed-radius-block);cursor:pointer;' +
-            'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'box-shadow:var(--color-shadow-cards);margin-bottom:4px;transition:background .1s}' +
+            'background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
+            'box-shadow:none;margin-bottom:4px;transition:background .1s}' +
             '.db-setting-row:hover{background:var(--cards-hover-bg)}' +
             '.db-search-wrap{position:relative;margin-bottom:20px}' +
             '.db-plan-search{width:100%;box-sizing:border-box;' +
@@ -395,7 +394,6 @@ class TodayDashboard {
             '.db-task-source-wrap{flex:0 0 100%;min-width:0;max-width:none;margin-top:4px}' +
             '.db-task-source--link{overflow:hidden;text-overflow:ellipsis;max-width:24ch;font-size:12px;opacity:.75}' +
             '.db-src-icon{padding:1px 2px}' +
-            '.db-block .db-unpin{display:none}' +
             '}' +
             '.db-task--open{background:var(--cards-hover-bg);border-color:var(--ed-container-border-color);' +
             'border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;margin-bottom:0!important}' +
@@ -412,9 +410,7 @@ class TodayDashboard {
             '.db-inline-slot-label{font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-inline-slot-time{font-size:11px;opacity:.5;white-space:nowrap;font-variant-numeric:tabular-nums}' +
             '.db-pin-icon{display:inline-flex;align-items:center;justify-content:center;' +
-            'background:none;border:none;cursor:pointer;color:var(--ed-gray-text);' +
-            'opacity:.7;font-size:14px;padding:0 4px;border-radius:var(--ed-radius-normal);' +
-            'transition:opacity .15s;flex-shrink:0;line-height:1}' +
+            'color:var(--ed-gray-text);opacity:.7;font-size:14px;padding:0 4px}' +
             '.db-pin-icon:hover{opacity:1;color:var(--ed-link-color)}' +
             '.db-sheet-overlay{display:none}' +
             '.db-task-sheet{display:none}' +
@@ -423,7 +419,7 @@ class TodayDashboard {
             '.db-sheet-overlay{display:block;position:fixed;inset:0;background:transparent;z-index:199}' +
             '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--cards-bg);' +
             'border-radius:16px 16px 0 0;z-index:200;border-top:1px solid var(--sidebar-border-color);' +
-            'box-shadow:var(--color-shadow-hover);max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
+            'box-shadow:none;max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
             '.db-sheet-handle{width:36px;height:4px;background:var(--sidebar-border-color);' +
             'border-radius:2px;margin:10px auto 12px}' +
             '.db-sheet-header{padding:0 20px 14px;border-bottom:1px solid var(--sidebar-border-color)}' +
@@ -450,8 +446,8 @@ class TodayDashboard {
             '.db-wipe-btn{width:100%;text-align:left;padding:10px 14px;background:none;border:none;cursor:pointer;' +
             'font-size:14px;color:var(--ed-error-color);opacity:.7;border-radius:var(--ed-radius-block);transition:opacity .1s,background .1s}' +
             '.db-wipe-btn:hover{opacity:1;background:var(--cards-hover-bg)}' +
-            '.db-wipe-confirm{padding:10px 14px;background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-cards)}' +
+            '.db-wipe-confirm{padding:10px 14px;background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
+            'border-radius:var(--ed-radius-block);box-shadow:none}' +
             '.db-wipe-confirm-msg{font-size:13px;opacity:.7;margin:0 0 14px;line-height:1.5}' +
             '.db-wipe-actions{display:flex;gap:8px;align-items:center}' +
             '.db-wipe-confirm-btn{background:var(--ed-error-color);color:var(--ed-button-primary-text);border:none;cursor:pointer;' +
@@ -460,8 +456,7 @@ class TodayDashboard {
             '.db-wipe-cancel-btn{background:none;border:none;cursor:pointer;font-size:13px;color:inherit;' +
             'opacity:.45;padding:6px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
             '.db-wipe-cancel-btn:hover{opacity:.8}' +
-            '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}' +
-            '.empty-msg-panel{padding: 20px 0px 20px 0px !important}'
+            '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}'
             + '@keyframes db-sheet-rise{from{transform:translateY(14px);opacity:.92}to{transform:translateY(0);opacity:1}}'
             + '@media(prefers-reduced-motion:reduce){.db-task-sheet,.db-recur-edit--sheet{animation:none}}'
         );
@@ -1119,7 +1114,7 @@ class TodayDashboard {
         : `<span class="db-recur-summary db-recur-summary--unconfigured">Configure</span>`;
         const isExpanded = this._expandedRecurring === task.guid;
         const doneBtn  = `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
-        const row = `<div class="db-task db-recur-row${isExpanded ? ' db-task--open db-recur-row--expanded' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
+        const row = `<div class="db-task db-recur-row${isExpanded ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
         <div class="db-task-r1">
         ${doneBtn}
         <div class="db-task-body">
