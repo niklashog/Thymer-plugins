@@ -27,9 +27,18 @@ Used to decide what goes into your day.
 
 - **Overdue** — tasks past their due date, highlighted in red
 - **Today's Focus** — tasks pinned for today
-- **Inbox** — undated todos, plus optionally upcoming tasks; filter with the **Unscheduled** and **Upcoming** buttons in the section header
+- **Search** — filter Overdue and Inbox by task text, exclusions, and source links
 
 Tap a task in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Navigate forward to future dates with `←` / `→`. Switch back with **← Focus**.
+
+Plan search supports combined filters. For a task named `Write draft for my weekly on Medium` from source `articles`:
+
+- `weekly on Medium` — match the task text as a phrase
+- `!draft` — hide task rows containing `draft`
+- `@articles` — match only task source links containing `articles`
+- `!@articles` — hide task rows whose source link contains `articles`
+
+Filters can be combined, for example `weekly on Medium @articles !published`.
 
 ### Recurring tasks
 
@@ -73,6 +82,9 @@ If you clear your browser cache and browser data while the plugin is installed i
 **Fix:** switch your mobile browser to desktop mode, navigate around a little, then switch back to mobile mode and the app should load correctly on next visit.
 
 ## Changelog
+
+### 2026-04-30
+- **Plan search** — search can now combine phrase matching, exclusions, source-only matches, and source-only exclusions
 
 ### 2026-04-29
 - **Mobile task layout** — task rows are easier to tap, with cleaner spacing between task text, due dates, and source links

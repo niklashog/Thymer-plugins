@@ -167,20 +167,18 @@ class TodayDashboard {
             '.db-section-toggle{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 4px;border-radius:4px;opacity:.35;transition:opacity .15s}' +
             '.db-section-toggle:hover{opacity:.65}' +
+            '.db-task,.db-recur-edit,.db-setting-row,.db-settings-note,.db-block,.db-sheet-slot,.db-wipe-confirm{' +
+            'background:var(--cards-bg);border:1px solid var(--ed-container-border-color);box-shadow:none}' +
             '.db-task{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:36px;' +
             'box-sizing:border-box;border-radius:var(--ed-radius-normal);transition:background .1s,border-color .1s;' +
-            'background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
-            'box-shadow:none;margin-bottom:3px}' +
+            'margin-bottom:3px}' +
             '.db-task:hover{background:var(--cards-hover-bg);box-shadow:none}' +
-            '.db-task:focus-visible,.db-inline-slot:focus-visible,.db-sheet-slot:focus-visible,' +
-            '.db-day-nav-btn:focus-visible,.db-day-nav-label:focus-visible,.db-mode-toggle:focus-visible,' +
-            '.db-hamburger:focus-visible,.db-pin-icon:focus-visible,.db-recurring-btn:focus-visible,.db-recur-remove:focus-visible,' +
-            '.db-src-icon:focus-visible,.db-ignore:focus-visible,.db-unignore:focus-visible{' +
+            '.db-task:focus-visible,.db-btn:focus-visible,.db-icon-btn:focus-visible,.db-hamburger:focus-visible,.db-recur-remove:focus-visible,' +
+            '.db-inline-slot:focus-visible,.db-sheet-slot:focus-visible,.db-day-nav-btn:focus-visible,.db-day-nav-label:focus-visible,.db-mode-toggle:focus-visible{' +
             'outline:1px solid var(--ed-link-color);outline-offset:2px}' +
-            '.db-task--selected{border-color:var(--ed-link-color)}' +
             '.db-done{flex-shrink:0;cursor:pointer;align-self:center;margin-top:0!important;margin-right:0!important}' +
             '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
-            '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
+            '.db-task.state-done .db-task-source--link{opacity:.2}' +
             '.db-task.state-done .db-date-chip{opacity:.35}' +
             '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;cursor:pointer;line-height:1.35}' +
             '.db-task-text{min-width:0;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
@@ -192,15 +190,23 @@ class TodayDashboard {
             '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
             '.db-date-chip{flex-shrink:0;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
             'border-radius:3px;padding:1px 4px;font-size:12px;line-height:1.35;white-space:nowrap}' +
-            '.db-date-chip--overdue{color:var(--ed-datetime-color);background:var(--ed-datetime-bg)}' +
-            '.db-task-source{font-size:12px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
             '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;gap:2px;padding-right:0px;max-width:180px}' +
             '.db-task-source--link{font-size:12px;color:var(--ed-link-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-task-source-wrap:hover .db-task-source--link{color:var(--ed-link-hover-color)}' +
-            '.db-pin,.db-unpin,.db-nav,.db-ignore,.db-unignore,.db-recurring-btn{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
+            '.db-btn{background:none;border:none;cursor:pointer;color:inherit;border-radius:var(--ed-radius-normal);' +
+            'transition:opacity .1s,background .1s,color .1s}' +
+            '.db-btn--primary{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);' +
+            'font-size:12px;font-weight:600;padding:6px 16px}' +
+            '.db-btn--primary:hover{background:var(--ed-button-primary-bg-hover)}' +
+            '.db-btn--danger{background:var(--ed-error-color);color:var(--ed-button-primary-text);' +
+            'font-size:13px;font-weight:600;padding:6px 14px}' +
+            '.db-btn--danger:hover{opacity:.85}' +
+            '.db-btn--quiet{font-size:12px;opacity:.45;padding:6px 8px}' +
+            '.db-btn--quiet:hover{opacity:.8}' +
+            '.db-icon-btn{flex-shrink:0;background:none;border:none;cursor:pointer;color:inherit;' +
             'font-size:15px;line-height:1;padding:1px 5px;opacity:.2;transition:opacity .15s;border-radius:4px}' +
-            '.db-pin:hover,.db-unpin:hover,.db-nav:hover,.db-ignore:hover,.db-unignore:hover,.db-recurring-btn:hover{opacity:.7}' +
+            '.db-icon-btn:hover{opacity:.7}' +
             // [RECURRING-START] recurring UI — remove when Thymer ships native recurring
             '.db-recurring-btn{display:inline-flex;align-items:center;gap:2px}' +
             '.db-recurring-btn--active{opacity:.6;color:var(--ed-link-color)}' +
@@ -214,53 +220,47 @@ class TodayDashboard {
             '.db-recurring-notice-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
             '.db-recurring-notice-btn:hover{color:var(--ed-link-hover-color)}' +
+            '.db-bottom-sheet{display:none;position:fixed;bottom:0;left:0;right:0;' +
+            'border:none;border-top:1px solid var(--sidebar-border-color);border-radius:16px 16px 0 0;' +
+            'background:var(--cards-bg);z-index:200;box-shadow:none;max-height:calc(100vh - 24px);' +
+            'overflow:auto;animation:db-sheet-rise .16s ease-out}' +
             '.db-recur-overlay{display:none;position:fixed;inset:0;background:transparent;z-index:199}' +
             '.db-recur-row{cursor:pointer}' +
             '.db-recur-summary{font-size:12px;opacity:.4;white-space:nowrap;flex-shrink:0}' +
             '.db-recur-summary--unconfigured{color:var(--ed-error-color);opacity:.7}' +
             '.db-recur-row .db-task-source-wrap{min-width:0}' +
-            '.db-recur-edit{background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
-            'border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
+            '.db-recur-edit{border-top:none;border-radius:0 0 var(--ed-radius-block) var(--ed-radius-block);' +
             'padding:16px;margin:-1px 0 8px;box-shadow:none;box-sizing:border-box}' +
             '.db-recur-edit--sheet{display:none}' +
             '.db-recur-pills{display:flex;gap:6px;margin-bottom:16px}' +
-            '.db-recur-pill{background:none;border:1px solid var(--sidebar-border-color);' +
-            'border-radius:var(--ed-radius-pill);cursor:pointer;font-size:12px;font-weight:500;' +
-            'padding:4px 12px;color:inherit;opacity:.6;transition:all .1s}' +
+            '.db-recur-pill,.db-recur-day-btn,.db-setting-toggle{background:none;border:1px solid var(--sidebar-border-color);' +
+            'cursor:pointer;color:inherit;font-size:12px;font-weight:500;transition:all .1s}' +
+            '.db-recur-pill,.db-setting-toggle{border-radius:var(--ed-radius-pill);padding:4px 12px}' +
+            '.db-recur-pill{opacity:.6}' +
             '.db-recur-pill:hover{opacity:1}' +
-            '.db-recur-pill--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent;opacity:1}' +
+            '.db-recur-pill--active,.db-recur-day-btn--active,.db-setting-toggle--on{' +
+            'background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent;opacity:1}' +
             '.db-recur-date-area{margin-bottom:16px}' +
             '.db-recur-start{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px}' +
             '.db-recur-start-label{flex:0 0 100%;font-size:12px;font-weight:600;opacity:.45;line-height:1.2}' +
             '.db-recur-days{display:flex;flex-wrap:wrap;gap:6px}' +
-            '.db-recur-day-btn{background:none;border:1px solid var(--sidebar-border-color);' +
-            'border-radius:var(--ed-radius-normal);cursor:pointer;font-size:12px;font-weight:500;' +
-            'padding:5px 10px;color:inherit;opacity:.5;transition:all .1s}' +
+            '.db-recur-day-btn{border-radius:var(--ed-radius-normal);padding:5px 10px;opacity:.5}' +
             '.db-recur-day-btn:hover{opacity:.9}' +
-            '.db-recur-day-btn--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent;opacity:1}' +
             '.db-recur-select{background:var(--input-bg-color);border:1px solid var(--input-border-color);' +
             'border-radius:var(--ed-radius-normal);cursor:pointer;font-size:12px;padding:5px 8px;' +
             'color:inherit;outline:none;margin-right:8px}' +
             '.db-recur-actions{display:flex;align-items:center;gap:8px}' +
-            '.db-recur-save{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);' +
-            'border:none;border-radius:var(--ed-radius-normal);cursor:pointer;font-size:12px;font-weight:600;' +
-            'padding:6px 16px;transition:background .1s}' +
-            '.db-recur-save:hover{background:var(--ed-button-primary-bg-hover)}' +
-            '.db-recur-cancel{background:none;border:none;cursor:pointer;font-size:12px;color:inherit;' +
-            'opacity:.45;padding:6px 8px;transition:opacity .1s;border-radius:var(--ed-radius-normal)}' +
-            '.db-recur-cancel:hover{opacity:.8}' +
             '.db-recur-remove{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;' +
             'font-size:12px;color:var(--ed-link-color);opacity:1;padding:6px 8px;margin-left:auto;' +
             'border-radius:var(--ed-radius-normal);transition:opacity .1s,color .1s}' +
             '.db-recur-remove:hover{opacity:.45;color:inherit}' +
             '@media(max-width:700px),(pointer:coarse){.db-recur-overlay:not([hidden]){display:block}' +
+            '.db-recur-edit--sheet.db-bottom-sheet{display:block;border-top:1px solid var(--sidebar-border-color);' +
+            'border-radius:16px 16px 0 0}' +
             '.db-recur-summary{margin-left:auto;line-height:1.35;padding-top:1px}' +
             '.db-recur-row .db-task-source-wrap{min-width:0;max-width:none}' +
             '.db-recur-edit--inline{display:none}' +
-            '.db-recur-edit--sheet{display:block;position:fixed;bottom:0;left:0;right:0;' +
-            'border-radius:16px 16px 0 0;border:none;border-top:1px solid var(--sidebar-border-color);' +
-            'background:var(--cards-bg);padding:20px;z-index:200;box-shadow:none;margin:0;' +
-            'max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
+            '.db-recur-edit--sheet{padding:20px;margin:0}' +
             '.db-recur-pills,.db-recur-actions{flex-wrap:wrap}' +
             '.db-recur-select{max-width:100%;margin-bottom:8px}' +
             '.db-recur-remove{margin-left:0}}' +
@@ -281,8 +281,7 @@ class TodayDashboard {
             '.db-dropdown-item:hover{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text)}' +
             '.db-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;' +
             'padding:10px 14px;border-radius:var(--ed-radius-block);cursor:pointer;' +
-            'background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'box-shadow:var(--color-shadow-cards);margin-bottom:4px;transition:background .1s}' +
+            'margin-bottom:4px;transition:background .1s}' +
             '.db-setting-row:hover{background:var(--cards-hover-bg)}' +
             '.db-search-wrap{position:relative;margin-bottom:20px}' +
             '.db-plan-search{width:100%;box-sizing:border-box;' +
@@ -298,13 +297,10 @@ class TodayDashboard {
             '.db-search-clear:hover,.db-search-clear:focus{color:var(--ed-text-color);' +
             'background:var(--cards-hover-bg);outline:none}' +
             '.db-setting-label{font-size:14px;flex:1}' +
-            '.db-setting-toggle{background:none;border:1px solid var(--sidebar-border-color);cursor:pointer;color:inherit;' +
-            'font-size:12px;font-weight:500;padding:4px 12px;border-radius:var(--ed-radius-pill);' +
-            'opacity:.5;transition:all .1s;white-space:nowrap}' +
+            '.db-setting-toggle{opacity:.5;white-space:nowrap}' +
             '.db-setting-toggle:hover{opacity:.9}' +
-            '.db-setting-toggle--on{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-text);border-color:transparent;opacity:1}' +
-            '.db-settings-note{background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
-            'border-radius:var(--ed-radius-block);padding:12px 14px;margin-bottom:4px}' +
+            '.db-setting-toggle--on{color:var(--ed-button-primary-text)}' +
+            '.db-settings-note{border-radius:var(--ed-radius-block);padding:12px 14px;margin-bottom:4px}' +
             '.db-settings-note-title{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;margin-bottom:4px}' +
             '.db-settings-badge{font-size:11px;font-weight:600;color:var(--ed-link-color);opacity:.75}' +
             '.db-settings-note-copy{font-size:12px;line-height:1.45;opacity:.55;margin:0 0 12px}' +
@@ -329,8 +325,7 @@ class TodayDashboard {
             'font-size:14px;padding:2px 0;transition:color .15s}' +
             '.db-mode-toggle:hover{color:var(--ed-link-hover-color)}' +
             '' +
-            '.db-block{border-radius:var(--ed-radius-block);margin-bottom:12px;' +
-            'background:var(--cards-bg);border:1px solid var(--ed-container-border-color);box-shadow:none}' +
+            '.db-block{border-radius:var(--ed-radius-block);margin-bottom:12px}' +
             '.db-block-time{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px}' +
             '.db-block-label{font-size:13px;font-weight:500;opacity:.48}' +
             '.db-block-clock{font-size:12px;opacity:.32;font-variant-numeric:tabular-nums}' +
@@ -395,7 +390,6 @@ class TodayDashboard {
             '.db-task-source-wrap{flex:0 0 100%;min-width:0;max-width:none;margin-top:4px}' +
             '.db-task-source--link{overflow:hidden;text-overflow:ellipsis;max-width:24ch;font-size:12px;opacity:.75}' +
             '.db-src-icon{padding:1px 2px}' +
-            '.db-block .db-unpin{display:none}' +
             '}' +
             '.db-task--open{background:var(--cards-hover-bg);border-color:var(--ed-container-border-color);' +
             'border-radius:var(--ed-radius-block) var(--ed-radius-block) 0 0;margin-bottom:0!important}' +
@@ -412,18 +406,14 @@ class TodayDashboard {
             '.db-inline-slot-label{font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.db-inline-slot-time{font-size:11px;opacity:.5;white-space:nowrap;font-variant-numeric:tabular-nums}' +
             '.db-pin-icon{display:inline-flex;align-items:center;justify-content:center;' +
-            'background:none;border:none;cursor:pointer;color:var(--ed-gray-text);' +
-            'opacity:.7;font-size:14px;padding:0 4px;border-radius:var(--ed-radius-normal);' +
-            'transition:opacity .15s;flex-shrink:0;line-height:1}' +
+            'color:var(--ed-gray-text);opacity:.7;font-size:14px;padding:0 4px}' +
             '.db-pin-icon:hover{opacity:1;color:var(--ed-link-color)}' +
             '.db-sheet-overlay{display:none}' +
             '.db-task-sheet{display:none}' +
             '@media(max-width:600px){' +
             '.db-task-inline{display:none}' +
             '.db-sheet-overlay{display:block;position:fixed;inset:0;background:transparent;z-index:199}' +
-            '.db-task-sheet{display:block;position:fixed;bottom:0;left:0;right:0;background:var(--cards-bg);' +
-            'border-radius:16px 16px 0 0;z-index:200;border-top:1px solid var(--sidebar-border-color);' +
-            'box-shadow:var(--color-shadow-hover);max-height:calc(100vh - 24px);overflow:auto;animation:db-sheet-rise .16s ease-out}' +
+            '.db-task-sheet.db-bottom-sheet{display:block}' +
             '.db-sheet-handle{width:36px;height:4px;background:var(--sidebar-border-color);' +
             'border-radius:2px;margin:10px auto 12px}' +
             '.db-sheet-header{padding:0 20px 14px;border-bottom:1px solid var(--sidebar-border-color)}' +
@@ -432,8 +422,7 @@ class TodayDashboard {
             'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ed-text-color)}' +
             '.db-sheet-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 20px}' +
             '.db-sheet-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-            'padding:10px 6px;background:var(--cards-bg);border:1px solid var(--ed-container-border-color);' +
-            'border-radius:var(--ed-radius-block);box-shadow:none;' +
+            'padding:10px 6px;border-radius:var(--ed-radius-block);' +
             'cursor:pointer;color:inherit;min-height:52px;transition:background .1s,border-color .1s;box-sizing:border-box}' +
             '.db-sheet-slot:active{background:var(--cards-hover-bg);border-color:var(--input-border-color)}' +
             '.db-sheet-slot--active{background:var(--ed-button-primary-bg);color:var(--ed-button-primary-color);border-color:transparent}' +
@@ -450,18 +439,10 @@ class TodayDashboard {
             '.db-wipe-btn{width:100%;text-align:left;padding:10px 14px;background:none;border:none;cursor:pointer;' +
             'font-size:14px;color:var(--ed-error-color);opacity:.7;border-radius:var(--ed-radius-block);transition:opacity .1s,background .1s}' +
             '.db-wipe-btn:hover{opacity:1;background:var(--cards-hover-bg)}' +
-            '.db-wipe-confirm{padding:10px 14px;background:var(--cards-bg);border:1px solid var(--cards-border-color);' +
-            'border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-cards)}' +
+            '.db-wipe-confirm{padding:10px 14px;border-radius:var(--ed-radius-block)}' +
             '.db-wipe-confirm-msg{font-size:13px;opacity:.7;margin:0 0 14px;line-height:1.5}' +
             '.db-wipe-actions{display:flex;gap:8px;align-items:center}' +
-            '.db-wipe-confirm-btn{background:var(--ed-error-color);color:var(--ed-button-primary-text);border:none;cursor:pointer;' +
-            'font-size:13px;font-weight:600;padding:6px 14px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
-            '.db-wipe-confirm-btn:hover{opacity:.85}' +
-            '.db-wipe-cancel-btn{background:none;border:none;cursor:pointer;font-size:13px;color:inherit;' +
-            'opacity:.45;padding:6px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s}' +
-            '.db-wipe-cancel-btn:hover{opacity:.8}' +
-            '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}' +
-            '.empty-msg-panel{padding: 20px 0px 20px 0px !important}'
+            '.db-wipe-status{font-size:13px;padding:10px 14px;opacity:.5}'
             + '@keyframes db-sheet-rise{from{transform:translateY(14px);opacity:.92}to{transform:translateY(0);opacity:1}}'
             + '@media(prefers-reduced-motion:reduce){.db-task-sheet,.db-recur-edit--sheet{animation:none}}'
         );
@@ -871,7 +852,7 @@ class TodayDashboard {
         ? `<button class="db-sheet-remove" data-action="sheet-unpin" data-guid="${guid}"><i class="ti ti-pin"></i><span>Unpin</span></button>`
         : '';
         return `<div class="db-sheet-overlay" data-action="close-task-sheet"></div>
-        <div class="db-task-sheet">
+        <div class="db-bottom-sheet db-task-sheet">
         <div class="db-sheet-handle"></div>
         <div class="db-sheet-header">
         <div class="db-sheet-kicker">Schedule</div>
@@ -1038,8 +1019,8 @@ class TodayDashboard {
             <div class="db-wipe-confirm">
             <p class="db-wipe-confirm-msg">Removes all plugin data from tasks — pins, time blocks, recurring settings, ignored status — and clears plugin configuration. Cannot be undone.</p>
             <div class="db-wipe-actions">
-            <button class="db-wipe-confirm-btn" data-action="wipe-metadata-confirm">Confirm wipe</button>
-            <button class="db-wipe-cancel-btn" data-action="wipe-metadata-cancel">Cancel</button>
+            <button class="db-btn db-btn--danger db-wipe-confirm-btn" data-action="wipe-metadata-confirm">Confirm wipe</button>
+            <button class="db-btn db-btn--quiet db-wipe-cancel-btn" data-action="wipe-metadata-cancel">Cancel</button>
             </div>
             </div>` : this._wipeState === 'wiping' ? `
             <div class="db-wipe-status">Wiping…</div>` : this._wipeState === 'done' ? `
@@ -1108,7 +1089,7 @@ class TodayDashboard {
         const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
-        ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-icon-btn db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
         const bodyMeta = dateChip + sourceHTML;
         const freq = task.props?.['db-recurring-freq'];
@@ -1119,7 +1100,7 @@ class TodayDashboard {
         : `<span class="db-recur-summary db-recur-summary--unconfigured">Configure</span>`;
         const isExpanded = this._expandedRecurring === task.guid;
         const doneBtn  = `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
-        const row = `<div class="db-task db-recur-row${isExpanded ? ' db-task--open db-recur-row--expanded' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
+        const row = `<div class="db-task db-recur-row${isExpanded ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
         <div class="db-task-r1">
         ${doneBtn}
         <div class="db-task-body">
@@ -1192,13 +1173,13 @@ class TodayDashboard {
         <select class="db-recur-select db-recur-start-month" data-guid="${guid}">${startMonthOptions}</select>
         <select class="db-recur-select db-recur-start-day" data-guid="${guid}">${startDayOptions}</select>
         </div>` : '';
-        return `<div class="db-recur-edit db-recur-edit--${variant}">
+        return `<div class="db-recur-edit db-recur-edit--${variant}${variant === 'sheet' ? ' db-bottom-sheet' : ''}">
         <div class="db-recur-pills">${pills}</div>
         ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
         ${startArea}
         <div class="db-recur-actions">
-        <button class="db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
-        <button class="db-recur-cancel" data-action="cancel-recurring">Cancel</button>
+        <button class="db-btn db-btn--primary db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
+        <button class="db-btn db-btn--quiet db-recur-cancel" data-action="cancel-recurring">Cancel</button>
         <button class="db-recur-remove" data-action="remove-recurring" data-guid="${guid}" title="Remove recurring"><i class="ti ti-repeat"></i><span>Remove recurring</span></button>
         </div>
         </div>`;
@@ -1220,9 +1201,9 @@ class TodayDashboard {
         const dateChip = this._getDateChipHTML(task);
         const source = this._escape(task.record?.getName() || '');
         const sourceHTML = source
-        ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-icon-btn db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
-        const actionHTML = `<button class="${isIgnored ? 'db-unignore' : 'db-ignore'}" data-task-action="ignore" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}" aria-label="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>`;
+        const actionHTML = `<button class="db-icon-btn ${isIgnored ? 'db-unignore' : 'db-ignore'}" data-task-action="ignore" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}" aria-label="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>`;
         return `<div class="db-task listitem-task${isIgnored ? ' db-task--ignored' : ''}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
         <div class="db-task-r1">
         <div class="db-done line-check-div" aria-disabled="true" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
@@ -1281,7 +1262,7 @@ class TodayDashboard {
         const source     = this._escape(task.record?.getName() || '');
         // WIP: open-in-panel button goes here — blocked on Thymer SDK (createPanel + navigateTo doesn't open native record view)
         const sourceBody = source
-        ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
+        ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-icon-btn db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
         const bodyMeta = dateChip + sourceBody;
         const isPast   = this._viewDateStr() < this._todayD();
@@ -1292,8 +1273,8 @@ class TodayDashboard {
         // [RECURRING-START] freq button — remove when Thymer ships native recurring
         const freq       = task.props?.['db-recurring-freq'];
         const recurToggle = freq
-        ? `<button class="db-recurring-btn db-recurring-btn--active" data-task-action="recurring" data-action="remove-recurring" data-guid="${task.guid}" title="Remove recurring"><i class="ti ti-repeat"></i></button>`
-        : `<button class="db-recurring-btn" data-task-action="recurring" data-action="enable-recurring" data-guid="${task.guid}" title="Set as recurring"><i class="ti ti-repeat"></i></button>`;
+        ? `<button class="db-icon-btn db-recurring-btn db-recurring-btn--active" data-task-action="recurring" data-action="remove-recurring" data-guid="${task.guid}" title="Remove recurring"><i class="ti ti-repeat"></i></button>`
+        : `<button class="db-icon-btn db-recurring-btn" data-task-action="recurring" data-action="enable-recurring" data-guid="${task.guid}" title="Set as recurring"><i class="ti ti-repeat"></i></button>`;
         // [RECURRING-END]
 
         if (section === 'recurring-preview') {
@@ -1308,7 +1289,7 @@ class TodayDashboard {
 
         // [RECURRING-START] ghost traces for past/today views
         if (section === 'recurring-done') {
-            return `<div class="db-task listitem listitem-task state-done db-task--recurring-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
             <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
             <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
@@ -1318,7 +1299,7 @@ class TodayDashboard {
         }
 
         if (section === 'recurring-missed') {
-            return `<div class="db-task listitem-task db-task--recurring-missed" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
             <div class="db-task-r1">
             <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
             <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
@@ -1352,7 +1333,7 @@ class TodayDashboard {
 
         if (isFocus) {
             const pinBtn = task.props?.['db-pinned']
-            ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
+            ? `<button class="db-icon-btn db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
             : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
@@ -1369,7 +1350,7 @@ class TodayDashboard {
 
         if (section === 'today') {
             const pinBtn = task.props?.['db-pinned']
-            ? `<button class="db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
+            ? `<button class="db-icon-btn db-pin-icon" data-task-action="pin" data-action="sheet-unpin" data-guid="${task.guid}" title="Remove from today"><i class="ti ti-pin"></i></button>`
             : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
@@ -1401,7 +1382,6 @@ class TodayDashboard {
         ${doneBtn}
         <div class="db-task-body" data-action="open" data-guid="${task.guid}">
         <span class="db-task-text">${text}</span>${bodyMeta}
-        ${source ? `<span class="db-task-source">${source}</span>` : ''}
         </div>
         </div>
         ${this._r2HTML('', '')}
@@ -1840,15 +1820,24 @@ class TodayDashboard {
     }
 
     _reapplyPlanSearch(el) {
-        const term = (this._planSearch || '').toLowerCase().trim();
+        const terms = (this._planSearch || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+        const includeTerm = terms.filter(t => !t.startsWith('!') && !t.startsWith('@')).join(' ');
+        const excludeTerms = terms.map(t => t.startsWith('!') && !t.startsWith('!@') ? t.slice(1) : '').filter(Boolean);
+        const sourceIncludeTerms = terms.map(t => t.startsWith('@') ? t.slice(1) : '').filter(Boolean);
+        const sourceExcludeTerms = terms.map(t => t.startsWith('!@') ? t.slice(2) : '').filter(Boolean);
         for (const section of el.querySelectorAll('.db-section--overdue, .db-section--inbox')) {
             let visibleCount = 0;
             for (const row of section.querySelectorAll('.db-task')) {
-                const match = !term || row.textContent.toLowerCase().includes(term);
+                const rowText = row.textContent.toLowerCase();
+                const sourceText = row.querySelector('.db-task-source--link')?.textContent.toLowerCase() || '';
+                const match = (!includeTerm || rowText.includes(includeTerm))
+                    && excludeTerms.every(t => !rowText.includes(t))
+                    && sourceIncludeTerms.every(t => sourceText.includes(t))
+                    && sourceExcludeTerms.every(t => !sourceText.includes(t));
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             }
-            section.style.display = (term && visibleCount === 0) ? 'none' : '';
+            section.style.display = (terms.length && visibleCount === 0) ? 'none' : '';
         }
     }
 
@@ -2020,13 +2009,11 @@ class TodayDashboard {
     }
 
     _getDateChipHTML(task) {
-        const todayD = this._todayD().replace(/-/g, '');
         const seg = (task.segments || []).find(s => s.type === 'datetime');
         const d = seg?.text?.d;
         if (!d) return '';
         const label = this._formatDate(d);
-        const isOverdue = d < todayD;
-        return `<span class="db-date-chip${isOverdue ? ' db-date-chip--overdue' : ''}">${this._escape(label)}</span>`;
+        return `<span class="db-date-chip">${this._escape(label)}</span>`;
     }
 
     _escape(str) {
