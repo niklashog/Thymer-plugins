@@ -22,7 +22,8 @@ class TodayDashboard {
         this._doneTasksMap   = new Map();
         this._viewDate       = null;
         this._hideUndated    = false;
-        this._hideUpcoming   = true;
+        this._upcomingRange  = 'default';
+        this._upcomingMenuOpen = false;
         this._overdueCollapsed = false;
         this._listenerAbort  = null;
         this._todayCache     = null;
@@ -220,6 +221,16 @@ class TodayDashboard {
             'opacity:.35;padding:2px 4px;border-radius:4px;transition:opacity .15s;white-space:nowrap}' +
             '.db-recurring-filter:hover{opacity:.6}' +
             '.db-recurring-filter--active{opacity:.6;color:var(--ed-link-color)}' +
+            '.db-upcoming-wrap{position:relative;margin-left:auto}' +
+            '.db-upcoming-popover{position:absolute;right:0;top:calc(100% + 6px);z-index:120;' +
+            'display:grid;gap:2px;min-width:150px;padding:4px;background:var(--input-bg-color);' +
+            'border:1px solid var(--input-border-color);border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-hover)}' +
+            '.db-upcoming-popover[hidden]{display:none}' +
+            '.db-upcoming-option{display:flex;align-items:center;justify-content:space-between;gap:10px;' +
+            'background:none;border:none;color:inherit;cursor:pointer;text-align:left;font-size:12px;' +
+            'padding:7px 10px;border-radius:var(--ed-radius-normal)}' +
+            '.db-upcoming-option:hover{background:var(--cards-hover-bg)}' +
+            '.db-upcoming-option--active{color:var(--ed-link-color);font-weight:600}' +
             '.db-recurring-notice{font-size:12px;opacity:.6;padding:4px 6px 12px;display:flex;align-items:center;gap:5px}' +
             '.db-recurring-notice-btn{background:none;border:none;cursor:pointer;color:var(--ed-link-color);' +
             'font-size:12px;padding:0;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
@@ -795,13 +806,21 @@ class TodayDashboard {
         });
 
         const todayD = this._todayD().replace(/-/g, '');
-        const upcomingCutoff = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0,10).replace(/-/g,''); })();
+        const upcomingCutoff = this._upcomingCutoffKey();
         const upcomingTasks = allTodos.filter(l => {
+            if (!upcomingCutoff) return false;
             const pinDate = l.props?.['db-pinned'] || '';
             if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || pinDate >= today) return false;
             const seg = (l.segments || []).find(s => s.type === 'datetime');
             const d = seg?.text?.d;
             return d && d > todayD && d <= upcomingCutoff;
+        }).sort((a, b) => {
+            const da = this._taskDueDateKey(a);
+            const db = this._taskDueDateKey(b);
+            if (da && db && da !== db) return da.localeCompare(db);
+            if (da && !db) return -1;
+            if (!da && db) return 1;
+            return 0;
         });
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
@@ -1012,9 +1031,24 @@ class TodayDashboard {
 
     _buildPlanHTML(overdue, today, inbox, ignoredCount = 0, unconfiguredRecurring = 0, hideRecurring = false, recurringPreview = [], timeBlocks = {}, upcomingTasks = []) {
         const undatedBtn    = `<button class="db-recurring-filter${!this._hideUndated ? ' db-recurring-filter--active' : ''}" data-action="toggle-undated-filter">Unscheduled</button>`;
-        const upcomingBtn   = `<button class="db-recurring-filter${!this._hideUpcoming ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-filter" style="margin-left:auto">Upcoming</button>`;
+        const upcomingOptions = [
+            ['default', 'Default (3 days)'],
+            ['7', '7 days'],
+            ['14', '14 days'],
+            ['21', '21 days'],
+            ['45', '45 days'],
+            ['this-week', 'This week'],
+            ['this-month', 'This month'],
+            ['off', 'Off'],
+        ];
+        const upcomingBtn = `<span class="db-upcoming-wrap">
+        <button class="db-recurring-filter${this._upcomingRange !== 'off' ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-menu">Upcoming: ${this._escape(this._upcomingRangeLabel())}</button>
+        <span class="db-upcoming-popover"${this._upcomingMenuOpen ? '' : ' hidden'}>
+        ${upcomingOptions.map(([value, label]) => `<button class="db-upcoming-option${(this._upcomingRange || 'default') === value ? ' db-upcoming-option--active' : ''}" data-action="set-upcoming-range" data-range="${value}"><span>${label}</span>${(this._upcomingRange || 'default') === value ? '<i class="ti ti-check"></i>' : ''}</button>`).join('')}
+        </span>
+        </span>`;
         let visInbox = inbox;
-        if (!this._hideUpcoming) visInbox = [...upcomingTasks, ...visInbox];
+        if (this._upcomingRange !== 'off') visInbox = [...upcomingTasks, ...visInbox];
         if (this._hideUndated)   visInbox = visInbox.filter(t => (t.segments || []).some(s => s.type === 'datetime'));
         const filtersHidingAll = visInbox.length === 0 && (inbox.length > 0 || upcomingTasks.length > 0);
         const inboxEmptyMsg = filtersHidingAll ? "There's stuff here — you're just not looking at it." : null;
@@ -1340,6 +1374,40 @@ class TodayDashboard {
         return typeof d === 'string' ? d : '';
     }
 
+    _dateKeyFromDate(date) {
+        return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    _upcomingCutoffKey() {
+        const range = this._upcomingRange || 'default';
+        if (range === 'off') return null;
+        const today = new Date();
+        const d = new Date(today);
+        if (range === 'this-week') {
+            const daysUntilSunday = (7 - today.getDay()) % 7;
+            d.setDate(today.getDate() + daysUntilSunday);
+        } else if (range === 'this-month') {
+            d.setMonth(today.getMonth() + 1, 0);
+        } else {
+            const days = { default: 3, '7': 7, '14': 14, '21': 21, '45': 45 }[range] || 3;
+            d.setDate(today.getDate() + days);
+        }
+        return this._dateKeyFromDate(d);
+    }
+
+    _upcomingRangeLabel() {
+        return {
+            default: '3 days',
+            '7': '7 days',
+            '14': '14 days',
+            '21': '21 days',
+            '45': '45 days',
+            'this-week': 'This week',
+            'this-month': 'This month',
+            off: 'Off',
+        }[this._upcomingRange || 'default'] || '3 days';
+    }
+
     _ignoreListTaskRow(task, isIgnored) {
         const text   = this._getTaskTextHTML(task);
         const dateChip = this._getDateChipHTML(task);
@@ -1560,6 +1628,7 @@ class TodayDashboard {
         if (searchInput) {
             searchInput.addEventListener('input', () => {
                 this._planSearch = searchInput.value;
+                this._upcomingMenuOpen = false;
                 if (searchClear) searchClear.hidden = !this._planSearch;
                 this._reapplyPlanSearch(el);
             }, { signal });
@@ -1904,22 +1973,31 @@ class TodayDashboard {
                 }
                 case 'toggle-undated-filter': {
                     this._hideUndated = !this._hideUndated;
+                    this._upcomingMenuOpen = false;
                     rerenderCurrentSurface();
                     break;
                 }
-                case 'toggle-upcoming-filter': {
-                    this._hideUpcoming = !this._hideUpcoming;
+                case 'toggle-upcoming-menu': {
+                    this._upcomingMenuOpen = !this._upcomingMenuOpen;
+                    rerenderCurrentSurface();
+                    break;
+                }
+                case 'set-upcoming-range': {
+                    this._upcomingRange = target.dataset.range || 'default';
+                    this._upcomingMenuOpen = false;
                     rerenderCurrentSurface();
                     break;
                 }
                 case 'toggle-overdue': {
                     this._overdueCollapsed = !this._overdueCollapsed;
+                    this._upcomingMenuOpen = false;
                     rerenderCurrentSurface();
                     break;
                 }
                 case 'set-mode': {
                     if (isPeekSurface()) this._peekMode = target.dataset.mode;
                     else this._mode = target.dataset.mode;
+                    this._upcomingMenuOpen = false;
                     this._expandedRecurring = null; // [RECURRING]
                     this._recurringDraft    = null; // [RECURRING]
                     if ((isPeekSurface() ? this._peekMode : this._mode) === 'plan' && this._viewDate < this._todayD()) this._viewDate = null;
@@ -1928,16 +2006,19 @@ class TodayDashboard {
                 }
                 case 'go-today': {
                     this._viewDate = null;
+                    this._upcomingMenuOpen = false;
                     rerenderCurrentSurface();
                     break;
                 }
                 case 'prev-day': {
                     this._viewDate = this._offsetDate(this._viewDateStr(), -1);
+                    this._upcomingMenuOpen = false;
                     rerenderCurrentSurface();
                     break;
                 }
                 case 'next-day': {
                     this._viewDate = this._offsetDate(this._viewDateStr(), 1);
+                    this._upcomingMenuOpen = false;
                     rerenderCurrentSurface();
                     break;
                 }

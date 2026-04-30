@@ -90,6 +90,7 @@ If you clear your browser cache and browser data while the plugin is installed i
 ## Changelog
 
 ### 2026-04-30
+- **Upcoming filter** — Plan now shows the next 3 days by default, sorted by date, with range choices for 7, 14, 21, 45 days, This week, This month, or Off
 - **Fix** — recurring task sheets on mobile no longer re-animate while switching frequency options
 - **Fix** — task statuses such as in progress, blocked, and billing are visible again on task checkboxes
 - **Peek** — new command palette action opens Daily Focus in a modal over the current note, with a Focus / Plan switch
