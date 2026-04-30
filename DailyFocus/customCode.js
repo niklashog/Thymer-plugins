@@ -179,7 +179,7 @@ class TodayDashboard {
             'outline:1px solid var(--ed-link-color);outline-offset:2px}' +
             '.db-done{flex-shrink:0;cursor:pointer;align-self:center;margin-top:0!important;margin-right:0!important}' +
             '.db-task.state-done .db-task-text,.db-task.state-done .db-task-text--sel{text-decoration:line-through;opacity:.4}' +
-            '.db-task.state-done .db-task-source,.db-task.state-done .db-task-source--link{opacity:.2}' +
+            '.db-task.state-done .db-task-source--link{opacity:.2}' +
             '.db-task.state-done .db-date-chip{opacity:.35}' +
             '.db-task-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;cursor:pointer;line-height:1.35}' +
             '.db-task-text{min-width:0;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
@@ -191,8 +191,6 @@ class TodayDashboard {
             '.db-ref-chip .ti{font-size:11px;opacity:.6}' +
             '.db-date-chip{flex-shrink:0;color:var(--ed-datetime-color);background:var(--ed-datetime-bg);' +
             'border-radius:3px;padding:1px 4px;font-size:12px;line-height:1.35;white-space:nowrap}' +
-            '.db-date-chip--overdue{color:var(--ed-datetime-color);background:var(--ed-datetime-bg)}' +
-            '.db-task-source{font-size:12px;opacity:.35;white-space:nowrap;flex-shrink:0}' +
             '.db-task-source-wrap{display:inline-flex;align-items:center;flex-shrink:0;gap:2px;padding-right:0px;max-width:180px}' +
             '.db-task-source--link{font-size:12px;color:var(--ed-link-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
             'text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:2px}' +
@@ -1303,7 +1301,7 @@ class TodayDashboard {
 
         // [RECURRING-START] ghost traces for past/today views
         if (section === 'recurring-done') {
-            return `<div class="db-task listitem listitem-task state-done db-task--recurring-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
             <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
             <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
@@ -1313,7 +1311,7 @@ class TodayDashboard {
         }
 
         if (section === 'recurring-missed') {
-            return `<div class="db-task listitem-task db-task--recurring-missed" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
             <div class="db-task-r1">
             <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
             <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
@@ -1396,7 +1394,6 @@ class TodayDashboard {
         ${doneBtn}
         <div class="db-task-body" data-action="open" data-guid="${task.guid}">
         <span class="db-task-text">${text}</span>${bodyMeta}
-        ${source ? `<span class="db-task-source">${source}</span>` : ''}
         </div>
         </div>
         ${this._r2HTML('', '')}
@@ -2015,13 +2012,11 @@ class TodayDashboard {
     }
 
     _getDateChipHTML(task) {
-        const todayD = this._todayD().replace(/-/g, '');
         const seg = (task.segments || []).find(s => s.type === 'datetime');
         const d = seg?.text?.d;
         if (!d) return '';
         const label = this._formatDate(d);
-        const isOverdue = d < todayD;
-        return `<span class="db-date-chip${isOverdue ? ' db-date-chip--overdue' : ''}">${this._escape(label)}</span>`;
+        return `<span class="db-date-chip">${this._escape(label)}</span>`;
     }
 
     _escape(str) {
