@@ -381,8 +381,8 @@ class TodayDashboard {
             '.db-block-body .db-task{padding:12px 10px;min-height:58px}' +
             '.db-block-body .db-done{align-self:flex-start;margin-top:2px!important}' +
             '.db-block-body .db-task.state-done>.db-task-r1{flex:1 1 0;min-width:0}' +
-            '.db-task-r1{flex:0 0 100%;align-items:flex-start;padding-left:0}' +
-            '.db-task-r1>.db-done{align-self:flex-start;margin-top:2px!important}' +
+            '.db-task-r1{flex:1 1 0;align-items:flex-start;padding-left:0}' +
+            '.db-task>.db-done{align-self:flex-start;margin-top:2px!important}' +
             '.db-task-r2{flex:0 0 100%;margin-left:0;padding-left:32px;justify-content:space-between;min-height:18px}' +
             '.db-task-body{align-items:baseline;flex-wrap:wrap;row-gap:1px;column-gap:6px}' +
             '.db-task-text,.db-task-text--sel{flex:1;min-width:0;white-space:normal;display:-webkit-box;' +
@@ -1238,8 +1238,8 @@ class TodayDashboard {
         const isExpanded = this._expandedRecurring === task.guid;
         const doneBtn  = `<div class="db-done line-check-div clickable" role="button" aria-label="Complete task" data-task-action="done" data-action="done" data-guid="${task.guid}"></div>`;
         const row = `<div class="db-task db-recur-row${isExpanded ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="${isExpanded ? 'cancel-recurring' : 'expand-recurring'}" data-guid="${task.guid}">
-        <div class="db-task-r1">
         ${doneBtn}
+        <div class="db-task-r1">
         <div class="db-task-body">
         <span class="db-task-text">${text}</span>${bodyMeta}
         </div>
@@ -1342,8 +1342,8 @@ class TodayDashboard {
         : '';
         const actionHTML = `<button class="db-icon-btn ${isIgnored ? 'db-unignore' : 'db-ignore'}" data-task-action="ignore" data-action="${isIgnored ? 'unignore' : 'ignore'}" data-guid="${task.guid}" title="${isIgnored ? 'Restore task' : 'Ignore task'}" aria-label="${isIgnored ? 'Restore task' : 'Ignore task'}"><i class="ti ${isIgnored ? 'ti-eye-off' : 'ti-eye'} db-icon-default"></i><i class="ti ${isIgnored ? 'ti-eye' : 'ti-eye-off'} db-icon-hover"></i></button>`;
         return `<div class="db-task listitem-task${isIgnored ? ' db-task--ignored' : ''}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-        <div class="db-task-r1">
         <div class="db-done line-check-div" aria-disabled="true" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+        <div class="db-task-r1">
         <div class="db-task-body">
         <span class="db-task-text">${text}</span>${dateChip}${sourceHTML}
         </div>
@@ -1416,8 +1416,8 @@ class TodayDashboard {
 
         if (section === 'recurring-preview') {
             return `<div class="db-task listitem-task db-task--recurring-preview" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-            <div class="db-task-r1">
             <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
+            <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
             </div>
             ${this._r2HTML('', '')}
@@ -1437,8 +1437,8 @@ class TodayDashboard {
 
         if (section === 'recurring-missed') {
             return `<div class="db-task listitem-task" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-            <div class="db-task-r1">
             <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
+            <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
             </div>
             ${this._r2HTML('', '')}
@@ -1475,8 +1475,8 @@ class TodayDashboard {
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
-            <div class="db-task-r1">
             ${doneBtn}
+            <div class="db-task-r1">
             <div class="db-task-body">
             <span class="db-task-text--sel">${text}</span>${bodyMeta}
             </div>
@@ -1492,8 +1492,8 @@ class TodayDashboard {
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
             return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
-            <div class="db-task-r1">
             ${doneBtn}
+            <div class="db-task-r1">
             <div class="db-task-body">
             <span class="db-task-text">${text}</span>${bodyMeta}
             </div>
@@ -1504,8 +1504,8 @@ class TodayDashboard {
 
         if (section === 'inbox' || section === 'overdue') {
             return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-action="pin" data-guid="${task.guid}">
-            <div class="db-task-r1">
             ${doneBtn}
+            <div class="db-task-r1">
             <div class="db-task-body">
             <span class="db-task-text">${text}</span>${bodyMeta}
             </div>
@@ -1515,8 +1515,8 @@ class TodayDashboard {
         }
 
         return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
-        <div class="db-task-r1">
         ${doneBtn}
+        <div class="db-task-r1">
         <div class="db-task-body" data-action="open" data-guid="${task.guid}">
         <span class="db-task-text">${text}</span>${bodyMeta}
         </div>
