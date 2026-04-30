@@ -14,9 +14,10 @@
             "default_banner": null,
             "show_sidebar_items": false,
             "show_cmdpal_items": false,
-            "page_field_ids": ["title", "status", "priority", "depends-on"],
+            "page_field_ids": ["title", "description", "status", "priority", "depends-on"],
             "fields": [
                 { "id": "title",      "label": "Title",    "type": "text",     "icon": "ti-abc",        "many": false, "read_only": false, "active": true },
+                { "id": "description", "label": "Description", "type": "text",  "icon": "ti-align-left", "many": false, "read_only": false, "active": true },
                 { "id": "updated_at", "label": "Modified", "type": "datetime", "icon": "ti-clock-edit", "many": false, "read_only": true,  "active": true },
                 { "id": "created_at", "label": "Created",  "type": "datetime", "icon": "ti-clock-plus", "many": false, "read_only": true,  "active": true },
                 { "id": "banner",     "label": "Banner",   "type": "banner",   "icon": "ti-photo",      "many": false, "read_only": false, "active": true },
@@ -60,7 +61,7 @@
                     "id": "board", "type": "board", "icon": "ti-layout-kanban",
                     "label": "Board", "description": "Kanban board with dependency tracking",
                     "query": "", "shown": true, "read_only": false,
-                    "field_ids": ["title", "priority", "depends-on"],
+                    "field_ids": ["title", "description", "priority", "depends-on"],
                     "group_by_field_id": "status",
                     "sort_dir": "asc", "sort_field_id": null,
                     "opts": {}
