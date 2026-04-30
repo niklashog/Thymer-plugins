@@ -12,6 +12,8 @@ A workspace-wide task manager that aggregates tasks from across your entire Thym
 
 ## Modes
 
+**New! Peek** — open Daily Focus in a modal over your current note, without switching context. Press `Ctrl+P` / `Cmd+P`, then type `peek` and choose `Daily Focus: Peek`.
+
 ### Focus
 
 Shows what you're working on today, organized by time.
