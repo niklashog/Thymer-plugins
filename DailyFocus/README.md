@@ -60,6 +60,8 @@ A hamburger menu (☰) sits in the top left corner of every view:
 - **Ignore list** — hide tasks from Plan and Focus
 - **Settings** — configure plugin behaviour
 
+These views can also be opened directly from the command palette: `Daily Focus: Open Focus`, `Daily Focus: Open Plan`, `Daily Focus: Open Recurring Tasks`, `Daily Focus: Open Ignore List`, and `Daily Focus: Open Settings`.
+
 ## Task interactions
 
 - **Checkbox** — mark a task done (or undo from the done state). Done tasks appear with strikethrough and reduced opacity. For recurring tasks, checking off advances the date to the next occurrence instead of marking permanently done.
@@ -84,6 +86,7 @@ If you clear your browser cache and browser data while the plugin is installed i
 ## Changelog
 
 ### 2026-04-30
+- **Command palette** — Focus, Plan, Recurring tasks, Ignore list, and Settings can now be opened directly
 - **Plan search** — search can now combine phrase matching, exclusions, source-only matches, and source-only exclusions
 
 ### 2026-04-29

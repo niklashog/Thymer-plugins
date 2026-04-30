@@ -453,6 +453,36 @@ class TodayDashboard {
             onSelected: () => this._openPanel(),
         });
 
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Focus",
+            icon:  'gauge',
+            onSelected: () => this._openMode('focus'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Plan",
+            icon:  'calendar',
+            onSelected: () => this._openMode('plan'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Recurring Tasks",
+            icon:  'repeat',
+            onSelected: () => this._openMode('recurring-list'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Ignore List",
+            icon:  'eye-off',
+            onSelected: () => this._openMode('ignore-list'),
+        });
+
+        this.plugin.ui.addCommandPaletteCommand({
+            label: "Daily Focus: Open Settings",
+            icon:  'settings',
+            onSelected: () => this._openMode('settings'),
+        });
+
         this.plugin.ui.addSidebarItem({
             label:   "Daily Focus",
             icon:    'gauge',
@@ -537,6 +567,15 @@ class TodayDashboard {
         let panel = this.plugin.ui.getActivePanel();
         if (!panel) panel = await this.plugin.ui.createPanel();
         if (panel) panel.navigateToCustomType('today-dashboard');
+    }
+
+    async _openMode(mode) {
+        this._mode = mode;
+        this._expandedRecurring = null; // [RECURRING]
+        this._recurringDraft    = null; // [RECURRING]
+        if (this._mode === 'plan' && this._viewDate < this._todayD()) this._viewDate = null;
+        await this._openPanel();
+        if (this._panel) this._render(this._panel);
     }
 
     async _render(panel, fromCallback = false) {
