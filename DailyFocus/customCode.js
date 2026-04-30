@@ -34,6 +34,7 @@ class TodayDashboard {
         // [RECURRING-START] draft state for recurring task UI — remove when Thymer ships native recurring
         this._expandedRecurring       = null;
         this._recurringDraft          = null;
+        this._recurringSheetAnimate   = false;
         this._completedRecurringDates = {}; // guid → comma-separated YYYYMMDD, persists across _lastData refreshes
         this._rescheduledRecurring    = {}; // guid → YYYYMMDD start date when rescheduled to future
         // [RECURRING-END]
@@ -264,6 +265,8 @@ class TodayDashboard {
             '.db-recur-row .db-task-source-wrap{min-width:0;max-width:none}' +
             '.db-recur-edit--inline{display:none}' +
             '.db-recur-edit--sheet{padding:20px;margin:0}' +
+            '.db-recur-edit--no-anim{animation:none}' +
+            '.db-recur-edit--sheet .db-recur-fields{min-height:66px}' +
             '.db-recur-pills,.db-recur-actions{flex-wrap:wrap}' +
             '.db-recur-select{max-width:100%;margin-bottom:8px}' +
             '.db-recur-remove{margin-left:0}}' +
@@ -1310,10 +1313,14 @@ class TodayDashboard {
         <select class="db-recur-select db-recur-start-month" data-guid="${guid}">${startMonthOptions}</select>
         <select class="db-recur-select db-recur-start-day" data-guid="${guid}">${startDayOptions}</select>
         </div>` : '';
-        return `<div class="db-recur-edit db-recur-edit--${variant}${variant === 'sheet' ? ' db-bottom-sheet' : ''}">
+        const sheetAnimClass = variant === 'sheet' && !this._recurringSheetAnimate ? ' db-recur-edit--no-anim' : '';
+        if (variant === 'sheet') this._recurringSheetAnimate = false;
+        return `<div class="db-recur-edit db-recur-edit--${variant}${variant === 'sheet' ? ' db-bottom-sheet' : ''}${sheetAnimClass}">
         <div class="db-recur-pills">${pills}</div>
+        <div class="db-recur-fields">
         ${dateArea ? `<div class="db-recur-date-area">${dateArea}</div>` : ''}
         ${startArea}
+        </div>
         <div class="db-recur-actions">
         <button class="db-btn db-btn--primary db-recur-save" data-action="save-recurring" data-guid="${guid}">Save</button>
         <button class="db-btn db-btn--quiet db-recur-cancel" data-action="cancel-recurring">Cancel</button>
@@ -1768,6 +1775,7 @@ class TodayDashboard {
                 case 'expand-recurring': {
                     if (!task) return;
                     this._expandedRecurring = guid;
+                    this._recurringSheetAnimate = true;
                     this._recurringDraft = {
                         freq: task.props?.['db-recurring-freq'] || 'daily',
                         day:  task.props?.['db-recurring-day']  || null,
