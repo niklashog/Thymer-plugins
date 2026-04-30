@@ -226,6 +226,7 @@ class TodayDashboard {
             'display:grid;gap:2px;min-width:150px;padding:4px;background:var(--input-bg-color);' +
             'border:1px solid var(--input-border-color);border-radius:var(--ed-radius-block);box-shadow:var(--color-shadow-hover)}' +
             '.db-upcoming-popover[hidden]{display:none}' +
+            '.db-upcoming-overlay,.db-upcoming-sheet-handle,.db-upcoming-sheet-title{display:none}' +
             '.db-upcoming-option{display:flex;align-items:center;justify-content:space-between;gap:10px;' +
             'background:none;border:none;color:inherit;cursor:pointer;text-align:left;font-size:12px;' +
             'padding:7px 10px;border-radius:var(--ed-radius-normal)}' +
@@ -451,6 +452,16 @@ class TodayDashboard {
             'color:var(--ed-gray-text);padding:10px 8px;border-radius:var(--ed-radius-normal);transition:opacity .1s,color .1s}' +
             '.db-sheet-remove:hover{color:var(--ed-link-color)}' +
             '.db-sheet-remove:active{opacity:.6}' +
+            '.db-upcoming-overlay:not([hidden]){display:block;position:fixed;inset:0;background:transparent;z-index:199}' +
+            '.db-upcoming-popover{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:200;' +
+            'display:grid;gap:2px;min-width:0;padding:10px 16px calc(18px + env(safe-area-inset-bottom));' +
+            'background:var(--cards-bg);border:none;border-top:1px solid var(--sidebar-border-color);' +
+            'border-radius:16px 16px 0 0;box-shadow:none;animation:db-sheet-rise .16s ease-out}' +
+            '.db-upcoming-popover[hidden]{display:none}' +
+            '.db-upcoming-sheet-handle{display:block;width:36px;height:4px;background:var(--sidebar-border-color);' +
+            'border-radius:2px;margin:0 auto 12px}' +
+            '.db-upcoming-sheet-title{display:block;font-size:13px;font-weight:600;opacity:.55;padding:0 4px 8px}' +
+            '.db-upcoming-option{font-size:14px;min-height:44px;padding:10px 8px;border-radius:var(--ed-radius-block)}' +
             '.db-pin-icon{display:none}' +
             '}' +
             '.db-wipe-btn{width:100%;text-align:left;padding:10px 14px;background:none;border:none;cursor:pointer;' +
@@ -1043,7 +1054,10 @@ class TodayDashboard {
         ];
         const upcomingBtn = `<span class="db-upcoming-wrap">
         <button class="db-recurring-filter${this._upcomingRange !== 'off' ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-menu">Upcoming: ${this._escape(this._upcomingRangeLabel())}</button>
+        <span class="db-upcoming-overlay" data-action="close-upcoming-menu"${this._upcomingMenuOpen ? '' : ' hidden'}></span>
         <span class="db-upcoming-popover"${this._upcomingMenuOpen ? '' : ' hidden'}>
+        <span class="db-upcoming-sheet-handle"></span>
+        <span class="db-upcoming-sheet-title">Upcoming range</span>
         ${upcomingOptions.map(([value, label]) => `<button class="db-upcoming-option${(this._upcomingRange || 'default') === value ? ' db-upcoming-option--active' : ''}" data-action="set-upcoming-range" data-range="${value}"><span>${label}</span>${(this._upcomingRange || 'default') === value ? '<i class="ti ti-check"></i>' : ''}</button>`).join('')}
         </span>
         </span>`;
@@ -1979,6 +1993,11 @@ class TodayDashboard {
                 }
                 case 'toggle-upcoming-menu': {
                     this._upcomingMenuOpen = !this._upcomingMenuOpen;
+                    rerenderCurrentSurface();
+                    break;
+                }
+                case 'close-upcoming-menu': {
+                    this._upcomingMenuOpen = false;
                     rerenderCurrentSurface();
                     break;
                 }
