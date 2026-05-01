@@ -124,15 +124,16 @@ class TodayDashboard {
         return result;
     }
 
-    async _fetchTaskData(perf = null) {
+    async _fetchTaskData(perf = null, opts = {}) {
         const started = this._perfNow();
-        const [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
+        const includeDone = opts.includeDone !== false;
+        const [todoResult, doneResult] = await Promise.all([
             this._timedSearch('@task @todo',    150, perf),
-            this._timedSearch('@task @today',   100, perf),
-            this._timedSearch('@task @overdue',  50, perf),
-            this._timedSearch('@task @due',     100, perf),
-            this._timedSearch('@task @done',    100, perf),
+            includeDone ? this._timedSearch('@task @done', 100, perf) : Promise.resolve({ lines: [] }),
         ]);
+        const scheduledResult = { lines: [] };
+        const overdueResult = { lines: [] };
+        const dueResult = { lines: [] };
         this._perfStep(perf, 'fetchTaskData total', started);
         return { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
     }
@@ -826,7 +827,9 @@ class TodayDashboard {
         } else {
             let doneResult = { lines: [] };
             try {
-                ({ todoResult, scheduledResult, overdueResult, dueResult, doneResult } = await this._fetchTaskData(perf));
+                ({ todoResult, scheduledResult, overdueResult, dueResult, doneResult } = await this._fetchTaskData(perf, {
+                    includeDone: this._mode !== 'plan' && this._mode !== 'recurring-list' && this._mode !== 'ignore-list' && this._mode !== 'settings',
+                }));
             } catch (e) {
                 console.warn('[Dashboard] fetch failed:', e);
                 todoResult = scheduledResult = overdueResult = dueResult = { lines: [] };
@@ -847,16 +850,22 @@ class TodayDashboard {
         this._perfStep(perf, 'classify: done map', classifyPartStarted, { doneLines: doneLinesAll.length });
 
         classifyPartStarted = this._perfNow();
-        const overdueGuids   = new Set((overdueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
-        const datedGuids     = new Set((dueResult.lines       || []).filter(l => l.type === 'task').map(l => l.guid));
-        const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
         const allTodosRaw    =         (todoResult.lines      || []).filter(l => l.type === 'task');
         const ignoredTasks   = allTodosRaw.filter(l =>  l.props?.['db-ignored']);
         const allTodos       = allTodosRaw.filter(l => !l.props?.['db-ignored']);
+        const todayD         = this._todayD();
+        const datedGuids     = new Set();
+        const overdueGuids   = new Set();
+        for (const l of allTodosRaw) {
+            const dateInfo = this._taskDateInfo(l);
+            if (!dateInfo.d) continue;
+            datedGuids.add(l.guid);
+            if (!dateInfo.isRange && dateInfo.d < todayD) overdueGuids.add(l.guid);
+        }
         this._perfStep(perf, 'classify: sets and filters', classifyPartStarted, {
             overdueGuids: overdueGuids.size,
             datedGuids: datedGuids.size,
-            scheduledGuids: scheduledGuids.size,
+            scheduledGuids: 0,
             allTodosRaw: allTodosRaw.length,
         });
 
@@ -903,7 +912,7 @@ class TodayDashboard {
             const isDateRange = dateInfo.isRange;
             const isOverdue   = overdueGuids.has(l.guid) && !isDateRange;
             const isPinned    = todaySet.has(l.guid);
-            const isScheduled = scheduledGuids.has(l.guid) && this._hasExactDateForView(l, viewDate);
+            const isScheduled = this._hasExactDateForView(l, viewDate);
             const isDated     = !!dateInfo.d || datedGuids.has(l.guid);
             const pinDate     = l.props?.['db-pinned'] || '';
             const hasActivePin = pinDate >= today;
@@ -957,7 +966,6 @@ class TodayDashboard {
         });
 
         classifyPartStarted = this._perfNow();
-        const todayD = this._todayD().replace(/-/g, '');
         const upcomingCutoff = this._upcomingCutoffKey();
         const upcomingTasks = allTodos.filter(l => {
             if (!upcomingCutoff) return false;
@@ -1039,8 +1047,8 @@ class TodayDashboard {
         this._perfCount(perf, {
             todoLines: todoResult?.lines?.length || 0,
             scheduledLines: scheduledResult?.lines?.length || 0,
-            overdueLines: overdueResult?.lines?.length || 0,
-            dueLines: dueResult?.lines?.length || 0,
+            overdueLines: overdueGuids.size,
+            dueLines: datedGuids.size,
             doneLines: doneLinesAll.length,
             allTodosRaw: allTodosRaw.length,
             allTodos: allTodos.length,
