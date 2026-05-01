@@ -39,7 +39,7 @@ Date ranges such as `this week`, `this month`, and `this year` stay in Plan Inbo
 
 The Plan search box filters only **Overdue** and **Inbox**. It does not hide tasks already pinned to Today's Focus.
 
-The **Upcoming** menu above Inbox controls how many future dated tasks are included in the Inbox before search filters are applied. Choose `All` when you want filters such as `due:5 weeks` to search without a date-window limit. Choose `None` to show only the regular Inbox without extra upcoming dated tasks.
+The **Upcoming** menu above Inbox controls how many future dated tasks are included in the Inbox before search filters are applied. This includes exact due dates and date ranges such as `Week 19` or `Sep 2026`. Date ranges are included when their start date falls inside the selected Upcoming range. Choose `All` when you want filters such as `due:5 weeks` to search without a date-window limit. Choose `None` to show only the regular Inbox without extra upcoming dated tasks.
 
 Filters can be combined in one search. Every filter must match for a task to stay visible.
 

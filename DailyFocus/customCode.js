@@ -788,7 +788,7 @@ class TodayDashboard {
             const isOverdue   = overdueGuids.has(l.guid) && !isDateRange;
             const isPinned    = todaySet.has(l.guid);
             const isScheduled = scheduledGuids.has(l.guid) && this._hasExactDateForView(l, viewDate);
-            const isDated     = datedGuids.has(l.guid) && !isDateRange;
+            const isDated     = !!this._getTaskDate(l)?.d || datedGuids.has(l.guid);
             const pinDate     = l.props?.['db-pinned'] || '';
             const hasActivePin = pinDate >= today;
             // [RECURRING-START] don't show recurring tasks already completed or rescheduled away from today
@@ -817,10 +817,14 @@ class TodayDashboard {
             if (!upcomingCutoff) return false;
             const pinDate = l.props?.['db-pinned'] || '';
             if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || pinDate >= today) return false;
-            if (this._hasDateRange(l)) return false;
-            const seg = (l.segments || []).find(s => s.type === 'datetime');
-            const d = seg?.text?.d;
-            return d && d > todayD && d <= upcomingCutoff;
+            const value = this._getTaskDate(l);
+            const d = value?.d;
+            if (!d) return false;
+            if (!this._isDateRange(value)) return d > todayD && d <= upcomingCutoff;
+            const range = this._dateRangeParts(value);
+            if (!range) return false;
+            const start = this._dateKeyFromDate(range.startDate);
+            return start >= todayD && start <= upcomingCutoff;
         }).sort((a, b) => this._compareTasksByPlanDate(a, b));
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
