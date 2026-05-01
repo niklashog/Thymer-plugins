@@ -148,6 +148,22 @@ Use `Daily Focus: Peek` to open Focus in a modal over your current note. The pee
 
 The dashboard refreshes automatically when tasks are created, updated, or completed elsewhere in the workspace.
 
+## Performance diagnostics
+
+Daily Focus includes optional console timing for large workspaces. It is off by default.
+
+To collect a report:
+
+1. Open browser developer tools.
+2. Run `DailyFocusPerf.enable()` in the console.
+3. Reload Thymer.
+4. Open Daily Focus, switch between Focus and Plan, and use the Upcoming menu once.
+5. Run `copy(DailyFocusPerf.report())` in the console.
+6. Paste the copied JSON into the bug report.
+7. Run `DailyFocusPerf.disable()` when finished.
+
+The report contains render timings, search timings, and task counts. It does not include task text or note content.
+
 ## Known issues
 
 **Mobile browser — blank screen after clearing cache or browser data**
@@ -159,6 +175,9 @@ If you clear your browser cache and browser data while the plugin is installed i
 ## Changelog
 
 ### 2026-05-01
+- **Performance** — cached Plan renders are much faster by caching per-render task date/source data, precomputing sort keys, and avoiding expensive record lookups while sorting and building task rows
+- **Performance** — initial task fetch now avoids redundant `@today`, `@due`, and `@overdue` searches by deriving scheduled, due, and overdue buckets from the `@todo` result; direct Plan-style views can skip `@done`
+- **Performance diagnostics** — optional console timing can now collect render, search, and task-count data for large workspace testing
 - **Plan filters** — documented the full search syntax for text, exclusions, source filters, and due-date filters
 - **Due-date search** — Plan search now supports `due:` filters such as `due:next week`, `due:this month`, `due:september`, and `due:5 weeks`
 - **Source search** — `@` and `!@` filters now support source names with spaces, such as `@client work`
