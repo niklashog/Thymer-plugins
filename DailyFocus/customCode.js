@@ -45,14 +45,95 @@ class TodayDashboard {
         this._wipeState  = null;
     }
 
-    async _fetchTaskData() {
+    _installPerfConsoleHelper() {
+        if (typeof window === 'undefined' || window.DailyFocusPerf) return;
+        const key = 'DailyFocus:perf';
+        window.DailyFocusPerf = {
+            reports: [],
+            enable() {
+                localStorage.setItem(key, '1');
+                console.info('[DailyFocus perf] Enabled. Reload Thymer, open Daily Focus, then run copy(DailyFocusPerf.report()).');
+            },
+            disable() {
+                localStorage.removeItem(key);
+                console.info('[DailyFocus perf] Disabled. Reload Thymer to stop logging.');
+            },
+            status() {
+                return localStorage.getItem(key) === '1' ? 'enabled' : 'disabled';
+            },
+            clear() {
+                this.reports.length = 0;
+                console.info('[DailyFocus perf] Cleared collected reports.');
+            },
+            report() {
+                return JSON.stringify(this.reports, null, 2);
+            },
+        };
+    }
+
+    _perfEnabled() {
+        try { return typeof localStorage !== 'undefined' && localStorage.getItem('DailyFocus:perf') === '1'; }
+        catch (e) { return false; }
+    }
+
+    _perfNow() {
+        return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
+    }
+
+    _perfCreate(label, meta = {}) {
+        if (!this._perfEnabled()) return null;
+        return { label, meta, start: this._perfNow(), steps: [], counts: {} };
+    }
+
+    _perfStep(perf, label, start, extra = {}) {
+        if (!perf) return;
+        perf.steps.push({ step: label, ms: Math.round((this._perfNow() - start) * 10) / 10, ...extra });
+    }
+
+    _perfCount(perf, counts) {
+        if (!perf) return;
+        Object.assign(perf.counts, counts);
+    }
+
+    _perfLog(perf) {
+        if (!perf) return;
+        const total = Math.round((this._perfNow() - perf.start) * 10) / 10;
+        const report = { label: perf.label, totalMs: total, meta: perf.meta, counts: perf.counts, steps: perf.steps };
+        if (typeof window !== 'undefined' && window.DailyFocusPerf?.reports) {
+            window.DailyFocusPerf.reports.push(report);
+            if (window.DailyFocusPerf.reports.length > 20) window.DailyFocusPerf.reports.shift();
+        }
+        console.groupCollapsed(`[DailyFocus perf] ${perf.label} ${total}ms`);
+        console.log('meta', perf.meta);
+        console.log('counts', perf.counts);
+        if (console.table) console.table(perf.steps);
+        else console.log('steps', perf.steps);
+        console.log('copy JSON with: copy(DailyFocusPerf.report())');
+        console.groupEnd();
+    }
+
+    async _timedSearch(query, maxResults, perf) {
+        const started = this._perfNow();
+        const result = await this.plugin.data.searchByQuery(query, maxResults);
+        this._perfStep(perf, `search ${query}`, started, {
+            max: maxResults,
+            lines: result?.lines?.length || 0,
+            records: result?.records?.length || 0,
+            error: result?.error || '',
+        });
+        return result;
+    }
+
+    async _fetchTaskData(perf = null) {
+        const started = this._perfNow();
         const [todoResult, scheduledResult, overdueResult, dueResult, doneResult] = await Promise.all([
-            this.plugin.data.searchByQuery('@task @todo',    150),
-            this.plugin.data.searchByQuery('@task @today',   100),
-            this.plugin.data.searchByQuery('@task @overdue',  50),
-            this.plugin.data.searchByQuery('@task @due',     100),
-            this.plugin.data.searchByQuery('@task @done',    100),
+            this._timedSearch('@task @todo',    150, perf),
+            this._timedSearch('@task @today',   100, perf),
+            this._timedSearch('@task @overdue',  50, perf),
+            this._timedSearch('@task @due',     100, perf),
+            this._timedSearch('@task @done',    100, perf),
         ]);
+        this._perfStep(perf, 'fetchTaskData total', started);
         return { todoResult, scheduledResult, overdueResult, dueResult, doneResult };
     }
 
@@ -162,6 +243,7 @@ class TodayDashboard {
     }
 
     load() {
+        this._installPerfConsoleHelper();
         this.plugin.ui.injectCSS(
             '.db-root{width:100%;height:100%;box-sizing:border-box;padding:0 0 32px;}' +
             '.db-section{margin-bottom:28px}' +
@@ -702,7 +784,16 @@ class TodayDashboard {
     }
 
     async _render(panel, fromCallback = false) {
+        const perf = this._perfCreate('render', {
+            mode: this._mode || 'auto',
+            peekMode: this._peekMode,
+            viewDate: this._viewDateStr(),
+            fromCallback: !!fromCallback,
+            cachedData: !!this._lastData,
+        });
         this._todayCache = null;
+        this._renderDateInfoCache = new Map();
+        this._renderRecordNameCache = new Map();
         const ver = ++this._renderVer;
         const el  = panel.getElement();
         if (!el) return;
@@ -723,6 +814,7 @@ class TodayDashboard {
         let todoResult, scheduledResult, overdueResult, dueResult, doneLinesAll = [];
 
         if (data) {
+            const cacheStarted = this._perfNow();
             todoResult      = data.todoResult;
             scheduledResult = data.scheduledResult;
             overdueResult   = (this._mode === 'focus' || this._mode === 'ignore-list') ? { lines: [] } : data.overdueResult;
@@ -730,10 +822,11 @@ class TodayDashboard {
             if (this._mode !== 'recurring-list' && this._mode !== 'ignore-list') {
                 doneLinesAll = (data.doneResult?.lines || []).filter(l => l.type === 'task');
             }
+            this._perfStep(perf, 'read cached data', cacheStarted);
         } else {
             let doneResult = { lines: [] };
             try {
-                ({ todoResult, scheduledResult, overdueResult, dueResult, doneResult } = await this._fetchTaskData());
+                ({ todoResult, scheduledResult, overdueResult, dueResult, doneResult } = await this._fetchTaskData(perf));
             } catch (e) {
                 console.warn('[Dashboard] fetch failed:', e);
                 todoResult = scheduledResult = overdueResult = dueResult = { lines: [] };
@@ -744,19 +837,30 @@ class TodayDashboard {
 
         if (ver !== this._renderVer) return;
 
+        const classifyStarted = this._perfNow();
+        let classifyPartStarted = this._perfNow();
         for (const l of doneLinesAll) {
             if (l.props?.['db-done-date'] === today) {
                 this._doneTasksMap.set(l.guid, l);
             }
         }
+        this._perfStep(perf, 'classify: done map', classifyPartStarted, { doneLines: doneLinesAll.length });
 
+        classifyPartStarted = this._perfNow();
         const overdueGuids   = new Set((overdueResult.lines   || []).filter(l => l.type === 'task').map(l => l.guid));
         const datedGuids     = new Set((dueResult.lines       || []).filter(l => l.type === 'task').map(l => l.guid));
         const scheduledGuids = new Set((scheduledResult.lines || []).filter(l => l.type === 'task').map(l => l.guid));
         const allTodosRaw    =         (todoResult.lines      || []).filter(l => l.type === 'task');
         const ignoredTasks   = allTodosRaw.filter(l =>  l.props?.['db-ignored']);
         const allTodos       = allTodosRaw.filter(l => !l.props?.['db-ignored']);
+        this._perfStep(perf, 'classify: sets and filters', classifyPartStarted, {
+            overdueGuids: overdueGuids.size,
+            datedGuids: datedGuids.size,
+            scheduledGuids: scheduledGuids.size,
+            allTodosRaw: allTodosRaw.length,
+        });
 
+        classifyPartStarted = this._perfNow();
         const todaySet       = new Set(allTodos.filter(l => l.props?.['db-pinned'] === today).map(l => l.guid));
         const doneTasks      = isViewingToday
         ? [...this._doneTasksMap.values()]
@@ -774,21 +878,33 @@ class TodayDashboard {
             return true;
         });
         const viewPinnedSet  = new Set(viewPinned.map(l => l.guid));
+        this._perfStep(perf, 'classify: today done pinned', classifyPartStarted, {
+            todaySet: todaySet.size,
+            doneTasks: doneTasks.length,
+            viewPinned: viewPinned.length,
+        });
 
         // Time blocks — date-stamped format "YYYYMMDD:HH:MM", only show for the viewed date
+        classifyPartStarted = this._perfNow();
         const timeBlocks = {};
         for (const t of [...allTodos, ...doneTasks]) {
             const parsed = this._parseTimeblock(t.props?.['db-timeblock']);
             if (parsed && parsed.date === viewDate) timeBlocks[t.guid] = parsed.time;
         }
+        this._perfStep(perf, 'classify: time blocks', classifyPartStarted, {
+            scanned: allTodos.length + doneTasks.length,
+            timeBlocks: Object.keys(timeBlocks).length,
+        });
 
+        classifyPartStarted = this._perfNow();
         const planOverdue = [], todayPinned = [], scheduled = [], inbox = [], planInbox = [];
         for (const l of allTodos) {
-            const isDateRange = this._hasDateRange(l);
+            const dateInfo = this._taskDateInfo(l);
+            const isDateRange = dateInfo.isRange;
             const isOverdue   = overdueGuids.has(l.guid) && !isDateRange;
             const isPinned    = todaySet.has(l.guid);
             const isScheduled = scheduledGuids.has(l.guid) && this._hasExactDateForView(l, viewDate);
-            const isDated     = !!this._getTaskDate(l)?.d || datedGuids.has(l.guid);
+            const isDated     = !!dateInfo.d || datedGuids.has(l.guid);
             const pinDate     = l.props?.['db-pinned'] || '';
             const hasActivePin = pinDate >= today;
             // [RECURRING-START] don't show recurring tasks already completed or rescheduled away from today
@@ -807,34 +923,74 @@ class TodayDashboard {
             if (!isDated && !isPinned && !isScheduled && !isOverdue)    inbox.push(l);
             if (!isDated && !hasActivePin && !isScheduled && !isOverdue)  planInbox.push(l);
         }
-        planOverdue.sort((a, b) => this._compareTasksByPlanDate(a, b));
-        inbox.sort((a, b) => this._compareTasksByPlanDate(a, b));
-        planInbox.sort((a, b) => this._compareTasksByPlanDate(a, b));
+        this._perfStep(perf, 'classify: bucket loop', classifyPartStarted, {
+            scanned: allTodos.length,
+            planOverdue: planOverdue.length,
+            todayPinned: todayPinned.length,
+            scheduled: scheduled.length,
+            inbox: inbox.length,
+            planInbox: planInbox.length,
+        });
 
+        classifyPartStarted = this._perfNow();
+        const planSortCache = new Map();
+        const ensurePlanSortKeys = tasks => {
+            for (const task of tasks) this._taskPlanSortKey(task, planSortCache);
+        };
+        const sortByPlanDate = tasks => tasks.sort((a, b) =>
+            this._compareTaskPlanSortKeys(planSortCache.get(a), planSortCache.get(b))
+        );
+        const sortKeysStarted = this._perfNow();
+        ensurePlanSortKeys(planOverdue);
+        ensurePlanSortKeys(inbox);
+        ensurePlanSortKeys(planInbox);
+        this._perfStep(perf, 'classify: sort keys', sortKeysStarted, { keys: planSortCache.size });
+        const sortArraysStarted = this._perfNow();
+        sortByPlanDate(planOverdue);
+        sortByPlanDate(inbox);
+        sortByPlanDate(planInbox);
+        this._perfStep(perf, 'classify: sort arrays', sortArraysStarted);
+        this._perfStep(perf, 'classify: sort buckets', classifyPartStarted, {
+            planOverdue: planOverdue.length,
+            inbox: inbox.length,
+            planInbox: planInbox.length,
+        });
+
+        classifyPartStarted = this._perfNow();
         const todayD = this._todayD().replace(/-/g, '');
         const upcomingCutoff = this._upcomingCutoffKey();
         const upcomingTasks = allTodos.filter(l => {
             if (!upcomingCutoff) return false;
             const pinDate = l.props?.['db-pinned'] || '';
             if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || pinDate >= today) return false;
-            const value = this._getTaskDate(l);
-            const d = value?.d;
+            const dateInfo = this._taskDateInfo(l);
+            const d = dateInfo.d;
             if (!d) return false;
-            if (!this._isDateRange(value)) return d > todayD && d <= upcomingCutoff;
-            const range = this._dateRangeParts(value);
+            if (!dateInfo.isRange) return d > todayD && d <= upcomingCutoff;
+            const range = dateInfo.range;
             if (!range) return false;
             const start = this._dateKeyFromDate(range.startDate);
             return start >= todayD && start <= upcomingCutoff;
-        }).sort((a, b) => this._compareTasksByPlanDate(a, b));
+        });
+        ensurePlanSortKeys(upcomingTasks);
+        sortByPlanDate(upcomingTasks);
+        this._perfStep(perf, 'classify: upcoming', classifyPartStarted, {
+            scanned: allTodos.length,
+            upcomingCutoff: upcomingCutoff || '',
+            upcomingTasks: upcomingTasks.length,
+        });
 
+        classifyPartStarted = this._perfNow();
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
         const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
         : this._mode === 'recurring-list' ? 'recurring-list'
         : this._mode === 'settings' ? 'settings'
         : (this._mode === 'plan' || (!hasAnyTasks && this._mode !== 'focus')) ? 'plan'
         : 'focus';
+        this._perfStep(perf, 'classify: effective mode', classifyPartStarted, { effectiveMode });
 
         // [RECURRING-START] unconfigured count, future preview, past ghost traces
+        classifyPartStarted = this._perfNow();
         const unconfiguredRecurring = allTodosRaw.filter(l =>
         l.props?.['db-recurring-freq'] &&
         l.props['db-recurring-freq'] !== 'daily' &&
@@ -869,10 +1025,38 @@ class TodayDashboard {
         })
         : [];
         // [RECURRING-END]
+        this._perfStep(perf, 'classify: recurring', classifyPartStarted, {
+            unconfiguredRecurring,
+            recurringPreview: recurringPreview.length,
+            recurringDoneGhosts: recurringDoneGhosts.length,
+            recurringMissedGhosts: recurringMissedGhosts.length,
+        });
 
+        classifyPartStarted = this._perfNow();
         const allTasks = [...allTodos, ...doneTasks];
+        this._perfStep(perf, 'classify: all tasks merge', classifyPartStarted, { allTasks: allTasks.length });
+        this._perfStep(perf, 'classify tasks', classifyStarted);
+        this._perfCount(perf, {
+            todoLines: todoResult?.lines?.length || 0,
+            scheduledLines: scheduledResult?.lines?.length || 0,
+            overdueLines: overdueResult?.lines?.length || 0,
+            dueLines: dueResult?.lines?.length || 0,
+            doneLines: doneLinesAll.length,
+            allTodosRaw: allTodosRaw.length,
+            allTodos: allTodos.length,
+            ignoredTasks: ignoredTasks.length,
+            doneTasks: doneTasks.length,
+            planOverdue: planOverdue.length,
+            todayPinned: todayPinned.length,
+            scheduled: scheduled.length,
+            planInbox: planInbox.length,
+            upcomingTasks: upcomingTasks.length,
+            recurringPreview: recurringPreview.length,
+            allTasks: allTasks.length,
+        });
 
-        el.innerHTML = effectiveMode === 'ignore-list'
+        const buildStarted = this._perfNow();
+        const html = effectiveMode === 'ignore-list'
         ? this._buildIgnoreListHTML(allTodos, ignoredTasks)
         : effectiveMode === 'recurring-list'
         ? this._buildRecurringHTML(allTodosRaw.filter(l => l.props?.['db-recurring-freq']))
@@ -881,11 +1065,21 @@ class TodayDashboard {
         : effectiveMode === 'focus'
         ? this._buildFocusHTML(todayPinned, scheduled, this._settings.hideDoneInFocus ? [] : doneTasks, timeBlocks, allTasks, viewPinned, recurringPreview, recurringDoneGhosts, recurringMissedGhosts)
         : this._buildPlanHTML(planOverdue, viewPinned, planInbox, ignoredTasks.length, unconfiguredRecurring, false, recurringPreview, timeBlocks, upcomingTasks);
+        this._perfStep(perf, 'build HTML', buildStarted, { chars: html.length, effectiveMode });
+
+        const domStarted = this._perfNow();
+        el.innerHTML = html;
+        this._perfStep(perf, 'set innerHTML', domStarted);
 
         if (this._listenerAbort) this._listenerAbort.abort();
         this._listenerAbort = new AbortController();
+        const listenersStarted = this._perfNow();
         this._attachListeners(el, allTasks, ignoredTasks, this._listenerAbort.signal);
+        this._perfStep(perf, 'attach listeners', listenersStarted);
+        const filterStarted = this._perfNow();
         this._reapplyPlanSearch(el);
+        this._perfStep(perf, 'reapply plan search', filterStarted, { queryLength: (this._planSearch || '').length });
+        this._perfLog(perf);
     }
 
     _menuHTML(crumb) {
@@ -1269,7 +1463,7 @@ class TodayDashboard {
         const dateChip   = this._getDateChipHTML(task);
         const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-blocked', billable:'state-dollar', discuss:'state-question', alert:'state-alert', starred:'state-starred' };
         const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
-        const source = this._escape(task.record?.getName() || '');
+        const source = this._escape(this._recordName(task.record));
         const sourceHTML = source
         ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-icon-btn db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
@@ -1377,38 +1571,82 @@ class TodayDashboard {
         return seg?.text || null;
     }
 
+    _taskDateInfo(task) {
+        const cache = this._renderDateInfoCache;
+        const cacheKey = task || '';
+        if (cache && cache.has(cacheKey)) return cache.get(cacheKey);
+
+        const value = this._getTaskDate(task);
+        const d = typeof value?.d === 'string' ? value.d : '';
+        const info = {
+            value,
+            d,
+            isRange: false,
+            range: null,
+            startKey: d,
+            endKey: d,
+            precision: d ? 0 : 99,
+            rangeLabel: null,
+        };
+
+        if (d) {
+            info.isRange = this._isDateRange(value);
+            if (info.isRange) {
+                info.range = this._dateRangeParts(value);
+                info.precision = info.range ? this._dateRangePrecisionFromParts(info.range) : 9;
+                if (info.range) {
+                    info.startKey = this._dateKeyFromDate(info.range.startDate);
+                    info.endKey = this._dateKeyFromDate(info.range.endDate);
+                }
+            }
+        }
+
+        if (cache) cache.set(cacheKey, info);
+        return info;
+    }
+
     _taskDueDateKey(task) {
-        const d = this._getTaskDate(task)?.d;
-        return typeof d === 'string' ? d : '';
+        return this._taskDateInfo(task).d;
     }
 
     _compareTasksByPlanDate(a, b) {
-        const da = this._taskDateSortInfo(a);
-        const db = this._taskDateSortInfo(b);
-        if (da.key && db.key && da.key !== db.key) return da.key.localeCompare(db.key);
-        if (da.key && !db.key) return -1;
-        if (!da.key && db.key) return 1;
+        return this._compareTaskPlanSortKeys(this._taskPlanSortKey(a), this._taskPlanSortKey(b));
+    }
+
+    _taskPlanSortKey(task, cache = null) {
+        const cacheKey = task || '';
+        if (cache && cache.has(cacheKey)) return cache.get(cacheKey);
+        const date = this._taskDateSortInfo(task);
+        const text = this._getSortText(task);
+        const key = { dateKey: date.key, precision: date.precision, text, sortText: text.toLowerCase() };
+        if (cache) cache.set(cacheKey, key);
+        return key;
+    }
+
+    _compareTaskPlanSortKeys(da, db) {
+        if (da.dateKey && db.dateKey && da.dateKey !== db.dateKey) return da.dateKey < db.dateKey ? -1 : 1;
+        if (da.dateKey && !db.dateKey) return -1;
+        if (!da.dateKey && db.dateKey) return 1;
         if (da.precision !== db.precision) return da.precision - db.precision;
-        return this._getText(a).localeCompare(this._getText(b));
+        if (da.sortText !== db.sortText) return da.sortText < db.sortText ? -1 : 1;
+        if (da.text !== db.text) return da.text < db.text ? -1 : 1;
+        return 0;
     }
 
     _taskDateSortInfo(task) {
-        const value = this._getTaskDate(task);
-        const key = typeof value?.d === 'string' ? value.d : '';
+        const info = this._taskDateInfo(task);
+        const key = info.d;
         if (!key) return { key: '', precision: 99 };
-        if (!this._isDateRange(value)) return { key, precision: 0 };
-        return { key, precision: this._dateRangePrecision(value) };
+        return { key, precision: info.precision };
     }
 
     _hasExactDateForView(task, viewDate) {
-        const seg = (task.segments || []).find(s => s.type === 'datetime');
-        if (seg?.text?.d !== viewDate) return false;
-        return !this._isDateRange(seg.text);
+        const info = this._taskDateInfo(task);
+        return info.d === viewDate && !info.isRange;
     }
 
     _hasDateRange(task) {
-        const seg = (task.segments || []).find(s => s.type === 'datetime');
-        return this._isDateRange(seg?.text);
+        return this._taskDateInfo(task).isRange;
     }
 
     _isDateRange(value) {
@@ -1425,14 +1663,18 @@ class TodayDashboard {
         try {
             const range = this._dateRangeParts(value);
             if (!range) return 9;
-            const { sp, ep, startDate, endDate } = range;
-            if (this._offsetDate(this._dateKeyFromDate(startDate), 6) === this._dateKeyFromDate(endDate)) return 1;
-            if (sp.year === ep.year && sp.month === ep.month && sp.day === 1 && ep.day === new Date(ep.year, ep.month + 1, 0).getDate()) return 2;
-            if (sp.year === ep.year && sp.month === 0 && sp.day === 1 && ep.month === 11 && ep.day === 31) return 3;
-            return 4;
+            return this._dateRangePrecisionFromParts(range);
         } catch (e) {
             return 9;
         }
+    }
+
+    _dateRangePrecisionFromParts(range) {
+        const { sp, ep, startDate, endDate } = range;
+        if (this._offsetDate(this._dateKeyFromDate(startDate), 6) === this._dateKeyFromDate(endDate)) return 1;
+        if (sp.year === ep.year && sp.month === ep.month && sp.day === 1 && ep.day === new Date(ep.year, ep.month + 1, 0).getDate()) return 2;
+        if (sp.year === ep.year && sp.month === 0 && sp.day === 1 && ep.month === 11 && ep.day === 31) return 3;
+        return 4;
     }
 
     _dateRangeParts(value) {
@@ -1488,7 +1730,7 @@ class TodayDashboard {
     _ignoreListTaskRow(task, isIgnored) {
         const text   = this._getTaskTextHTML(task);
         const dateChip = this._getDateChipHTML(task);
-        const source = this._escape(task.record?.getName() || '');
+        const source = this._escape(this._recordName(task.record));
         const sourceHTML = source
         ? `<span class="db-task-source-wrap" data-action="open" data-guid="${task.guid}"><span class="db-task-source--link">${source}</span><button class="db-icon-btn db-src-icon db-nav" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
         : '';
@@ -1544,20 +1786,9 @@ class TodayDashboard {
     }
 
     _taskSearchAttrs(task) {
-        const value = this._getTaskDate(task);
-        const label = this._formatDateRange(value) || this._formatDate(value?.d || '');
-        let start = value?.d || '';
-        let end = start;
-        let precision = start ? 0 : 99;
-        if (this._isDateRange(value)) {
-            precision = this._dateRangePrecision(value);
-            const range = this._dateRangeParts(value);
-            if (range) {
-                start = this._dateKeyFromDate(range.startDate);
-                end = this._dateKeyFromDate(range.endDate);
-            }
-        }
-        return ` data-date-key="${this._escape(start)}" data-date-end="${this._escape(end)}" data-date-precision="${precision}" data-date-label="${this._escape(label.toLowerCase())}"`;
+        const info = this._taskDateInfo(task);
+        const label = this._formatTaskDateInfo(info);
+        return ` data-date-key="${this._escape(info.startKey)}" data-date-end="${this._escape(info.endKey)}" data-date-precision="${info.precision}" data-date-label="${this._escape(label.toLowerCase())}"`;
     }
 
     _taskRow(task, section) {
@@ -1566,7 +1797,7 @@ class TodayDashboard {
         const searchAttrs = this._taskSearchAttrs(task);
         const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-blocked', billable:'state-dollar', discuss:'state-question', alert:'state-alert', starred:'state-starred' };
         const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
-        const source     = this._escape(task.record?.getName() || '');
+        const source     = this._escape(this._recordName(task.record));
         // WIP: open-in-panel button goes here — blocked on Thymer SDK (createPanel + navigateTo doesn't open native record view)
         const sourceBody = source
         ? `<span class="db-task-source-wrap"><span class="db-task-source--link" data-action="open" data-guid="${task.guid}">${source}</span><button class="db-icon-btn db-src-icon db-nav" data-action="open" data-guid="${task.guid}" data-task-action="source" title="Open source" aria-label="Open source"><i class="ti ti-arrow-up-right"></i></button></span>`
@@ -2453,12 +2684,33 @@ class TodayDashboard {
     _getText(lineItem) {
         return (lineItem.segments || [])
         .map(s => {
-            if (s.type === 'ref') return s.text?.title || this.plugin.data.getRecord(s.text?.guid)?.getName() || '';
+            if (s.type === 'ref') return s.text?.title || s.text?.guid || '';
             if (typeof s.text === 'string') return s.text;
             if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
             return '';
         })
         .join('') || '(untitled)';
+    }
+
+    _getSortText(lineItem) {
+        return (lineItem.segments || [])
+        .map(s => {
+            if (s.type === 'ref') return s.text?.title || s.text?.guid || '';
+            if (typeof s.text === 'string') return s.text;
+            if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
+            return '';
+        })
+        .join('') || '(untitled)';
+    }
+
+    _recordName(record) {
+        if (!record) return '';
+        const cache = this._renderRecordNameCache;
+        const cacheKey = record.guid || record;
+        if (cache && cache.has(cacheKey)) return cache.get(cacheKey);
+        const name = record.getName?.() || '';
+        if (cache) cache.set(cacheKey, name);
+        return name;
     }
 
     _formatDate(d) {
@@ -2498,6 +2750,26 @@ class TodayDashboard {
         }
     }
 
+    _formatTaskDateInfo(info) {
+        if (!info?.d) return '';
+        if (!info.isRange) return this._formatDate(info.d);
+        if (info.rangeLabel != null) return info.rangeLabel;
+        const range = info.range;
+        if (!range) return '';
+        const { sp, ep, startDate, endDate } = range;
+        if (sp.year === ep.year && sp.month === 0 && sp.day === 1 && ep.month === 11 && ep.day === 31) {
+            info.rangeLabel = `Year ${sp.year}`;
+        } else if (sp.year === ep.year && sp.month === ep.month && sp.day === 1 && ep.day === new Date(ep.year, ep.month + 1, 0).getDate()) {
+            const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            info.rangeLabel = `${MONTHS[sp.month]} ${sp.year}`;
+        } else if (this._offsetDate(this._dateKeyFromDate(startDate), 6) === this._dateKeyFromDate(endDate)) {
+            info.rangeLabel = `Week ${this._weekNumber(startDate)}`;
+        } else {
+            info.rangeLabel = `${this._formatDate(this._dateKeyFromDate(startDate))} - ${this._formatDate(this._dateKeyFromDate(endDate))}`;
+        }
+        return info.rangeLabel;
+    }
+
     _weekNumber(date) {
         const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -2510,7 +2782,7 @@ class TodayDashboard {
             if (s.type === 'ref') {
                 const guid = s.text?.guid;
                 if (!guid) return '';
-                const title = s.text?.title || this.plugin.data.getRecord(guid)?.getName() || '?';
+                const title = s.text?.title || guid || '?';
                 return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}">${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
             }
             if (s.type === 'datetime') return '';
@@ -2522,10 +2794,9 @@ class TodayDashboard {
     }
 
     _getDateChipHTML(task) {
-        const seg = (task.segments || []).find(s => s.type === 'datetime');
-        const d = seg?.text?.d;
-        if (!d) return '';
-        const label = this._formatDateRange(seg.text) || this._formatDate(d);
+        const info = this._taskDateInfo(task);
+        if (!info.d) return '';
+        const label = this._formatTaskDateInfo(info);
         return `<span class="db-date-chip">${this._escape(label)}</span>`;
     }
 
