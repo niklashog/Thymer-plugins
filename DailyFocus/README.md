@@ -1,8 +1,12 @@
-# Daily Focus - Tasks
+# Daily Focus
 
 **Type:** Global Plugin
 
-A workspace-wide task manager that aggregates tasks from across your entire Thymer workspace. Operates in two modes — **Focus** for executing your day, **Plan** for deciding what matters.
+Daily Focus collects tasks from across your Thymer workspace and turns them into a simple daily workflow:
+
+- **Plan** decides what belongs in your day.
+- **Focus** shows what you are working on today.
+- **Peek** opens Daily Focus over your current note so you can check or plan without switching context.
 
 ## Screenshots
 
@@ -10,36 +14,68 @@ A workspace-wide task manager that aggregates tasks from across your entire Thym
 |---|---|---|---|
 | ![Plan desktop](images/newplan.png) | ![Focus desktop](images/newfocus.png) | ![Plan mobile](images/newplanmobile.png) | ![Focus mobile](images/newfocusmobile.png) |
 
-## Modes
+## Installation
 
-**New! Peek** — open Daily Focus in a modal over your current note, without switching context. Press `Ctrl+P` / `Cmd+P`, then type `peek` and choose `Daily Focus: Peek`.
+1. Open Thymer and go to **Settings -> Plugins**.
+2. Create a new **Global Plugin**.
+3. Paste the contents of `customCode.js` into the code editor.
+4. Paste the contents of `configuration.json` into the configuration editor.
+5. Save and activate the plugin.
 
-### Focus
+Open Daily Focus from the sidebar icon or from the command palette with `Open Daily Focus`.
 
-Shows what you're working on today, organized by time.
+## Quick Start
 
-- **Unscheduled** — tasks pinned to today or scheduled for today without a time block
-- **Day Plan** — time slots from Early Morning through Evening; tap a task to open a scheduling panel, then pick a slot to assign it. Tap the active slot again to unassign.
+1. Open **Daily Focus**.
+2. Go to **Plan**.
+3. Click tasks in **Overdue** or **Inbox** to add them to **Today's Focus**.
+4. Go to **Focus**.
+5. Click a task to assign it to a time block, or check it off when done.
 
-Navigate to past or future days with `←` / `→`. Future days show a dimmed preview of tasks that would recur on that day. Past days show a completion history for recurring tasks — completed occurrences appear with strikethrough, missed ones appear dimmed. Switch to Plan with the **Plan →** button.
+## Peek
 
-### Plan
+Peek opens Daily Focus in a modal over your current note. Use it when you want to quickly check Focus, plan the day, or review upcoming work without leaving the page you are editing.
 
-Used to decide what goes into your day.
+Open it from the command palette:
 
-- **Overdue** — tasks past their due date, highlighted in red
-- **Today's Focus** — tasks pinned for today
-- **Search** — filter Overdue and Inbox by text, source, and due date
+```text
+Daily Focus: Peek
+```
 
-Tap a task in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Navigate forward to future dates with `←` / `→`. Switch back with **← Focus**.
+The Peek view includes a Focus / Plan switch, so you can move between planning and execution without navigating away from your current context.
 
-Date ranges such as `this week`, `this month`, and `this year` stay in Plan Inbox instead of appearing automatically in Focus. Plan sorts exact dates first, then ranges by start date with week before month before year, and undated tasks last. Range due dates render as readable chips such as `Week 18`, `May 2026`, or `Year 2026`.
+## Plan
 
-### Plan filters
+Plan is where you decide what matters.
+
+- **Overdue** shows tasks past their due date.
+- **Today's Focus** shows tasks pinned for the selected day.
+- **Inbox** shows unscheduled tasks and, depending on the Upcoming menu, future dated tasks.
+- Click a task in Overdue or Inbox to pin it to Today's Focus.
+- Use the date arrows to plan future days.
+
+Date ranges such as `this week`, `this month`, and `this year` stay in Plan Inbox instead of appearing automatically in Focus. Plan sorts exact dates first, then ranges by start date, then undated tasks.
+
+## Focus
+
+Focus is where you work through the day.
+
+- **Unscheduled** shows tasks pinned to today without a time block.
+- **Day Plan** groups tasks into time blocks from Early Morning through Evening.
+- Click a task to open the scheduling panel, then choose a time block.
+- Click the active time block again to remove the assignment.
+- Check off tasks when done.
+
+Future days show a preview of recurring tasks. Past days show recurring task history: completed occurrences appear struck through, missed occurrences appear dimmed.
+
+## Filtering Plan
 
 The Plan search box filters only **Overdue** and **Inbox**. It does not hide tasks already pinned to Today's Focus.
 
-The **Upcoming** menu above Inbox controls how many future dated tasks are included in the Inbox before search filters are applied. This includes exact due dates and date ranges such as `Week 19` or `Sep 2026`. Date ranges are included when their start date falls inside the selected Upcoming range. Choose `All` when you want filters such as `due:5 weeks` to search without a date-window limit. Choose `None` to show only the regular Inbox without extra upcoming dated tasks.
+The **Upcoming** menu above Inbox controls how many future dated tasks are included before search filters are applied. It includes exact due dates and date ranges such as `Week 19` or `Sep 2026`.
+
+- Choose `All` when you want filters such as `due:5 weeks` to search without a date-window limit.
+- Choose `None` to show only the regular Inbox without extra upcoming dated tasks.
 
 Filters can be combined in one search. Every filter must match for a task to stay visible.
 
@@ -55,7 +91,7 @@ Filters can be combined in one search. Every filter must match for a task to sta
 | `due:4 weeks` | Tasks due from today through four weeks from today |
 | `!due:next week` | Excludes tasks due next week |
 
-Plain text and `!text` search the whole visible row, including task text, due date chip, and source name. Source filters use `@` and `!@` so they only match the source link.
+Plain text and `!text` search the whole visible row, including task text, due date chip, and source name. Source filters use `@` and `!@`, so they only match the source link.
 
 `@` and `due:` accept phrases with spaces. They keep reading until the next operator starts:
 
@@ -111,44 +147,52 @@ due:september
 
 Find tasks due in September this year.
 
-### Recurring tasks
+## Recurring Tasks
 
-Accessible via the ☰ menu. Lists all tasks marked as recurring. Tap a row to expand and set its schedule — choose a frequency (daily / weekly / monthly / yearly) and, where applicable, a day. Remove the recurring setting via the trash icon.
+Recurring tasks are managed from the menu.
 
-Each recurring task exists as a single task forever — no copies are created. Checking it off advances the scheduled date to the next occurrence and resets it to undone, ready for next time. Past occurrences are tracked as ghost traces in the Focus history view.
+Each recurring task is one task that moves forward when completed. Daily Focus does not create copies. Checking off a recurring task advances its scheduled date to the next occurrence and makes it ready for next time.
 
-### Ignore list
+Open **Recurring tasks** to choose a frequency:
 
-Accessible via the ☰ menu. Hide tasks from Plan and Focus without deleting them. Ignored tasks are listed separately and can be restored at any time with a single click.
+- daily
+- weekly
+- monthly
+- yearly
 
-## Menu
+Past recurring occurrences appear in Focus history as completed or missed traces.
 
-A hamburger menu (☰) sits in the top left corner of every view:
+## Ignore List
 
-- **Focus** — switch to Focus mode
-- **Plan** — switch to Plan mode
-- **Recurring tasks** — manage recurring schedules
-- **Ignore list** — hide tasks from Plan and Focus
-- **Settings** — configure plugin behaviour
+Use the Ignore list to hide tasks from Plan and Focus without deleting them. Ignored tasks can be restored later.
 
-These views can also be opened directly from the command palette: `Daily Focus: Open Focus`, `Daily Focus: Open Plan`, `Daily Focus: Open Recurring Tasks`, `Daily Focus: Open Ignore List`, and `Daily Focus: Open Settings`.
+## Common Actions
 
-Use `Daily Focus: Peek` to open Focus in a modal over your current note. The peek view includes a Focus / Plan switch so you can check or plan your day without navigating away.
+| Action | What it does |
+|---|---|
+| Checkbox | Mark a task done, or undo from the done state |
+| Task row in Plan | Pin the task to Today's Focus |
+| Task row in Focus | Open the scheduling panel |
+| Repeat icon | Mark a task as recurring or remove its recurring schedule |
+| Source name / arrow | Open the task in its source document |
+| Pin icon | Remove a task from Today's Focus |
+| Date arrows | Move between days |
 
-## Task interactions
+Daily Focus refreshes automatically when tasks are created, updated, completed, deleted, or restored elsewhere in the workspace.
 
-- **Checkbox** — mark a task done (or undo from the done state). Done tasks appear with strikethrough and reduced opacity. For recurring tasks, checking off advances the date to the next occurrence instead of marking permanently done.
-- **Repeat icon** — mark a task as recurring (defaults to daily) or remove its recurring schedule. Activating recurring clears any pin; removing recurring auto-pins the task to the current day.
-- **Note reference chip** — if a task links to another note, it renders as a clickable chip with ↗; tap to open the note.
-- **Due date chip** — tasks with a date show it inline next to the task name; overdue dates are highlighted in red.
-- **Task status icon** — native Thymer task statuses (important, started, waiting, etc.) are reflected as icons on each row.
-- **Source name / ↗ icon** — navigates directly to the task in its source document, scrolling to and highlighting it.
-- **Pin icon** — unpin from Today's Focus. On mobile, "Remove from today" also appears in the scheduling sheet.
-- **Task text** (Focus mode) — tap to open the scheduling panel; pick a time slot to assign the task, or tap the active slot to remove the assignment.
+## Commands
 
-The dashboard refreshes automatically when tasks are created, updated, or completed elsewhere in the workspace.
+Daily Focus adds these command palette actions:
 
-## Performance diagnostics
+- `Open Daily Focus`
+- `Daily Focus: Open Focus`
+- `Daily Focus: Open Plan`
+- `Daily Focus: Open Recurring Tasks`
+- `Daily Focus: Open Ignore List`
+- `Daily Focus: Open Settings`
+- `Daily Focus: Peek`
+
+## Performance Diagnostics
 
 Daily Focus includes optional console timing for large workspaces. It is off by default.
 
@@ -164,91 +208,20 @@ To collect a report:
 
 The report contains render timings, search timings, and task counts. It does not include task text or note content.
 
-## Known issues
+## Known Issues
 
-**Mobile browser — blank screen after clearing cache or browser data**
+**Mobile browser: blank screen after clearing cache or browser data**
 
-If you clear your browser cache and browser data while the plugin is installed in your workspace, the mobile browser may fail to load all panels and meta-properties required to run plugins on the next visit, resulting in a blank screen.
+If you clear your browser cache and browser data while the plugin is installed, the mobile browser may fail to load all panels and meta-properties required to run plugins on the next visit.
 
-**Fix:** switch your mobile browser to desktop mode, navigate around a little, then switch back to mobile mode and the app should load correctly on next visit.
+**Fix:** switch your mobile browser to desktop mode, navigate around a little, then switch back to mobile mode.
 
-## Changelog
+## Recent Changes
 
 ### 2026-05-01
-- **Performance** — cached Plan renders are much faster by caching per-render task date/source data, precomputing sort keys, and avoiding expensive record lookups while sorting and building task rows
-- **Performance** — initial task fetch now avoids redundant `@today`, `@due`, and `@overdue` searches by deriving scheduled, due, and overdue buckets from the `@todo` result; direct Plan-style views can skip `@done`
-- **Performance diagnostics** — optional console timing can now collect render, search, and task-count data for large workspace testing
-- **Plan filters** — documented the full search syntax for text, exclusions, source filters, and due-date filters
-- **Due-date search** — Plan search now supports `due:` filters such as `due:next week`, `due:this month`, `due:september`, and `due:5 weeks`
-- **Source search** — `@` and `!@` filters now support source names with spaces, such as `@client work`
-- **Upcoming range** — added `This year` and `All` for broader future task pools, and renamed `Off` to `None`
 
-### 2026-04-30
-- **Plan dates** — date ranges such as This week, This month, and This year stay in Plan Inbox, sort predictably, and render as Week, Month, or Year chips
-- **Upcoming filter** — Plan now shows the next 3 days by default, sorted by date, with range choices for 7, 14, 45 days, This week, This month, This year, or None
-- **Fix** — recurring task sheets on mobile no longer re-animate while switching frequency options
-- **Fix** — task statuses such as in progress, blocked, and billing are visible again on task checkboxes
-- **Peek** — new command palette action opens Daily Focus in a modal over the current note, with a Focus / Plan switch
-- **Command palette** — Focus, Plan, Recurring tasks, Ignore list, and Settings can now be opened directly
-- **Plan search** — search can now combine phrase matching, exclusions, source-only matches, and source-only exclusions
-
-### 2026-04-29
-- **Mobile task layout** — task rows are easier to tap, with cleaner spacing between task text, due dates, and source links
-- **Plan and Ignore list polish** — refreshed task lists to feel calmer and more consistent with Focus
-- **Plan** — Overdue tasks can now be collapsed when you want a quieter planning view
-- **Bottom sheets** — mobile sheets now behave more naturally and no longer fight with Thymer's bottom navigation
-- **Recurring tasks** — improved the mobile scheduling experience and replaced the destructive-looking remove action with a calmer control
-- **Recurring tasks** — recurring task rows now show the full task context and daily tasks can start on a chosen date
-- **Fix** — completed tasks could show an unchecked box or place the checkbox awkwardly on mobile
-- **Fix** — opening a source link on mobile could trigger from too much of the task row instead of just the source text or icon
-- **Fix** — tasks pinned to Focus but left unfinished could stay stuck in history instead of returning to the planner the next day
-- **Fix** — tasks from trashed or restored pages and collections now disappear or return after the dashboard refreshes
-
-### 2026-04-27
-- **Focus redesign** — time blocks feel lighter and more list-like; cleaner separation between blocks and tasks
-- **Links in task names** — if a task references another note, it shows as a tappable link that opens the note directly
-- **Due dates** — shown next to the task name; overdue dates turn red
-- **Task status icons** — important, started, waiting and other native Thymer statuses now show up on each task row
-- **Upcoming filter** — new toggle in Plan Inbox to show tasks due within the next 7 days
-- **Fix** — toggling recurring on and off could leave a task in a weird state where it disappeared or got stuck
-
-### 2026-04-26
-- **Time block selection** — rebuilt for both mobile and desktop; tap a task to open a selection sheet, then pick a time slot or remove from Today's Focus
-- **Search** — search box in Plan view filters Overdue and Inbox tasks in real time; × button clears the filter
-- **Settings** — new view accessible via ☰; configure plugin behaviour. Current options: hide completed tasks in Focus, disable journal transclusions
-- **Mobile** — unpin button and source link now visible on narrow screens; source truncated to 10 characters
-- **Menu trigger** — clicking the hamburger icon or the view name opens the menu
-- **Wipe Plugin Metadata** — new option under Settings → Data; removes all plugin data from tasks and clears plugin configuration
-- **Fix** — journal transclusions now work correctly across multiple workspaces or accounts open in the same browser
-
-### 2026-04-25 (recurring rethink)
-- **One task forever** — recurring tasks no longer create copies on each occurrence; a single task advances to the next date when checked off
-- **Ghost traces** — past days in Focus show recurring history: completed occurrences appear with strikethrough, missed ones appear dimmed
-- **Bounded history** — missed ghost traces only appear from the date a recurring schedule was first set, not retroactively
-- **Journal transclusion removed for recurring** — recurring completions are tracked in-plugin rather than via journal transclusions
-
-### 2026-04-25
-- **Instant UI** — panel opens immediately, no loading delay
-- **Recurring preview** — future dates show a dimmed ghost of tasks that would recur that day
-- **UI overhaul** — new design across all views
-- **Journal transclusion** — completing a task automatically adds a transclusion to today's journal page
-- **Native due dates** — recurring tasks show their scheduled date natively in Thymer; set immediately when configuring a recurring schedule
-
-### 2026-04-24
-- **Recurring tasks (experimental)** — mark tasks as recurring (daily / weekly / monthly / yearly); auto-generates occurrences and catches up in the background
-- **Recurring tasks view** — accessible via ☰; tap a row to expand and edit its schedule
-
-### 2026-04-23
-- Added **☰ menu** — sits in the top left corner of every view, starting point for plugin settings and tools
-- Added **Ignore list** — accessible via the ☰ menu. Hide tasks from Plan and Focus without deleting them. Restore at any time from the same view.
-- **Source navigation** now scrolls to and highlights the specific task in its source document, not just the page
-
-## Installation
-
-1. Open Thymer and go to **Settings → Plugins**
-2. Create a new **Global Plugin**
-3. Paste the contents of `customCode.js` into the code editor
-4. Paste the contents of `configuration.json` into the configuration editor
-5. Save and activate the plugin
-
-Access the dashboard via the sidebar icon or the command palette (`Open Daily Focus`).
+- Faster cached Plan renders by caching per-render task data and avoiding expensive record lookups.
+- Faster initial task fetch by deriving scheduled, due, and overdue buckets from the `@todo` result.
+- Added optional performance diagnostics with `DailyFocusPerf`.
+- Added richer Plan filters for text, source names, exclusions, and due dates.
+- Added broader Upcoming ranges, including `This year` and `All`.
