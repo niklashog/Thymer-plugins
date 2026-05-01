@@ -1035,11 +1035,12 @@ class TodayDashboard {
             ['default', 'Default (3 days)'],
             ['7', '7 days'],
             ['14', '14 days'],
-            ['21', '21 days'],
             ['45', '45 days'],
             ['this-week', 'This week'],
             ['this-month', 'This month'],
-            ['off', 'Off'],
+            ['this-year', 'This year'],
+            ['all', 'All'],
+            ['off', 'None'],
         ];
         const upcomingBtn = `<span class="db-upcoming-wrap">
         <button class="db-recurring-filter${this._upcomingRange !== 'off' ? ' db-recurring-filter--active' : ''}" data-action="toggle-upcoming-menu">Upcoming: ${this._escape(this._upcomingRangeLabel())}</button>
@@ -1449,6 +1450,7 @@ class TodayDashboard {
     _upcomingCutoffKey() {
         const range = this._upcomingRange || 'default';
         if (range === 'off') return null;
+        if (range === 'all') return '99991231';
         const today = new Date();
         const d = new Date(today);
         if (range === 'this-week') {
@@ -1456,8 +1458,10 @@ class TodayDashboard {
             d.setDate(today.getDate() + daysUntilSunday);
         } else if (range === 'this-month') {
             d.setMonth(today.getMonth() + 1, 0);
+        } else if (range === 'this-year') {
+            d.setMonth(11, 31);
         } else {
-            const days = { default: 3, '7': 7, '14': 14, '21': 21, '45': 45 }[range] || 3;
+            const days = { default: 3, '7': 7, '14': 14, '45': 45 }[range] || 3;
             d.setDate(today.getDate() + days);
         }
         return this._dateKeyFromDate(d);
@@ -1468,11 +1472,12 @@ class TodayDashboard {
             default: '3 days',
             '7': '7 days',
             '14': '14 days',
-            '21': '21 days',
             '45': '45 days',
             'this-week': 'This week',
             'this-month': 'This month',
-            off: 'Off',
+            'this-year': 'This year',
+            all: 'All',
+            off: 'None',
         }[this._upcomingRange || 'default'] || '3 days';
     }
 
@@ -1534,9 +1539,27 @@ class TodayDashboard {
         </div>`;
     }
 
+    _taskSearchAttrs(task) {
+        const value = this._getTaskDate(task);
+        const label = this._formatDateRange(value) || this._formatDate(value?.d || '');
+        let start = value?.d || '';
+        let end = start;
+        let precision = start ? 0 : 99;
+        if (this._isDateRange(value)) {
+            precision = this._dateRangePrecision(value);
+            const range = this._dateRangeParts(value);
+            if (range) {
+                start = this._dateKeyFromDate(range.startDate);
+                end = this._dateKeyFromDate(range.endDate);
+            }
+        }
+        return ` data-date-key="${this._escape(start)}" data-date-end="${this._escape(end)}" data-date-precision="${precision}" data-date-label="${this._escape(label.toLowerCase())}"`;
+    }
+
     _taskRow(task, section) {
         const text       = this._getTaskTextHTML(task);
         const dateChip   = this._getDateChipHTML(task);
+        const searchAttrs = this._taskSearchAttrs(task);
         const STATUS_CLASS = { important:'state-exclaim', started:'state-started', waiting:'state-blocked', billable:'state-dollar', discuss:'state-question', alert:'state-alert', starred:'state-starred' };
         const sc = STATUS_CLASS[task.getTaskStatus?.()] ? ' ' + STATUS_CLASS[task.getTaskStatus?.()] : '';
         const source     = this._escape(task.record?.getName() || '');
@@ -1558,7 +1581,7 @@ class TodayDashboard {
         // [RECURRING-END]
 
         if (section === 'recurring-preview') {
-            return `<div class="db-task listitem-task db-task--recurring-preview" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task db-task--recurring-preview" data-nav-task="true" tabindex="-1" data-guid="${task.guid}"${searchAttrs}>
             <div class="db-done line-check-div" style="opacity:.25;cursor:default" data-guid="${task.guid}"></div>
             <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
@@ -1569,7 +1592,7 @@ class TodayDashboard {
 
         // [RECURRING-START] ghost traces for past/today views
         if (section === 'recurring-done') {
-            return `<div class="db-task listitem listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}"${searchAttrs}>
             <div class="db-done line-check-div" style="opacity:.5;cursor:default" data-guid="${task.guid}"></div>
             <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
@@ -1579,7 +1602,7 @@ class TodayDashboard {
         }
 
         if (section === 'recurring-missed') {
-            return `<div class="db-task listitem-task" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task" data-nav-task="true" tabindex="-1" data-guid="${task.guid}"${searchAttrs}>
             <div class="db-done line-check-div" style="opacity:.15;cursor:default" data-guid="${task.guid}"></div>
             <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text" style="opacity:.4">${text}</span>${bodyMeta}</div>
@@ -1591,7 +1614,7 @@ class TodayDashboard {
 
         if (isPast) {
             const isDone = section === 'done';
-            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isDone ? ' state-done' : ''}${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}"${searchAttrs}>
             <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text">${text}</span>${bodyMeta}</div>
             </div>
@@ -1602,7 +1625,7 @@ class TodayDashboard {
         const isFocus = section === 'focus-pinned' || section === 'focus-scheduled' || section === 'block';
 
         if (section === 'done') {
-            return `<div class="db-task listitem listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+            return `<div class="db-task listitem listitem-task state-done" data-nav-task="true" tabindex="-1" data-guid="${task.guid}"${searchAttrs}>
             <div class="db-done line-check-div clickable" role="button" aria-label="Reopen task" data-task-action="done" data-action="undone" data-guid="${task.guid}"></div>
             <div class="db-task-r1">
             <div class="db-task-body"><span class="db-task-text--sel">${text}</span>${bodyMeta}</div>
@@ -1617,7 +1640,7 @@ class TodayDashboard {
             : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}"${searchAttrs}>
             ${doneBtn}
             <div class="db-task-r1">
             <div class="db-task-body">
@@ -1634,7 +1657,7 @@ class TodayDashboard {
             : '';
             const isOpen = this._taskSheet === task.guid;
             const inlinePanel = isOpen ? this._buildTaskInlinePanel(task.guid, this._taskSheetSlot) : '';
-            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${isOpen ? ' db-task--open' : ''}${sc}" data-nav-task="true" tabindex="-1" data-action="select-task" data-guid="${task.guid}"${searchAttrs}>
             ${doneBtn}
             <div class="db-task-r1">
             <div class="db-task-body">
@@ -1646,7 +1669,7 @@ class TodayDashboard {
         }
 
         if (section === 'inbox' || section === 'overdue') {
-            return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-action="pin" data-guid="${task.guid}">
+            return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-action="pin" data-guid="${task.guid}"${searchAttrs}>
             ${doneBtn}
             <div class="db-task-r1">
             <div class="db-task-body">
@@ -1657,7 +1680,7 @@ class TodayDashboard {
             </div>`;
         }
 
-        return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}">
+        return `<div class="db-task listitem-task${sc}" data-nav-task="true" tabindex="-1" data-guid="${task.guid}"${searchAttrs}>
         ${doneBtn}
         <div class="db-task-r1">
         <div class="db-task-body" data-action="open" data-guid="${task.guid}">
@@ -2128,12 +2151,158 @@ class TodayDashboard {
         }, { signal });
     }
 
+    _parsePlanSearch(query) {
+        const raw = (query || '').toLowerCase().trim();
+        const tokens = raw.match(/!?@"[^"]*"|!?@'[^']*'|!"[^"]*"|!'[^']*'|"[^"]*"|'[^']*'|\S+/g) || [];
+        const clean = value => (value || '').replace(/^["']|["']$/g, '').trim();
+        const isDueOperator = value => value.startsWith('due:') || value.startsWith('!due:');
+        const isOperator = value => value.startsWith('!@') || value.startsWith('@') || value.startsWith('!') || isDueOperator(value);
+        const includeTerms = [];
+        const excludeTerms = [];
+        const sourceIncludeTerms = [];
+        const sourceExcludeTerms = [];
+        const dueTerms = [];
+        const dueExcludeTerms = [];
+
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            if (isDueOperator(token)) {
+                const prefixLength = token.startsWith('!due:') ? 5 : 4;
+                const parts = [clean(token.slice(prefixLength))].filter(Boolean);
+                while (i + 1 < tokens.length && !isOperator(tokens[i + 1])) {
+                    parts.push(clean(tokens[++i]));
+                }
+                const dueTerm = parts.join(' ').trim();
+                if (!dueTerm) continue;
+                if (prefixLength === 5) dueExcludeTerms.push(dueTerm);
+                else dueTerms.push(dueTerm);
+            } else if (token.startsWith('!@') || token.startsWith('@')) {
+                const prefixLength = token.startsWith('!@') ? 2 : 1;
+                const parts = [clean(token.slice(prefixLength))].filter(Boolean);
+                while (i + 1 < tokens.length && !isOperator(tokens[i + 1])) {
+                    parts.push(clean(tokens[++i]));
+                }
+                const sourceTerm = parts.join(' ').trim();
+                if (!sourceTerm) continue;
+                if (prefixLength === 2) sourceExcludeTerms.push(sourceTerm);
+                else sourceIncludeTerms.push(sourceTerm);
+            } else if (token.startsWith('!')) {
+                const term = clean(token.slice(1));
+                if (term) excludeTerms.push(term);
+            } else {
+                const term = clean(token);
+                if (term) includeTerms.push(term);
+            }
+        }
+
+        return {
+            includeTerm: includeTerms.join(' '),
+            excludeTerms,
+            sourceIncludeTerms,
+            sourceExcludeTerms,
+            dueTerms,
+            dueExcludeTerms,
+            hasTerms: includeTerms.length > 0 || excludeTerms.length > 0 || sourceIncludeTerms.length > 0 || sourceExcludeTerms.length > 0 || dueTerms.length > 0 || dueExcludeTerms.length > 0,
+        };
+    }
+
+    _parseDueSearchTerm(term) {
+        const text = (term || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        const numberWords = {
+            one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+            seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+        };
+        const numberValue = value => numberWords[value] || parseInt(value, 10) || null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dateAfter = days => {
+            const d = new Date(today);
+            d.setDate(d.getDate() + days);
+            return this._dateKeyFromDate(d);
+        };
+        const weekRange = offset => {
+            const start = new Date(today);
+            const day = start.getDay() || 7;
+            start.setDate(start.getDate() - day + 1 + (offset * 7));
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            return { type: 'range', start: this._dateKeyFromDate(start), end: this._dateKeyFromDate(end), raw: text };
+        };
+        const nextWeeksRange = weeks => {
+            const end = new Date(today);
+            end.setDate(today.getDate() + (weeks * 7));
+            return { type: 'range', start: this._dateKeyFromDate(today), end: this._dateKeyFromDate(end), raw: text };
+        };
+        const monthRange = offset => {
+            const start = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+            const end = new Date(today.getFullYear(), today.getMonth() + offset + 1, 0);
+            return { type: 'range', start: this._dateKeyFromDate(start), end: this._dateKeyFromDate(end), raw: text };
+        };
+        const yearRange = offset => {
+            const year = today.getFullYear() + offset;
+            return { type: 'range', start: `${year}0101`, end: `${year}1231`, raw: text };
+        };
+        const monthNames = {
+            jan: 0, january: 0,
+            feb: 1, february: 1,
+            mar: 2, march: 2,
+            apr: 3, april: 3,
+            may: 4,
+            jun: 5, june: 5,
+            jul: 6, july: 6,
+            aug: 7, august: 7,
+            sep: 8, sept: 8, september: 8,
+            oct: 9, october: 9,
+            nov: 10, november: 10,
+            dec: 11, december: 11,
+        };
+        const monthNameRange = month => {
+            const start = new Date(today.getFullYear(), month, 1);
+            const end = new Date(today.getFullYear(), month + 1, 0);
+            return { type: 'month', start: this._dateKeyFromDate(start), end: this._dateKeyFromDate(end), raw: text };
+        };
+
+        if (text === 'today') return { type: 'exact', key: dateAfter(0), raw: text };
+        if (text === 'tomorrow') return { type: 'exact', key: dateAfter(1), raw: text };
+        if (text === 'yesterday') return { type: 'exact', key: dateAfter(-1), raw: text };
+        if (text === 'this week') return weekRange(0);
+        if (text === 'next week') return weekRange(1);
+        if (text === 'this month') return monthRange(0);
+        if (text === 'next month') return monthRange(1);
+        if (text === 'this year') return yearRange(0);
+        if (text === 'next year') return yearRange(1);
+        if (monthNames[text] != null) return monthNameRange(monthNames[text]);
+
+        let match = text.match(/^(?:next\s+|in\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+weeks?(?:\s+from\s+now)?$/);
+        if (match) {
+            const weeks = numberValue(match[1]);
+            if (weeks != null) return nextWeeksRange(weeks);
+        }
+
+        match = text.match(/^(?:in\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+days?(?:\s+from\s+now)?$/);
+        if (match) {
+            const days = numberValue(match[1]);
+            if (days != null) return { type: 'exact', key: dateAfter(days), raw: text };
+        }
+
+        return { type: 'text', raw: text };
+    }
+
+    _matchesDueSearch(row, term) {
+        const filter = this._parseDueSearchTerm(term);
+        const start = row.dataset.dateKey || '';
+        const end = row.dataset.dateEnd || start;
+        const precision = parseInt(row.dataset.datePrecision || '99', 10);
+        const label = row.dataset.dateLabel || '';
+        if (!start && !label) return false;
+        if (filter.type === 'exact') return !!start && start <= filter.key && (end || start) >= filter.key;
+        if (filter.type === 'month') return precision !== 3 && !!start && start <= filter.end && (end || start) >= filter.start;
+        if (filter.type === 'range') return !!start && start <= filter.end && (end || start) >= filter.start;
+        return label.includes(filter.raw) || start.includes(filter.raw.replace(/-/g, ''));
+    }
+
     _reapplyPlanSearch(el) {
-        const terms = (this._planSearch || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
-        const includeTerm = terms.filter(t => !t.startsWith('!') && !t.startsWith('@')).join(' ');
-        const excludeTerms = terms.map(t => t.startsWith('!') && !t.startsWith('!@') ? t.slice(1) : '').filter(Boolean);
-        const sourceIncludeTerms = terms.map(t => t.startsWith('@') ? t.slice(1) : '').filter(Boolean);
-        const sourceExcludeTerms = terms.map(t => t.startsWith('!@') ? t.slice(2) : '').filter(Boolean);
+        const { includeTerm, excludeTerms, sourceIncludeTerms, sourceExcludeTerms, dueTerms, dueExcludeTerms, hasTerms } = this._parsePlanSearch(this._planSearch);
         for (const section of el.querySelectorAll('.db-section--overdue, .db-section--inbox')) {
             let visibleCount = 0;
             for (const row of section.querySelectorAll('.db-task')) {
@@ -2142,11 +2311,13 @@ class TodayDashboard {
                 const match = (!includeTerm || rowText.includes(includeTerm))
                     && excludeTerms.every(t => !rowText.includes(t))
                     && sourceIncludeTerms.every(t => sourceText.includes(t))
-                    && sourceExcludeTerms.every(t => !sourceText.includes(t));
+                    && sourceExcludeTerms.every(t => !sourceText.includes(t))
+                    && dueTerms.every(t => this._matchesDueSearch(row, t))
+                    && dueExcludeTerms.every(t => !this._matchesDueSearch(row, t));
                 row.style.display = match ? '' : 'none';
                 if (match) visibleCount++;
             }
-            section.style.display = (terms.length && visibleCount === 0) ? 'none' : '';
+            section.style.display = (hasTerms && visibleCount === 0) ? 'none' : '';
         }
     }
 

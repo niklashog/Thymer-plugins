@@ -29,20 +29,87 @@ Used to decide what goes into your day.
 
 - **Overdue** — tasks past their due date, highlighted in red
 - **Today's Focus** — tasks pinned for today
-- **Search** — filter Overdue and Inbox by task text, exclusions, and source links
+- **Search** — filter Overdue and Inbox by text, source, and due date
 
 Tap a task in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Navigate forward to future dates with `←` / `→`. Switch back with **← Focus**.
 
 Date ranges such as `this week`, `this month`, and `this year` stay in Plan Inbox instead of appearing automatically in Focus. Plan sorts exact dates first, then ranges by start date with week before month before year, and undated tasks last. Range due dates render as readable chips such as `Week 18`, `May 2026`, or `Year 2026`.
 
-Plan search supports combined filters. For a task named `Write draft for my weekly on Medium` from source `articles`:
+### Plan filters
 
-- `weekly on Medium` — match the task text as a phrase
-- `!draft` — hide task rows containing `draft`
-- `@articles` — match only task source links containing `articles`
-- `!@articles` — hide task rows whose source link contains `articles`
+The Plan search box filters only **Overdue** and **Inbox**. It does not hide tasks already pinned to Today's Focus.
 
-Filters can be combined, for example `weekly on Medium @articles !published`.
+The **Upcoming** menu above Inbox controls how many future dated tasks are included in the Inbox before search filters are applied. Choose `All` when you want filters such as `due:5 weeks` to search without a date-window limit. Choose `None` to show only the regular Inbox without extra upcoming dated tasks.
+
+Filters can be combined in one search. Every filter must match for a task to stay visible.
+
+| Syntax | Matches |
+|---|---|
+| `weekly on Medium` | Visible task row text, as one phrase |
+| `!draft` | Excludes rows containing `draft` |
+| `@articles` | Source links containing `articles` |
+| `!@articles` | Excludes source links containing `articles` |
+| `@client work` | Source links containing `client work` |
+| `@"client work"` | Same as above, useful when you want the source phrase to be explicit |
+| `due:next week` | Tasks due next week |
+| `due:4 weeks` | Tasks due from today through four weeks from today |
+| `!due:next week` | Excludes tasks due next week |
+
+Plain text and `!text` search the whole visible row, including task text, due date chip, and source name. Source filters use `@` and `!@` so they only match the source link.
+
+`@` and `due:` accept phrases with spaces. They keep reading until the next operator starts:
+
+```text
+@client work due:next week !published
+```
+
+This means:
+
+- source contains `client work`
+- due date is next week
+- row does not contain `published`
+
+Supported due-date words:
+
+- `today`, `tomorrow`, `yesterday`
+- `this week`, `next week`
+- `this month`, `next month`
+- `this year`, `next year`
+- this year's calendar months, for example `may`, `june`, `september`, or `dec`
+- week windows, for example `2 weeks`, `four weeks`, `next five weeks`, or `in 12 weeks`
+- `in 10 days`, `two days from now`
+
+Due filters match real task dates and date ranges. For example, `due:next week` matches tasks with exact dates next week and tasks whose date range overlaps next week.
+
+Week windows are inclusive from today. For example, `due:4 weeks` shows tasks due any time from today through four weeks from today.
+
+Month names are not inclusive windows. For example, `due:dec` and `due:december` show tasks due in December this year, not every task due before December. Broad year ranges such as `Year 2026` are not treated as December tasks.
+
+Examples:
+
+```text
+weekly on Medium @articles
+```
+
+Find rows containing `weekly on Medium` from sources containing `articles`.
+
+```text
+@client work due:this month !invoice
+```
+
+Find tasks from `client work`, due this month, excluding rows containing `invoice`.
+
+```text
+due:5 weeks
+```
+
+Find tasks due from today through five weeks from today.
+
+```text
+due:september
+```
+
+Find tasks due in September this year.
 
 ### Recurring tasks
 
@@ -91,9 +158,15 @@ If you clear your browser cache and browser data while the plugin is installed i
 
 ## Changelog
 
+### 2026-05-01
+- **Plan filters** — documented the full search syntax for text, exclusions, source filters, and due-date filters
+- **Due-date search** — Plan search now supports `due:` filters such as `due:next week`, `due:this month`, `due:september`, and `due:5 weeks`
+- **Source search** — `@` and `!@` filters now support source names with spaces, such as `@client work`
+- **Upcoming range** — added `This year` and `All` for broader future task pools, and renamed `Off` to `None`
+
 ### 2026-04-30
 - **Plan dates** — date ranges such as This week, This month, and This year stay in Plan Inbox, sort predictably, and render as Week, Month, or Year chips
-- **Upcoming filter** — Plan now shows the next 3 days by default, sorted by date, with range choices for 7, 14, 21, 45 days, This week, This month, or Off
+- **Upcoming filter** — Plan now shows the next 3 days by default, sorted by date, with range choices for 7, 14, 45 days, This week, This month, This year, or None
 - **Fix** — recurring task sheets on mobile no longer re-animate while switching frequency options
 - **Fix** — task statuses such as in progress, blocked, and billing are visible again on task checkboxes
 - **Peek** — new command palette action opens Daily Focus in a modal over the current note, with a Focus / Plan switch
