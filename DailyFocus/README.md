@@ -76,7 +76,7 @@ Supported due-date words:
 - `this month`, `next month`
 - `this year`, `next year`
 - this year's calendar months, for example `may`, `june`, `september`, or `dec`
-- week windows, for example `2 weeks`, `four weeks`, `next five weeks`, or `in 12 weeks`
+- week windows, for example `2 weeks`, `four weeks`, or `12 weeks`
 - `in 10 days`, `two days from now`
 
 Due filters match real task dates and date ranges. For example, `due:next week` matches tasks with exact dates next week and tasks whose date range overlaps next week.
