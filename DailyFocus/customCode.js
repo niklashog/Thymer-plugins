@@ -763,8 +763,7 @@ class TodayDashboard {
         : doneLinesAll.filter(l => l.props?.['db-done-date'] === viewDateHyphen);
         const viewPinned     = allTodos.filter(l => {
             if (l.props?.['db-pinned'] === viewDateHyphen) return true;
-            const seg = (l.segments || []).find(s => s.type === 'datetime');
-            if (seg?.text?.d !== viewDate) return false;
+            if (!this._hasExactDateForView(l, viewDate)) return false;
             // [RECURRING-START] exclude recurring tasks already completed on this date or rescheduled away
             const recurDone = l.props?.['db-recurring-done-dates'];
             if (recurDone?.split(',').includes(viewDate)) return false;
@@ -785,10 +784,11 @@ class TodayDashboard {
 
         const planOverdue = [], todayPinned = [], scheduled = [], inbox = [], planInbox = [];
         for (const l of allTodos) {
-            const isOverdue   = overdueGuids.has(l.guid);
+            const isDateRange = this._hasDateRange(l);
+            const isOverdue   = overdueGuids.has(l.guid) && !isDateRange;
             const isPinned    = todaySet.has(l.guid);
-            const isScheduled = scheduledGuids.has(l.guid);
-            const isDated     = datedGuids.has(l.guid);
+            const isScheduled = scheduledGuids.has(l.guid) && this._hasExactDateForView(l, viewDate);
+            const isDated     = datedGuids.has(l.guid) && !isDateRange;
             const pinDate     = l.props?.['db-pinned'] || '';
             const hasActivePin = pinDate >= today;
             // [RECURRING-START] don't show recurring tasks already completed or rescheduled away from today
@@ -799,7 +799,7 @@ class TodayDashboard {
             );
             const rescheduledStart = this._rescheduledRecurring[l.guid];
             const isRescheduledAway = !!(rescheduledStart && rescheduledStart > viewDate);
-            const isRecurringToday = !!(l.props?.['db-recurring-freq'] && (l.segments || []).some(s => s.type === 'datetime' && s.text?.d === viewDate));
+            const isRecurringToday = !!(l.props?.['db-recurring-freq'] && this._hasExactDateForView(l, viewDate));
             // [RECURRING-END]
             if (isOverdue && !isPinned)                                                                                             planOverdue.push(l);
             if (isPinned    && !isRecurringCompleted && !isRescheduledAway)                                                         todayPinned.push(l);
@@ -807,14 +807,9 @@ class TodayDashboard {
             if (!isDated && !isPinned && !isScheduled && !isOverdue)    inbox.push(l);
             if (!isDated && !hasActivePin && !isScheduled && !isOverdue)  planInbox.push(l);
         }
-        planOverdue.sort((a, b) => {
-            const da = this._taskDueDateKey(a);
-            const db = this._taskDueDateKey(b);
-            if (da && db && da !== db) return da.localeCompare(db);
-            if (da && !db) return -1;
-            if (!da && db) return 1;
-            return 0;
-        });
+        planOverdue.sort((a, b) => this._compareTasksByPlanDate(a, b));
+        inbox.sort((a, b) => this._compareTasksByPlanDate(a, b));
+        planInbox.sort((a, b) => this._compareTasksByPlanDate(a, b));
 
         const todayD = this._todayD().replace(/-/g, '');
         const upcomingCutoff = this._upcomingCutoffKey();
@@ -822,17 +817,11 @@ class TodayDashboard {
             if (!upcomingCutoff) return false;
             const pinDate = l.props?.['db-pinned'] || '';
             if (overdueGuids.has(l.guid) || todaySet.has(l.guid) || pinDate >= today) return false;
+            if (this._hasDateRange(l)) return false;
             const seg = (l.segments || []).find(s => s.type === 'datetime');
             const d = seg?.text?.d;
             return d && d > todayD && d <= upcomingCutoff;
-        }).sort((a, b) => {
-            const da = this._taskDueDateKey(a);
-            const db = this._taskDueDateKey(b);
-            if (da && db && da !== db) return da.localeCompare(db);
-            if (da && !db) return -1;
-            if (!da && db) return 1;
-            return 0;
-        });
+        }).sort((a, b) => this._compareTasksByPlanDate(a, b));
 
         const hasAnyTasks = todayPinned.length > 0 || scheduled.length > 0 || doneTasks.length > 0;
         const effectiveMode = this._mode === 'ignore-list' ? 'ignore-list'
@@ -1386,6 +1375,71 @@ class TodayDashboard {
     _taskDueDateKey(task) {
         const d = this._getTaskDate(task)?.d;
         return typeof d === 'string' ? d : '';
+    }
+
+    _compareTasksByPlanDate(a, b) {
+        const da = this._taskDateSortInfo(a);
+        const db = this._taskDateSortInfo(b);
+        if (da.key && db.key && da.key !== db.key) return da.key.localeCompare(db.key);
+        if (da.key && !db.key) return -1;
+        if (!da.key && db.key) return 1;
+        if (da.precision !== db.precision) return da.precision - db.precision;
+        return this._getText(a).localeCompare(this._getText(b));
+    }
+
+    _taskDateSortInfo(task) {
+        const value = this._getTaskDate(task);
+        const key = typeof value?.d === 'string' ? value.d : '';
+        if (!key) return { key: '', precision: 99 };
+        if (!this._isDateRange(value)) return { key, precision: 0 };
+        return { key, precision: this._dateRangePrecision(value) };
+    }
+
+    _hasExactDateForView(task, viewDate) {
+        const seg = (task.segments || []).find(s => s.type === 'datetime');
+        if (seg?.text?.d !== viewDate) return false;
+        return !this._isDateRange(seg.text);
+    }
+
+    _hasDateRange(task) {
+        const seg = (task.segments || []).find(s => s.type === 'datetime');
+        return this._isDateRange(seg?.text);
+    }
+
+    _isDateRange(value) {
+        if (!value) return false;
+        try {
+            const dt = new DateTime(value);
+            return !!dt.getRangeEnd();
+        } catch (e) {
+            return !!(value.e || value.end || value.to || value.rangeEnd);
+        }
+    }
+
+    _dateRangePrecision(value) {
+        try {
+            const range = this._dateRangeParts(value);
+            if (!range) return 9;
+            const { sp, ep, startDate, endDate } = range;
+            if (this._offsetDate(this._dateKeyFromDate(startDate), 6) === this._dateKeyFromDate(endDate)) return 1;
+            if (sp.year === ep.year && sp.month === ep.month && sp.day === 1 && ep.day === new Date(ep.year, ep.month + 1, 0).getDate()) return 2;
+            if (sp.year === ep.year && sp.month === 0 && sp.day === 1 && ep.month === 11 && ep.day === 31) return 3;
+            return 4;
+        } catch (e) {
+            return 9;
+        }
+    }
+
+    _dateRangeParts(value) {
+        const start = new DateTime(value);
+        const end = start.getRangeEnd();
+        if (!end) return null;
+        const sp = start.getParts();
+        const ep = end.getParts();
+        if (!sp.year || sp.month == null || !sp.day || !ep.year || ep.month == null || !ep.day) return null;
+        const startDate = new Date(sp.year, sp.month, sp.day);
+        const endDate = new Date(ep.year, ep.month, ep.day);
+        return { sp, ep, startDate, endDate };
     }
 
     _dateKeyFromDate(date) {
@@ -2247,6 +2301,35 @@ class TodayDashboard {
         return date.getFullYear() !== today.getFullYear() ? `${label} ${date.getFullYear()}` : label;
     }
 
+    _formatDateRange(value) {
+        if (!this._isDateRange(value)) return '';
+        try {
+            const range = this._dateRangeParts(value);
+            if (!range) return '';
+            const { sp, ep, startDate, endDate } = range;
+            if (sp.year === ep.year && sp.month === 0 && sp.day === 1 && ep.month === 11 && ep.day === 31) {
+                return `Year ${sp.year}`;
+            }
+            if (sp.year === ep.year && sp.month === ep.month && sp.day === 1 && ep.day === new Date(ep.year, ep.month + 1, 0).getDate()) {
+                const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return `${MONTHS[sp.month]} ${sp.year}`;
+            }
+            if (this._offsetDate(this._dateKeyFromDate(startDate), 6) === this._dateKeyFromDate(endDate)) {
+                return `Week ${this._weekNumber(startDate)}`;
+            }
+            return `${this._formatDate(this._dateKeyFromDate(startDate))} - ${this._formatDate(this._dateKeyFromDate(endDate))}`;
+        } catch (e) {
+            return '';
+        }
+    }
+
+    _weekNumber(date) {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
     _getTaskTextHTML(task) {
         const parts = (task.segments || []).map(s => {
             if (s.type === 'ref') {
@@ -2267,7 +2350,7 @@ class TodayDashboard {
         const seg = (task.segments || []).find(s => s.type === 'datetime');
         const d = seg?.text?.d;
         if (!d) return '';
-        const label = this._formatDate(d);
+        const label = this._formatDateRange(seg.text) || this._formatDate(d);
         return `<span class="db-date-chip">${this._escape(label)}</span>`;
     }
 
