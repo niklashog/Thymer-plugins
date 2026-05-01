@@ -33,6 +33,8 @@ Used to decide what goes into your day.
 
 Tap a task in Overdue or Inbox to pin it to Today's Focus. Remove it with `×`. Navigate forward to future dates with `←` / `→`. Switch back with **← Focus**.
 
+Date ranges such as `this week`, `this month`, and `this year` stay in Plan Inbox instead of appearing automatically in Focus. Plan sorts exact dates first, then ranges by start date with week before month before year, and undated tasks last. Range due dates render as readable chips such as `Week 18`, `May 2026`, or `Year 2026`.
+
 Plan search supports combined filters. For a task named `Write draft for my weekly on Medium` from source `articles`:
 
 - `weekly on Medium` — match the task text as a phrase
@@ -90,6 +92,7 @@ If you clear your browser cache and browser data while the plugin is installed i
 ## Changelog
 
 ### 2026-04-30
+- **Plan dates** — date ranges such as This week, This month, and This year stay in Plan Inbox, sort predictably, and render as Week, Month, or Year chips
 - **Upcoming filter** — Plan now shows the next 3 days by default, sorted by date, with range choices for 7, 14, 21, 45 days, This week, This month, or Off
 - **Fix** — recurring task sheets on mobile no longer re-animate while switching frequency options
 - **Fix** — task statuses such as in progress, blocked, and billing are visible again on task checkboxes
