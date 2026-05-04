@@ -12,4 +12,5 @@ A collection of plugins for [Thymer](https://thymer.com).
 |---|---|---|
 | [BetterKanBan](./BetterKanBan) | Global | Kanban boards with dependency tracking |
 | [Coinflip](./Coinflip) | Global | Flip a coin from the status bar |
+| [Collection Property Fill](./CollectionPropertyFill) | Global | Set a text property value on every note in a collection |
 | [Daily Focus](./DailyFocus) | Global | Tasks with Focus and Plan modes, time block scheduling, day navigation, and recurring tasks |

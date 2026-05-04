@@ -1,0 +1,7 @@
+{
+    "ver": 1,
+    "name": "Collection Property Fill",
+    "icon": "ti-adjustments",
+    "description": "Set a text property value on every note in a selected collection",
+    "custom": {}
+}
