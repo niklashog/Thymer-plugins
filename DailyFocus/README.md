@@ -218,6 +218,10 @@ If you clear your browser cache and browser data while the plugin is installed, 
 
 ## Recent Changes
 
+### 2026-05-04
+
+- Fixed note references in task names showing as GUIDs instead of readable note names.
+
 ### 2026-05-01
 
 - Faster cached Plan renders by caching per-render task data and avoiding expensive record lookups.
