@@ -795,6 +795,7 @@ class TodayDashboard {
         this._todayCache = null;
         this._renderDateInfoCache = new Map();
         this._renderRecordNameCache = new Map();
+        this._renderRefTitleCache = new Map();
         const ver = ++this._renderVer;
         const el  = panel.getElement();
         if (!el) return;
@@ -2692,7 +2693,7 @@ class TodayDashboard {
     _getText(lineItem) {
         return (lineItem.segments || [])
         .map(s => {
-            if (s.type === 'ref') return s.text?.title || s.text?.guid || '';
+            if (s.type === 'ref') return this._refTitle(s);
             if (typeof s.text === 'string') return s.text;
             if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
             return '';
@@ -2703,7 +2704,7 @@ class TodayDashboard {
     _getSortText(lineItem) {
         return (lineItem.segments || [])
         .map(s => {
-            if (s.type === 'ref') return s.text?.title || s.text?.guid || '';
+            if (s.type === 'ref') return this._refTitle(s);
             if (typeof s.text === 'string') return s.text;
             if (s.text && typeof s.text === 'object') return s.text.title || s.text.link || '';
             return '';
@@ -2719,6 +2720,20 @@ class TodayDashboard {
         const name = record.getName?.() || '';
         if (cache) cache.set(cacheKey, name);
         return name;
+    }
+
+    _refTitle(segment) {
+        const text = segment?.text;
+        if (!text || typeof text !== 'object') return '';
+        if (text.title) return text.title;
+        const guid = text.guid;
+        if (!guid) return '';
+        const cache = this._renderRefTitleCache;
+        if (cache && cache.has(guid)) return cache.get(guid);
+        const record = this.plugin.data.getRecord?.(guid);
+        const title = record?.getName?.() || guid;
+        if (cache) cache.set(guid, title);
+        return title;
     }
 
     _formatDate(d) {
@@ -2790,7 +2805,7 @@ class TodayDashboard {
             if (s.type === 'ref') {
                 const guid = s.text?.guid;
                 if (!guid) return '';
-                const title = s.text?.title || guid || '?';
+                const title = this._refTitle(s) || guid || '?';
                 return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}">${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
             }
             if (s.type === 'datetime') return '';
