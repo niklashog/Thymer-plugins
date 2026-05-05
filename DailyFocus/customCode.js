@@ -29,6 +29,8 @@ class TodayDashboard {
         this._todayCache     = null;
         this._lastData           = null;
         this._prefetchInFlight   = false;
+        this._collectionByGuid   = null;
+        this._collectionCachePromise = null;
         this._peekOverlay        = null;
         this._peekPanel          = null;
         this._peekMode           = 'focus';
@@ -635,7 +637,14 @@ class TodayDashboard {
         this.plugin.events.on('lineitem.deleted', () => this._scheduleRefresh());
         this.plugin.events.on('lineitem.undeleted', () => this._scheduleRefresh());
         this.plugin.events.on('record.updated', ev => this._scheduleTrashRefresh(ev));
-        this.plugin.events.on('collection.updated', ev => this._scheduleTrashRefresh(ev));
+        this.plugin.events.on('collection.created', ev => {
+            this._invalidateCollectionCache();
+            this._scheduleTrashRefresh(ev);
+        });
+        this.plugin.events.on('collection.updated', ev => {
+            this._invalidateCollectionCache();
+            this._scheduleTrashRefresh(ev);
+        });
     }
 
     _patchTask(guid, propsUpdate) {
@@ -1065,6 +1074,8 @@ class TodayDashboard {
         });
 
         const buildStarted = this._perfNow();
+        await this._ensureCollectionCache();
+        if (ver !== this._renderVer) return;
         const html = effectiveMode === 'ignore-list'
         ? this._buildIgnoreListHTML(allTodos, ignoredTasks)
         : effectiveMode === 'recurring-list'
@@ -2153,12 +2164,23 @@ class TodayDashboard {
                     const refGuid = target.dataset.guid;
                     if (!refGuid) return;
                     const panel = this.plugin.ui.getActivePanel();
-                    if (panel) panel.navigateTo({
-                        type: 'edit_panel',
-                        rootId: refGuid,
-                        subId: null,
-                        workspaceGuid: this.plugin.getWorkspaceGuid(),
-                    });
+                    if (!panel) return;
+                    const refType = await this._refTargetType(refGuid);
+                    if (refType === 'collection') {
+                        panel.navigateTo({
+                            type: 'overview',
+                            rootId: refGuid,
+                            subId: target.dataset.viewId || null,
+                            workspaceGuid: this.plugin.getWorkspaceGuid(),
+                        });
+                    } else {
+                        panel.navigateTo({
+                            type: 'edit_panel',
+                            rootId: refGuid,
+                            subId: null,
+                            workspaceGuid: this.plugin.getWorkspaceGuid(),
+                        });
+                    }
                     break;
                 }
                 case 'ignore': {
@@ -2676,10 +2698,7 @@ class TodayDashboard {
     // [RECURRING-END]
 
     async _journalRecord() {
-        if (!this._journalCollection) {
-            const collections = await this.plugin.data.getAllCollections();
-            this._journalCollection = collections.find(c => c.isJournalPlugin()) || null;
-        }
+        if (!this._journalCollection) this._journalCollection = (await this._ensureCollectionCache()).find(c => c.isJournalPlugin()) || null;
         if (!this._journalCollection) return null;
         const user = this.plugin.data.getActiveUsers()[0];
         if (!user) return null;
@@ -2688,6 +2707,32 @@ class TodayDashboard {
         } catch (e) {
             return null;
         }
+    }
+
+    _invalidateCollectionCache() {
+        this._collectionByGuid = null;
+        this._collectionCachePromise = null;
+        this._journalCollection = null;
+    }
+
+    async _ensureCollectionCache() {
+        if (this._collectionByGuid) return Array.from(this._collectionByGuid.values());
+        if (!this._collectionCachePromise) {
+            this._collectionCachePromise = this.plugin.data.getAllCollections()
+            .then(collections => {
+                this._collectionByGuid = new Map(collections.map(c => [c.getGuid(), c]));
+                return collections;
+            })
+            .catch(e => {
+                console.warn('[DailyFocus] collection lookup failed:', e);
+                this._collectionByGuid = new Map();
+                return [];
+            })
+            .finally(() => {
+                this._collectionCachePromise = null;
+            });
+        }
+        return this._collectionCachePromise;
     }
 
     _getText(lineItem) {
@@ -2731,9 +2776,17 @@ class TodayDashboard {
         const cache = this._renderRefTitleCache;
         if (cache && cache.has(guid)) return cache.get(guid);
         const record = this.plugin.data.getRecord?.(guid);
-        const title = record?.getName?.() || guid;
+        const collection = this._collectionByGuid?.get(guid);
+        const title = record?.getName?.() || collection?.getName?.() || guid;
         if (cache) cache.set(guid, title);
         return title;
+    }
+
+    async _refTargetType(guid) {
+        if (!guid) return 'record';
+        if (this.plugin.data.getRecord?.(guid)) return 'record';
+        await this._ensureCollectionCache();
+        return this._collectionByGuid?.has(guid) ? 'collection' : 'record';
     }
 
     _formatDate(d) {
@@ -2806,7 +2859,8 @@ class TodayDashboard {
                 const guid = s.text?.guid;
                 if (!guid) return '';
                 const title = this._refTitle(s) || guid || '?';
-                return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}">${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
+                const viewId = s.text?.viewId ? ` data-view-id="${this._escape(s.text.viewId)}"` : '';
+                return `<span class="db-ref-chip" data-action="open-ref" data-guid="${this._escape(guid)}"${viewId}>${this._escape(title)}<i class="ti ti-arrow-up-right"></i></span>`;
             }
             if (s.type === 'datetime') return '';
             if (typeof s.text === 'string') return this._escape(s.text);
